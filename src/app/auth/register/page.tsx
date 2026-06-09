@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,18 +42,31 @@ export default function RegisterPage() {
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Registration failed");
+        setIsLoading(false);
+        return;
+      }
+
+      // Auto sign-in after successful registration
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInRes?.error) {
+        // Account created but auto-login failed; send them to login
+        window.location.href = "/auth/login";
       } else {
         window.location.href = "/dashboard";
       }
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/signin/google";
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   return (
