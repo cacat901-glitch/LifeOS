@@ -67,6 +67,12 @@ model User {
   subscription     Subscription?
   statistics       Statistics[]
   timelineEvents   TimelineEvent[]
+  projects         Project[]
+  projectTasks     ProjectTask[]
+  projectNotes     ProjectNote[]
+  financeAccounts  FinanceAccount[]
+  transactions     FinanceTransaction[]
+  budgets          FinanceBudget[]
 
   @@index([email])
   @@index([createdAt])
@@ -930,4 +936,194 @@ enum Theme {
   DARK
   LIGHT
   SYSTEM
+}
+
+
+// ============================================================
+// PROJECTS
+// ============================================================
+
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+
+  name        String
+  description String?  @db.Text
+  status      ProjectStatus @default(ACTIVE)
+  priority    ProjectPriority @default(MEDIUM)
+
+  color       String   @default("#6366f1")
+  icon        String   @default("📁")
+
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  // Progress (0-100, auto-calculated from tasks or manual)
+  progress    Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks  ProjectTask[]
+  notes  ProjectNote[]
+
+  @@index([userId])
+  @@index([userId, status])
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model ProjectTask {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+
+  title       String
+  description String?
+  status      ProjectTaskStatus @default(TODO)
+  priority    ProjectPriority   @default(MEDIUM)
+  assignee    String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  order       Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+enum ProjectTaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+model ProjectNote {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ============================================================
+// FINANCE
+// ============================================================
+
+model FinanceAccount {
+  id        String   @id @default(cuid())
+  userId    String
+
+  name      String           // e.g. "Main Checking", "Savings", "Credit Card"
+  type      AccountType
+  currency  String   @default("USD")
+  balance   Float    @default(0)
+  color     String   @default("#10b981")
+  isDefault Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions FinanceTransaction[]
+
+  @@index([userId])
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  INVESTMENT
+  CASH
+  OTHER
+}
+
+model FinanceTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  accountId String
+
+  type      TransactionType
+  amount    Float             // always positive; type determines direction
+  currency  String   @default("USD")
+
+  title     String
+  notes     String?
+  category  String            // e.g. "Food", "Rent", "Salary"
+  tags      String[] @default([])
+
+  date      DateTime @default(now())
+  recurring Boolean  @default(false)
+  recurringInterval String?  // "monthly", "weekly", etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account FinanceAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, date])
+  @@index([accountId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model FinanceBudget {
+  id        String   @id @default(cuid())
+  userId    String
+
+  category  String
+  amount    Float              // budget limit
+  period    BudgetPeriod @default(MONTHLY)
+  color     String   @default("#6366f1")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, period])
+  @@index([userId])
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  YEARLY
 }
