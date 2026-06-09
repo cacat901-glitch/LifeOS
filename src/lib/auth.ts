@@ -12,6 +12,8 @@ export const {
   signOut,
 } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
+  trustHost: true,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
   },
