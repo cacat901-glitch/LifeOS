@@ -21,8 +21,8 @@ const authRoutes = ["/auth/login", "/auth/register", "/auth/forgot-password"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionToken =
-    request.cookies.get("next-auth.session-token")?.value ||
-    request.cookies.get("__Secure-next-auth.session-token")?.value;
+    request.cookies.get("authjs.session-token")?.value ||
+    request.cookies.get("__Secure-authjs.session-token")?.value;
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
