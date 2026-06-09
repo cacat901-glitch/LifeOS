@@ -117,13 +117,13 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold">Today&apos;s Habits</CardTitle>
-            <Button variant="ghost" size="sm" asChild><Link href="/habits">View All</Link></Button>
+            <Link href="/habits" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
           </CardHeader>
           <CardContent>
             {habits.list.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p className="text-sm">No habits yet.</p>
-                <Button size="sm" className="mt-3" asChild><Link href="/habits">Add your first habit</Link></Button>
+                <Link href="/habits" className="inline-flex items-center justify-center h-8 rounded-lg px-3 text-xs font-medium bg-primary text-primary-foreground mt-3">Add your first habit</Link>
               </div>
             ) : (
               <div className="space-y-2">
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground mt-2">No workouts yet</p>
                 </div>
               )}
-              <Button size="sm" className="w-full mt-3" asChild><Link href="/workout">Log Workout</Link></Button>
+              <Link href="/workout" className="inline-flex items-center justify-center w-full h-8 rounded-lg px-3 text-xs font-medium bg-primary text-primary-foreground mt-3">Log Workout</Link>
             </CardContent>
           </Card>
         </div>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold">Tasks</CardTitle>
-            <Button variant="ghost" size="sm" asChild><Link href="/tasks">View All</Link></Button>
+            <Link href="/tasks" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
           </CardHeader>
           <CardContent>
             {tasks.list.length === 0 ? (
@@ -236,7 +236,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold">Goals</CardTitle>
-            <Button variant="ghost" size="sm" asChild><Link href="/goals">View All</Link></Button>
+            <Link href="/goals" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
           </CardHeader>
           <CardContent>
             {goals.length === 0 ? (
@@ -295,12 +295,11 @@ export default function DashboardPage() {
               { icon: "🏋️", label: "Log Workout", href: "/workout" },
               { icon: "💜", label: "Log Mood", href: "/mood" },
             ].map((action) => (
-              <Button key={action.label} variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
-                <Link href={action.href}>
-                  <span className="text-xl">{action.icon}</span>
-                  <span className="text-xs">{action.label}</span>
-                </Link>
-              </Button>
+              <Link key={action.label} href={action.href}
+                className="inline-flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all">
+                <span className="text-xl">{action.icon}</span>
+                <span className="text-xs">{action.label}</span>
+              </Link>
             ))}
           </div>
         </CardContent>
