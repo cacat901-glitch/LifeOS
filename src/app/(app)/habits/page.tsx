@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -15,7 +15,6 @@ interface Habit {
   color: string;
   currentStreak: number;
   totalCompletions: number;
-  completionRate: number;
   frequency: string;
   logs: { completed: boolean }[];
   category?: { name: string };
@@ -27,11 +26,11 @@ const COLORS = ["#6366f1","#8b5cf6","#ec4899","#10b981","#f59e0b","#3b82f6","#ef
 export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<"FREE" | "PRO">("FREE");
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [plan, setPlan] = useState<"FREE" | "PRO">("FREE");
 
   const load = useCallback(async () => {
     const [habitsRes, userRes] = await Promise.all([
@@ -49,7 +48,9 @@ export default function HabitsPage() {
   useEffect(() => { load(); }, [load]);
 
   const toggle = async (habitId: string, currentlyDone: boolean) => {
-    setHabits((prev) => prev.map((h) => h.id === habitId ? { ...h, logs: [{ completed: !currentlyDone }] } : h));
+    setHabits((prev) =>
+      prev.map((h) => h.id === habitId ? { ...h, logs: [{ completed: !currentlyDone }] } : h)
+    );
     await fetch("/api/habits", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -88,49 +89,71 @@ export default function HabitsPage() {
     load();
   };
 
+  const handleNewHabit = async () => {
+    if (plan === "FREE" && habits.length >= 3) {
+      const res = await fetch("/api/stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "checkout" }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        if (url) window.location.href = url;
+      }
+    } else {
+      setShowCreate(true);
+    }
+  };
+
   const completed = habits.filter((h) => h.logs?.some((l) => l.completed)).length;
   const total = habits.length;
-  const bestStreak = habits.length > 0 ? Math.max(...habits.map((h) => h.currentStreak)) : 0;
+  const bestStreak = total > 0 ? Math.max(...habits.map((h) => h.currentStreak)) : 0;
   const totalCompletions = habits.reduce((s, h) => s + h.totalCompletions, 0);
+  const atFreeLimit = plan === "FREE" && total >= 3;
 
-  if (loading) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-16 rounded-2xl bg-muted/50" />)}</div>;
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-16 rounded-2xl bg-muted/50" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Habits</h2>
           <p className="text-sm text-muted-foreground">Build powerful routines that stick</p>
         </div>
-        <Button size="sm" onClick={() => {
-          if (plan === "FREE" && total >= 3) {
-            fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) })
-              .then((r) => r.json()).then(({ url }) => { if (url) window.location.href = url; });
-          } else {
-            setShowCreate(true);
-          }
-        }}>
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          {plan === "FREE" && total >= 3 ? "Upgrade for More" : "New Habit"}
+        <Button size="sm" onClick={handleNewHabit}>
+          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {atFreeLimit ? "Upgrade for More" : "New Habit"}
         </Button>
       </div>
 
       {/* Free plan limit banner */}
-      {plan === "FREE" && total >= 3 && (
+      {atFreeLimit && (
         <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium">You&apos;ve reached the free plan limit</p>
+            <p className="text-sm font-medium">You&apos;ve reached the free plan limit (3/3 habits)</p>
             <p className="text-xs text-muted-foreground mt-0.5">Upgrade to Pro for unlimited habits.</p>
           </div>
-          <button onClick={async () => {
-            const res = await fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) });
-            if (res.ok) { const { url } = await res.json(); if (url) window.location.href = url; }
-          }} className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+          <button
+            onClick={handleNewHabit}
+            className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium"
+          >
             Upgrade to Pro
           </button>
         </div>
       )}
+
+      {/* Today's Progress */}
+      {total > 0 && (
         <Card className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 border-green-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
@@ -138,27 +161,13 @@ export default function HabitsPage() {
                 <h3 className="font-semibold">Today&apos;s Progress</h3>
                 <p className="text-sm text-muted-foreground">{completed} of {total} completed</p>
               </div>
-              <div className="text-3xl font-bold text-green-500">{total > 0 ? Math.round((completed / total) * 100) : 0}%</div>
+              <div className="text-3xl font-bold text-green-500">
+                {Math.round((completed / total) * 100)}%
+              </div>
             </div>
-            <Progress value={total > 0 ? (completed / total) * 100 : 0} indicatorClassName="bg-green-500" />
+            <Progress value={(completed / total) * 100} indicatorClassName="bg-green-500" />
           </CardContent>
         </Card>
-      )}
-
-      {/* Free plan limit banner */}
-      {plan === "FREE" && total >= 3 && (
-        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">You&apos;ve reached the free plan limit (3/3 habits)</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Upgrade to Pro for unlimited habits.</p>
-          </div>
-          <button onClick={async () => {
-            const res = await fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) });
-            if (res.ok) { const { url } = await res.json(); if (url) window.location.href = url; }
-          }} className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
-            Upgrade to Pro
-          </button>
-        </div>
       )}
 
       {/* Stats */}
@@ -189,7 +198,9 @@ export default function HabitsPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => toggle(habit.id, done)}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 ${done ? "bg-green-500/20 ring-2 ring-green-500" : "bg-muted hover:ring-2 hover:ring-primary"}`}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 ${
+                        done ? "bg-green-500/20 ring-2 ring-green-500" : "bg-muted hover:ring-2 hover:ring-primary"
+                      }`}
                     >
                       {done
                         ? <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
@@ -199,7 +210,9 @@ export default function HabitsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{habit.name}</span>
-                        {habit.currentStreak >= 3 && <Badge variant="warning" className="text-[10px]">🔥 {habit.currentStreak}</Badge>}
+                        {habit.currentStreak >= 3 && (
+                          <Badge variant="warning" className="text-[10px]">🔥 {habit.currentStreak}</Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-xs text-muted-foreground capitalize">{habit.frequency?.toLowerCase()}</span>
@@ -210,7 +223,9 @@ export default function HabitsPage() {
                       onClick={() => deleteHabit(habit.id)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                     </button>
                   </div>
                 </CardContent>
@@ -225,17 +240,29 @@ export default function HabitsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Create New Habit</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            {error && <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+            {error && (
+              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+            )}
             <div>
               <label className="text-sm font-medium block mb-1.5">Habit Name</label>
-              <Input placeholder="e.g. Morning Meditation" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                placeholder="e.g. Morning Meditation"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onKeyDown={(e) => e.key === "Enter" && createHabit()}
+              />
             </div>
             <div>
               <label className="text-sm font-medium block mb-2">Icon</label>
               <div className="flex flex-wrap gap-2">
                 {ICONS.map((icon) => (
-                  <button key={icon} onClick={() => setForm({ ...form, icon })}
-                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${form.icon === icon ? "ring-2 ring-primary bg-primary/10" : "hover:bg-muted"}`}>
+                  <button
+                    key={icon}
+                    onClick={() => setForm({ ...form, icon })}
+                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${
+                      form.icon === icon ? "ring-2 ring-primary bg-primary/10" : "hover:bg-muted"
+                    }`}
+                  >
                     {icon}
                   </button>
                 ))}
@@ -245,18 +272,27 @@ export default function HabitsPage() {
               <label className="text-sm font-medium block mb-2">Color</label>
               <div className="flex gap-2">
                 {COLORS.map((c) => (
-                  <button key={c} onClick={() => setForm({ ...form, color: c })}
-                    className={`w-7 h-7 rounded-full transition-all ${form.color === c ? "ring-2 ring-offset-2 ring-offset-background ring-foreground" : ""}`}
-                    style={{ backgroundColor: c }} />
+                  <button
+                    key={c}
+                    onClick={() => setForm({ ...form, color: c })}
+                    className={`w-7 h-7 rounded-full transition-all ${
+                      form.color === c ? "ring-2 ring-offset-2 ring-offset-background ring-foreground" : ""
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
                 ))}
               </div>
             </div>
             <div>
               <label className="text-sm font-medium block mb-1.5">Frequency</label>
               <div className="flex gap-2">
-                {["DAILY","WEEKLY","MONTHLY"].map((f) => (
-                  <Button key={f} variant={form.frequency === f ? "default" : "outline"} size="sm"
-                    onClick={() => setForm({ ...form, frequency: f })}>
+                {["DAILY", "WEEKLY", "MONTHLY"].map((f) => (
+                  <Button
+                    key={f}
+                    variant={form.frequency === f ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setForm({ ...form, frequency: f })}
+                  >
                     {f.charAt(0) + f.slice(1).toLowerCase()}
                   </Button>
                 ))}
@@ -271,6 +307,7 @@ export default function HabitsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
