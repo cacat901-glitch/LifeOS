@@ -17,7 +17,6 @@ export const {
   },
   pages: {
     signIn: "/auth/login",
-    signUp: "/auth/register",
     error: "/auth/error",
     verifyRequest: "/auth/verify",
   },
