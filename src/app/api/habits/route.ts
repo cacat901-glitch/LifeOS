@@ -136,9 +136,9 @@ async function recalcStreak(habitId: string) {
   }
 
   // Deduplicate & normalise to midnight timestamps
-  const days = [...new Set(logs.map((l) => {
+  const days = Array.from(new Set(logs.map((l) => {
     const d = new Date(l.date); d.setHours(0,0,0,0); return d.getTime();
-  }))].sort((a, b) => b - a);
+  }))).sort((a, b) => b - a);
 
   const now = new Date(); now.setHours(0,0,0,0);
   const todayTs     = now.getTime();
