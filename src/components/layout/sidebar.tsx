@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { calculateLevel } from "@/lib/gamification";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: "grid" },
@@ -79,6 +81,21 @@ const iconMap: Record<string, React.ReactNode> = {
 export function AppSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const [userData, setUserData] = useState<{ xp: number; level: number; name: string; subscription?: { plan: string } } | null>(null);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch("/api/user")
+        .then((r) => r.json())
+        .then((d) => setUserData(d))
+        .catch(() => {});
+    }
+  }, [session?.user?.id]);
+
+  const levelInfo = userData ? calculateLevel(userData.xp ?? 0) : null;
+  const displayName = userData?.name || session?.user?.name || "User";
+  const isPro = userData?.subscription?.plan === "PRO";
 
   return (
     <>
@@ -116,7 +133,9 @@ export function AppSidebar() {
             <div>
               <span className="font-bold text-lg">LifeOS</span>
               <div className="flex items-center gap-1.5">
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Pro</Badge>
+                <Badge variant={isPro ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                  {isPro ? "Pro" : "Free"}
+                </Badge>
               </div>
             </div>
           </Link>
@@ -168,15 +187,30 @@ export function AppSidebar() {
           })}
 
           {/* User */}
-          <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-xl bg-muted/50">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
-              U
+          <Link href="/settings" onClick={() => setIsMobileOpen(false)}
+            className="flex items-center gap-3 px-3 py-3 mt-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+              {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">User</div>
-              <div className="text-xs text-muted-foreground truncate">Level 5 • 2,450 XP</div>
+              <div className="text-sm font-medium truncate">{displayName}</div>
+              {levelInfo ? (
+                <div className="text-xs text-muted-foreground truncate">
+                  Lvl {levelInfo.level} {levelInfo.title} • {userData?.xp ?? 0} XP
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">Loading…</div>
+              )}
+              {levelInfo && (
+                <div className="mt-1 h-1 w-full bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${levelInfo.progress}%` }}
+                  />
+                </div>
+              )}
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
     </>

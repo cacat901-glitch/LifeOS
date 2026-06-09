@@ -31,10 +31,18 @@ export default function HabitsPage() {
   const [form, setForm] = useState({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [plan, setPlan] = useState<"FREE" | "PRO">("FREE");
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/habits");
-    if (res.ok) setHabits(await res.json());
+    const [habitsRes, userRes] = await Promise.all([
+      fetch("/api/habits"),
+      fetch("/api/user"),
+    ]);
+    if (habitsRes.ok) setHabits(await habitsRes.json());
+    if (userRes.ok) {
+      const u = await userRes.json();
+      setPlan(u?.subscription?.plan === "PRO" ? "PRO" : "FREE");
+    }
     setLoading(false);
   }, []);
 
@@ -95,14 +103,34 @@ export default function HabitsPage() {
           <h2 className="text-2xl font-bold">Habits</h2>
           <p className="text-sm text-muted-foreground">Build powerful routines that stick</p>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
+        <Button size="sm" onClick={() => {
+          if (plan === "FREE" && total >= 3) {
+            fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) })
+              .then((r) => r.json()).then(({ url }) => { if (url) window.location.href = url; });
+          } else {
+            setShowCreate(true);
+          }
+        }}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          New Habit
+          {plan === "FREE" && total >= 3 ? "Upgrade for More" : "New Habit"}
         </Button>
       </div>
 
-      {/* Progress */}
-      {total > 0 && (
+      {/* Free plan limit banner */}
+      {plan === "FREE" && total >= 3 && (
+        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">You&apos;ve reached the free plan limit</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Upgrade to Pro for unlimited habits.</p>
+          </div>
+          <button onClick={async () => {
+            const res = await fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) });
+            if (res.ok) { const { url } = await res.json(); if (url) window.location.href = url; }
+          }} className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+            Upgrade to Pro
+          </button>
+        </div>
+      )}
         <Card className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 border-green-500/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
@@ -115,6 +143,22 @@ export default function HabitsPage() {
             <Progress value={total > 0 ? (completed / total) * 100 : 0} indicatorClassName="bg-green-500" />
           </CardContent>
         </Card>
+      )}
+
+      {/* Free plan limit banner */}
+      {plan === "FREE" && total >= 3 && (
+        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">You&apos;ve reached the free plan limit (3/3 habits)</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Upgrade to Pro for unlimited habits.</p>
+          </div>
+          <button onClick={async () => {
+            const res = await fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) });
+            if (res.ok) { const { url } = await res.json(); if (url) window.location.href = url; }
+          }} className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+            Upgrade to Pro
+          </button>
+        </div>
       )}
 
       {/* Stats */}
