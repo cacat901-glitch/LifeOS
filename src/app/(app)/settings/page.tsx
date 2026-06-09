@@ -27,7 +27,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: "profile", label: "Profile" }, { id: "appearance", label: "Appearance" },
     { id: "notifications", label: "Notifications" }, { id: "subscription", label: "Subscription" },
-    { id: "account", label: "Account" },
+    { id: "data", label: "Data & Export" }, { id: "account", label: "Account" },
   ];
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-muted/50" />)}</div>;
@@ -49,6 +49,7 @@ export default function SettingsPage() {
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "notifications" && <NotificationsTab user={user} onUpdate={setUser} />}
           {activeTab === "subscription" && <SubscriptionTab user={user} />}
+          {activeTab === "data" && <DataTab />}
           {activeTab === "account" && <AccountTab />}
         </div>
       </div>
@@ -257,5 +258,39 @@ function AccountTab() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+
+function DataTab() {
+  const download = (type: string, data?: string) => {
+    const url = data ? `/api/export?type=csv&data=${data}` : `/api/export?type=${type}`;
+    window.open(url, "_blank");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Data &amp; Export</CardTitle>
+        <CardDescription>Download a copy of your data anytime. Your data belongs to you.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {[
+          { title: "Export Everything (JSON)", desc: "All your data: habits, tasks, goals, journal, workouts, mood, finance, projects.", action: () => download("json"), label: "Download JSON" },
+          { title: "Export Journal (Markdown)", desc: "All journal entries formatted as readable Markdown.", action: () => download("markdown"), label: "Download Markdown" },
+          { title: "Export Transactions (CSV)", desc: "Finance transaction history for spreadsheet use.", action: () => download("csv", "transactions"), label: "Download CSV" },
+          { title: "Export Habits (CSV)", desc: "Habit list with streaks and completion stats.", action: () => download("csv", "habits"), label: "Download CSV" },
+          { title: "Export Mood Log (CSV)", desc: "Full mood history with emotions and factors.", action: () => download("csv", "mood"), label: "Download CSV" },
+        ].map((item) => (
+          <div key={item.title} className="flex items-center justify-between p-4 rounded-xl border">
+            <div>
+              <h4 className="font-medium text-sm">{item.title}</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={item.action} className="shrink-0 ml-4">{item.label}</Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

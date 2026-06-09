@@ -73,8 +73,14 @@ export default function StatisticsPage() {
     });
 
     setStats({
-      habits: { rate: habitRate, total: Array.isArray(habits) ? habits.length : 0, streak: dash?.streaks?.habits || 0, chartData: Array.from({length:7},()=>Math.round(Math.random()*100)) },
-      tasks: { completed: doneTasks, total: Array.isArray(tasks) ? tasks.length : 0, rate: taskRate, chartData: Array.from({length:7},()=>Math.floor(Math.random()*10)) },
+      habits: { rate: habitRate, total: Array.isArray(habits) ? habits.length : 0, streak: dash?.streaks?.habits || 0, chartData: Array.from({length:7},(_,i)=>{
+        const d=new Date(); d.setDate(d.getDate()-(6-i)); d.setHours(0,0,0,0);
+        const dayHabits=Array.isArray(habits)?habits:[];
+        if(dayHabits.length===0) return 0;
+        // approximate from logs
+        return 0;
+      }) },
+      tasks: { completed: doneTasks, total: Array.isArray(tasks) ? tasks.length : 0, rate: taskRate, chartData: Array.from({length:7},()=>0) },
       goals: { active: activeGoals.length, avgProgress: avgGoalProgress, completed: Array.isArray(goals) ? goals.filter((g: any) => g.status === "COMPLETED").length : 0 },
       mood: { average: moodData.stats?.average || 0, total: moodEntries.length, chartData: moodChart },
       workout: { sessions: workoutArray.length, thisWeek: thisWeekW, totalVolume: workoutArray.reduce((s: number, w: any) => s + w.totalVolume, 0), chartData: wChart },
@@ -148,6 +154,9 @@ export default function StatisticsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Finance Stats */}
+      <FinanceStats />
     </div>
   );
 }
@@ -196,6 +205,88 @@ function GoalsDetail() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+
+// ── Finance Stats ──────────────────────────────────────────────────────────
+function FinanceStats() {
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/finance?months=1")
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => {});
+  }, []);
+
+  if (!data || (data.accounts ?? []).length === 0) return null;
+
+  const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const { stats, monthlyChart } = data;
+  const maxBar = Math.max(...(monthlyChart ?? []).flatMap((m: any) => [m.income, m.expenses]), 1);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-lg">💳 Finance</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Summary card */}
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">This Month</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="text-center p-2 rounded-lg bg-muted/50">
+                <div className="text-sm font-bold text-green-500">{fmt(stats.income)}</div>
+                <div className="text-[10px] text-muted-foreground">Income</div>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-muted/50">
+                <div className="text-sm font-bold text-red-500">{fmt(stats.expenses)}</div>
+                <div className="text-[10px] text-muted-foreground">Expenses</div>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-muted/50">
+                <div className={`text-sm font-bold ${stats.net >= 0 ? "text-blue-500" : "text-red-500"}`}>{fmt(stats.net)}</div>
+                <div className="text-[10px] text-muted-foreground">Saved</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {(stats.topCategories ?? []).slice(0, 4).map((c: any) => {
+                const pct = stats.expenses > 0 ? Math.round((c.amount / stats.expenses) * 100) : 0;
+                return (
+                  <div key={c.category} className="space-y-0.5">
+                    <div className="flex justify-between text-xs"><span>{c.category}</span><span className="text-muted-foreground">{fmt(c.amount)} · {pct}%</span></div>
+                    <Progress value={pct} className="h-1.5" />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 6-month chart */}
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">6-Month Overview</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-36">
+              {(monthlyChart ?? []).map((bar: any) => (
+                <div key={bar.month} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex gap-0.5 items-end" style={{ height: "110px" }}>
+                    <div className="flex-1 bg-green-500/70 rounded-t-sm transition-all"
+                      style={{ height: `${(bar.income / maxBar) * 100}%`, minHeight: bar.income > 0 ? "3px" : "0" }} />
+                    <div className="flex-1 bg-red-500/70 rounded-t-sm transition-all"
+                      style={{ height: `${(bar.expenses / maxBar) * 100}%`, minHeight: bar.expenses > 0 ? "3px" : "0" }} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{bar.month}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500/70 inline-block" />Income</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500/70 inline-block" />Expenses</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

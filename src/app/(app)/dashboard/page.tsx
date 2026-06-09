@@ -282,6 +282,9 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {/* Finance Widget */}
+      <FinanceWidget />
+
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Quick Actions</CardTitle></CardHeader>
@@ -338,5 +341,62 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+// ── Finance Widget ─────────────────────────────────────────────────────────
+function FinanceWidget() {
+  const [data, setData] = useState<{ stats: any; accounts: any[]; transactions: any[] } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/finance?months=1")
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => {});
+  }, []);
+
+  if (!data || data.accounts.length === 0) return null;
+
+  const { stats, accounts, transactions } = data;
+
+  function fmt(n: number) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-base font-semibold">Finance</CardTitle>
+        <Link href="/finance" className="text-xs text-primary hover:underline">View All</Link>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="text-center p-3 rounded-xl bg-muted/50">
+            <div className={`text-lg font-bold ${stats.netWorth >= 0 ? "text-green-500" : "text-red-500"}`}>{fmt(stats.netWorth)}</div>
+            <div className="text-xs text-muted-foreground">Net Worth</div>
+          </div>
+          <div className="text-center p-3 rounded-xl bg-muted/50">
+            <div className="text-lg font-bold text-green-500">+{fmt(stats.income)}</div>
+            <div className="text-xs text-muted-foreground">Income</div>
+          </div>
+          <div className="text-center p-3 rounded-xl bg-muted/50">
+            <div className="text-lg font-bold text-red-500">-{fmt(stats.expenses)}</div>
+            <div className="text-xs text-muted-foreground">Expenses</div>
+          </div>
+        </div>
+        {transactions.slice(0, 3).map((tx: any) => (
+          <div key={tx.id} className="flex items-center gap-3 py-2 border-t first:border-0">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 ${tx.type === "INCOME" ? "bg-green-500/15 text-green-500" : "bg-red-500/15 text-red-500"}`}>
+              {tx.type === "INCOME" ? "↑" : "↓"}
+            </div>
+            <span className="flex-1 text-sm truncate">{tx.title}</span>
+            <span className={`text-sm font-medium shrink-0 ${tx.type === "INCOME" ? "text-green-500" : "text-red-500"}`}>
+              {tx.type === "INCOME" ? "+" : "-"}{fmt(tx.amount)}
+            </span>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
