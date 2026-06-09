@@ -58,8 +58,8 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm text-muted-foreground">
                   If an account exists with that email, you&apos;ll receive a password reset link shortly.
                 </p>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/auth/login">Back to Sign In</Link>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/auth/login"}>
+                  Back to Sign In
                 </Button>
               </div>
             ) : (
