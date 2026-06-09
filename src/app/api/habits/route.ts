@@ -139,3 +139,20 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+
+// DELETE /api/habits - Archive (soft-delete) a habit
+export async function DELETE(req: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { habitId } = await req.json();
+    await prisma.habit.update({
+      where: { id: habitId, userId: session.user.id },
+      data: { isArchived: true, isActive: false },
+    });
+    return NextResponse.json({ message: "Habit deleted" });
+  } catch (error) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
