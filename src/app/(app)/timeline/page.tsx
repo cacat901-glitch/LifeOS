@@ -26,7 +26,7 @@ function groupByDate(events: TimelineEvent[]) {
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(e);
   }
-  return [...map.entries()].sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  return Array.from(map.entries()).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
 }
 
 export default function TimelinePage() {
