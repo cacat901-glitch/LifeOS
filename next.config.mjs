@@ -12,7 +12,9 @@ const nextConfig = {
       },
     ],
   },
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
+  },
 };
 
 export default nextConfig;
