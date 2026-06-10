@@ -31,14 +31,14 @@ export async function GET(req: Request) {
       return new NextResponse(JSON.stringify(payload, null, 2), {
         headers: {
           "Content-Type": "application/json",
-          "Content-Disposition": `attachment; filename="lifeos-export-${new Date().toISOString().slice(0,10)}.json"`,
+          "Content-Disposition": `attachment; filename="novus-export-${new Date().toISOString().slice(0,10)}.json"`,
         },
       });
     }
 
     // ── Markdown journal export ──────────────────────────────────────────────
     if (type === "markdown") {
-      const lines: string[] = [`# LifeOS Journal Export\n*Exported: ${new Date().toLocaleDateString()}*\n\n---\n`];
+      const lines: string[] = [`# Novus Journal Export\n*Exported: ${new Date().toLocaleDateString()}*\n\n---\n`];
       for (const entry of journal) {
         lines.push(`## ${entry.title || "Untitled"}`);
         lines.push(`*${new Date(entry.date).toLocaleDateString()}*${entry.moodEmoji ? ` · ${entry.moodEmoji}` : ""}`);
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
       return new NextResponse(lines.join("\n"), {
         headers: {
           "Content-Type": "text/markdown",
-          "Content-Disposition": `attachment; filename="lifeos-journal-${new Date().toISOString().slice(0,10)}.md"`,
+          "Content-Disposition": `attachment; filename="novus-journal-${new Date().toISOString().slice(0,10)}.md"`,
         },
       });
     }
@@ -74,7 +74,7 @@ export async function GET(req: Request) {
         return new NextResponse(csv, {
           headers: {
             "Content-Type": "text/csv",
-            "Content-Disposition": `attachment; filename="lifeos-transactions-${new Date().toISOString().slice(0,10)}.csv"`,
+            "Content-Disposition": `attachment; filename="novus-transactions-${new Date().toISOString().slice(0,10)}.csv"`,
           },
         });
       }
@@ -88,7 +88,7 @@ export async function GET(req: Request) {
         return new NextResponse(csv, {
           headers: {
             "Content-Type": "text/csv",
-            "Content-Disposition": `attachment; filename="lifeos-habits-${new Date().toISOString().slice(0,10)}.csv"`,
+            "Content-Disposition": `attachment; filename="novus-habits-${new Date().toISOString().slice(0,10)}.csv"`,
           },
         });
       }
@@ -109,7 +109,7 @@ export async function GET(req: Request) {
         return new NextResponse(csv, {
           headers: {
             "Content-Type": "text/csv",
-            "Content-Disposition": `attachment; filename="lifeos-mood-${new Date().toISOString().slice(0,10)}.csv"`,
+            "Content-Disposition": `attachment; filename="novus-mood-${new Date().toISOString().slice(0,10)}.csv"`,
           },
         });
       }

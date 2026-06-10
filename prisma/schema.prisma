@@ -1,4 +1,4 @@
-// LifeOS - Complete Database Schema
+// Novus - Complete Database Schema
 // Production-grade relational database with full feature coverage
 
 generator client {

@@ -1,138 +1,280 @@
 "use client";
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useRef } from "react";
+import Link from "next/link";
+import { motion, useScroll, useTransform, type Variants } from "framer-motion";
+import { NovusMark, NovusLogo } from "@/components/shared/novus-logo";
 
-// ============================================================
-// LANDING PAGE - Complete SaaS Landing
-// ============================================================
+const ease: [number, number, number, number] = [0.2, 0.8, 0.2, 1];
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
+};
+const stagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12 } },
+};
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <TestimonialsSection />
-      <PricingSection />
-      <FAQSection />
-      <CTASection />
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+      <div className="aurora"><div className="aurora-blob" /></div>
+      <div className="noise" />
+      <Nav />
+      <Hero />
+      <Marquee />
+      <Manifesto />
+      <Features />
+      <AISection />
+      <CommandSection />
+      <HowItWorks />
+      <Testimonials />
+      <Pricing />
+      <FAQ />
+      <CTA />
       <Footer />
     </div>
   );
 }
 
-// ============================================================
-// NAVBAR
-// ============================================================
-
-function Navbar() {
+// ── Nav ────────────────────────────────────────────────────
+function Nav() {
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease }}
+      className="fixed top-0 inset-x-0 z-50"
+    >
+      <div className="max-w-6xl mx-auto px-4 mt-4">
+        <div className="flex items-center justify-between h-14 px-5 glass rounded-2xl">
+          <NovusLogo size="sm" />
+          <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#ai" className="hover:text-foreground transition-colors">Novus AI</a>
+            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+          </div>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">L</span>
-            </div>
-            <span className="font-bold text-xl">LifeOS</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-            <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              <a href="/auth/login">Log In</a>
-            </Button>
-            <Button size="sm" variant="glow">
-              <a href="/auth/register">Start Free</a>
-            </Button>
+            <Link href="/auth/login" className="text-sm px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors">Log in</Link>
+            <Link href="/auth/register" className="text-sm font-medium px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_8px_24px_-8px_rgba(99,102,241,0.8)] hover:opacity-90 transition-opacity">
+              Start free
+            </Link>
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
-// ============================================================
-// HERO
-// ============================================================
+// ── Hero ───────────────────────────────────────────────────
+function Hero() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.94]);
 
-function HeroSection() {
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-      {/* Background mesh gradient */}
-      <div className="absolute inset-0 mesh-gradient" />
-      
-      {/* Floating orbs */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+    <section ref={ref} className="relative pt-40 md:pt-52 pb-24 px-4">
+      <motion.div style={{ y, opacity, scale }} className="max-w-5xl mx-auto text-center">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Now with Novus AI — powered by Gemini
+        </motion.div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <Badge variant="secondary" className="mb-6 px-4 py-1.5">
-          ✨ Your personal operating system
-        </Badge>
-        
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight max-w-4xl mx-auto leading-[1.1]">
-          One app to run your{" "}
-          <span className="gradient-text">entire life.</span>
-        </h1>
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.1 }}
+          className="text-5xl sm:text-6xl md:text-8xl font-semibold tracking-tight leading-[0.95] text-balance"
+        >
+          Your personal
+          <br />
+          <span className="gradient-text-aurora">operating system.</span>
+        </motion.h1>
 
-        <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Journal, habits, goals, workouts, mood tracking, and AI insights — all in one premium platform. 
-          Stop switching between apps. Start living intentionally.
-        </p>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.25 }}
+          className="mt-7 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty"
+        >
+          Novus is the intelligent companion for your entire life. One calm, beautiful place to think, plan, reflect, and grow — guided by an AI that understands the bigger picture.
+        </motion.p>
 
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="xl" variant="glow">
-            <a href="/auth/register" className="flex items-center gap-2">
-              Start Free
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </a>
-          </Button>
-          <Button size="xl" variant="outline">
-            <a href="#features">See Features</a>
-          </Button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.4 }}
+          className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
+        >
+          <Link href="/auth/register"
+            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium text-base shadow-[0_12px_40px_-8px_rgba(99,102,241,0.7)] hover:shadow-[0_16px_50px_-8px_rgba(99,102,241,0.9)] transition-all">
+            Start free
+            <svg className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </Link>
+          <a href="#ai"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-2xl glass font-medium text-base hover:bg-muted/40 transition-colors">
+            See Novus AI
+          </a>
+        </motion.div>
+        <p className="mt-4 text-xs text-muted-foreground">Free forever. No credit card required.</p>
+      </motion.div>
 
-        <p className="mt-4 text-xs text-muted-foreground">
-          Free forever. No credit card required.
-        </p>
-
-        {/* Dashboard Preview */}
-        <div className="mt-16 relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
-          <div className="rounded-2xl border bg-card/50 backdrop-blur-sm p-2 shadow-2xl max-w-5xl mx-auto">
-            <div className="rounded-xl bg-card border overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b bg-muted/30">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                </div>
-                <div className="flex-1 text-center">
-                  <div className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    app.lifeos.io/dashboard
+      {/* Floating product mock */}
+      <motion.div
+        initial={{ opacity: 0, y: 60, rotateX: 12 }} animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 1, ease, delay: 0.5 }}
+        className="relative max-w-4xl mx-auto mt-20"
+        style={{ perspective: 1200 }}
+      >
+        <div className="glass-panel rounded-[28px] p-2 shadow-2xl">
+          <div className="rounded-[22px] overflow-hidden bg-background/60 border border-border/40">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40">
+              <div className="flex gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-red-400/70" />
+                <span className="w-3 h-3 rounded-full bg-amber-400/70" />
+                <span className="w-3 h-3 rounded-full bg-emerald-400/70" />
+              </div>
+            </div>
+            <div className="p-7">
+              <div className="flex items-start gap-4">
+                <div className="pulse-ring relative"><NovusMark size="md" /></div>
+                <div className="flex-1">
+                  <div className="text-[11px] uppercase tracking-wide text-primary/70 mb-2">Novus Briefing</div>
+                  <p className="text-base md:text-lg font-medium leading-relaxed text-foreground/90">
+                    Good evening, David. Today was productive — you completed your workout and held your 12-day streak. You&apos;re 68% toward your marathon goal. Today&apos;s focus: one deep-work block on your project.
+                  </p>
+                  <div className="flex gap-2 mt-4">
+                    <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-medium">Ask Novus</span>
+                    <span className="px-3 py-1.5 rounded-full bg-muted/50 text-xs">Review goals</span>
                   </div>
                 </div>
               </div>
-              <div className="p-8 min-h-[300px] bg-gradient-to-br from-background to-muted/30">
-                <DashboardPreview />
-              </div>
             </div>
+          </div>
+        </div>
+        <div className="absolute -inset-x-12 -bottom-12 h-40 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Marquee ────────────────────────────────────────────────
+function Marquee() {
+  const items = ["Journal", "Habits", "Goals", "Tasks", "Projects", "Finance", "Workouts", "Mood", "Timeline", "AI Coach"];
+  return (
+    <div className="relative py-8 overflow-hidden border-y border-border/40">
+      <motion.div
+        className="flex gap-10 whitespace-nowrap"
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+      >
+        {[...items, ...items].map((it, i) => (
+          <span key={i} className="text-2xl font-medium text-muted-foreground/40 flex items-center gap-10">
+            {it} <span className="text-primary/30">✦</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Manifesto ──────────────────────────────────────────────
+function Manifesto() {
+  return (
+    <section className="py-28 md:py-40 px-4">
+      <motion.div
+        variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}
+        className="max-w-4xl mx-auto text-center"
+      >
+        <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-6">The philosophy</motion.p>
+        <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-balance">
+          Not another habit tracker. Not another to-do list.
+          <span className="text-muted-foreground"> A second brain that helps you run your entire life.</span>
+        </motion.h2>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── Features ───────────────────────────────────────────────
+const features = [
+  { icon: "✦", title: "Living journal", desc: "Write, reflect, and watch patterns emerge across your moods and days." },
+  { icon: "◎", title: "Habits & streaks", desc: "Design the rhythm of your days with heatmaps and momentum tracking." },
+  { icon: "✧", title: "Goals & milestones", desc: "Set meaningful goals and see your trajectory toward them, visually." },
+  { icon: "⟁", title: "Workout intelligence", desc: "Log sessions, sets, and PRs. Novus connects training to your wellbeing." },
+  { icon: "◈", title: "Finance clarity", desc: "Track income, expenses and net worth with calm, beautiful charts." },
+  { icon: "❖", title: "Projects", desc: "Plan work with kanban boards, notes and progress — all in one canvas." },
+];
+
+function Features() {
+  return (
+    <section id="features" className="py-24 px-4">
+      <div className="max-w-6xl mx-auto">
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+          <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-4">Everything, unified</motion.p>
+          <motion.h2 variants={fadeUp} className="text-4xl md:text-6xl font-semibold tracking-tight">One canvas for your life.</motion.h2>
+        </motion.div>
+
+        <motion.div
+          variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
+          {features.map((f) => (
+            <motion.div key={f.title} variants={fadeUp}
+              className="group glass-panel rounded-[24px] p-7 lift">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+                {f.icon}
+              </div>
+              <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ── AI Section ─────────────────────────────────────────────
+function AISection() {
+  return (
+    <section id="ai" className="py-28 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="relative glass-panel rounded-[36px] p-8 md:p-16 overflow-hidden">
+          <div className="absolute -top-32 -right-20 w-96 h-96 rounded-full bg-violet-500/20 blur-3xl" />
+          <div className="absolute -bottom-32 -left-20 w-96 h-96 rounded-full bg-indigo-500/20 blur-3xl" />
+
+          <div className="relative grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium mb-6">
+                <NovusMark size="sm" className="!h-4 !w-4 !text-[9px] !rounded-md" /> Novus AI
+              </motion.div>
+              <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5">
+                A companion that actually <span className="gradient-text">knows you.</span>
+              </motion.h2>
+              <motion.p variants={fadeUp} className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Every morning, Novus reads your whole life — habits, goals, mood, training, finances — and tells you what matters today. It&apos;s not a chatbot in a corner. It&apos;s the intelligence at the center of everything.
+              </motion.p>
+              <motion.ul variants={fadeUp} className="space-y-3">
+                {["Personalized daily briefings", "Pattern recognition across your life", "Ask anything, grounded in your real data", "Built on a swappable provider layer"].map((t) => (
+                  <li key={t} className="flex items-center gap-3 text-sm">
+                    <span className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </motion.ul>
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+              className="glass rounded-[24px] p-6 space-y-4">
+              <ChatBubble role="user">What should I focus on today?</ChatBubble>
+              <ChatBubble role="ai">
+                You&apos;ve held your meditation streak for 15 days — keep that anchor. Your mathematics project is the highest-leverage thing on your list. Block two focused hours this morning while your energy is highest, then reward yourself with the workout you planned.
+              </ChatBubble>
+              <ChatBubble role="user">Am I on track for my savings goal?</ChatBubble>
+              <ChatBubble role="ai">
+                You&apos;re at 82% with two months to spare. At your current pace you&apos;ll arrive early — nicely done.
+              </ChatBubble>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -140,527 +282,214 @@ function HeroSection() {
   );
 }
 
-function DashboardPreview() {
+function ChatBubble({ role, children }: { role: "user" | "ai"; children: React.ReactNode }) {
+  const isUser = role === "user";
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Life Score */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="text-xs text-muted-foreground mb-2">Life Score</div>
-        <div className="text-3xl font-bold gradient-text">87</div>
-        <div className="text-xs text-green-500 mt-1">↑ 5% from last week</div>
-        <div className="mt-3 h-2 bg-primary/20 rounded-full overflow-hidden">
-          <div className="h-full w-[87%] bg-primary rounded-full" />
-        </div>
-      </div>
-
-      {/* Today's Habits */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="text-xs text-muted-foreground mb-2">Today&apos;s Habits</div>
-        <div className="text-3xl font-bold">5/7</div>
-        <div className="text-xs text-muted-foreground mt-1">🔥 12 day streak</div>
-        <div className="mt-3 flex gap-1">
-          {[true, true, true, true, true, false, false].map((done, i) => (
-            <div key={i} className={`h-2 flex-1 rounded-full ${done ? "bg-green-500" : "bg-muted"}`} />
-          ))}
-        </div>
-      </div>
-
-      {/* Mood */}
-      <div className="rounded-xl border bg-card p-4">
-        <div className="text-xs text-muted-foreground mb-2">Today&apos;s Mood</div>
-        <div className="text-3xl">😊</div>
-        <div className="text-xs text-muted-foreground mt-1">Feeling good</div>
-        <div className="mt-3 flex items-center gap-1">
-          {[6, 7, 8, 7, 8, 9, 8].map((m, i) => (
-            <div key={i} className="flex-1 bg-primary/20 rounded-full overflow-hidden h-8 flex items-end">
-              <div className="w-full bg-primary/60 rounded-full" style={{ height: `${m * 10}%` }} />
-            </div>
-          ))}
-        </div>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+        isUser ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white" : "bg-muted/60 text-foreground"
+      }`}>
+        {children}
       </div>
     </div>
   );
 }
 
-// ============================================================
-// FEATURES
-// ============================================================
-
-const features = [
-  {
-    icon: "📓",
-    title: "Smart Journal",
-    description: "Rich text editor with mood tracking, tags, AI insights, and reflections. Your thoughts, organized beautifully.",
-  },
-  {
-    icon: "✅",
-    title: "Habit Tracker",
-    description: "Build powerful routines with streaks, heatmaps, analytics, and custom frequencies. Never break the chain.",
-  },
-  {
-    icon: "🎯",
-    title: "Goals & Milestones",
-    description: "Set quarterly, monthly, and long-term goals. Track progress with milestones and visual analytics.",
-  },
-  {
-    icon: "💪",
-    title: "Gym Tracker",
-    description: "Log workouts with sets, reps, weight, RPE. Track personal records, volume, and strength progression.",
-  },
-  {
-    icon: "📊",
-    title: "Life Score",
-    description: "A single score that reflects your daily performance across all areas. Track trends and breakdowns.",
-  },
-  {
-    icon: "🧠",
-    title: "AI Insights",
-    description: "Get personalized daily briefings, pattern recognition, and actionable suggestions powered by AI.",
-  },
-  {
-    icon: "📋",
-    title: "Task Management",
-    description: "Priorities, deadlines, categories, and focus mode. Get things done without the complexity.",
-  },
-  {
-    icon: "💜",
-    title: "Mood Tracking",
-    description: "Log daily moods, emotions, and factors. Understand patterns in your mental wellbeing over time.",
-  },
-  {
-    icon: "🏆",
-    title: "Achievements",
-    description: "Subtle gamification with XP, levels, and achievements. Professional motivation without the noise.",
-  },
-];
-
-function FeaturesSection() {
+// ── Command Section ────────────────────────────────────────
+function CommandSection() {
   return (
-    <section id="features" className="py-20 md:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">Features</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Everything you need.{" "}
-            <span className="text-muted-foreground">Nothing you don&apos;t.</span>
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Replace 7+ apps with one unified experience. Designed for people who take their growth seriously.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, i) => (
-            <Card key={i} className="card-hover border-border/50 bg-card/50">
-              <CardContent className="p-6">
-                <div className="text-3xl mb-4">{feature.icon}</div>
-                <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ============================================================
-// HOW IT WORKS
-// ============================================================
-
-const steps = [
-  {
-    step: "01",
-    title: "Sign up in seconds",
-    description: "Create your free account with email or Google. No credit card required.",
-  },
-  {
-    step: "02",
-    title: "Set up your life areas",
-    description: "Configure your habits, goals, and preferences. The system adapts to your lifestyle.",
-  },
-  {
-    step: "03",
-    title: "Track daily",
-    description: "Log your habits, moods, workouts, and tasks. Takes less than 5 minutes a day.",
-  },
-  {
-    step: "04",
-    title: "Grow with insights",
-    description: "Get AI-powered insights, track your Life Score, and watch yourself improve over time.",
-  },
-];
-
-function HowItWorksSection() {
-  return (
-    <section id="how-it-works" className="py-20 md:py-32 bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">How It Works</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Simple by design.{" "}
-            <span className="text-muted-foreground">Powerful by nature.</span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((step, i) => (
-            <div key={i} className="relative text-center">
-              <div className="text-5xl font-bold text-primary/20 mb-4">{step.step}</div>
-              <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-8 right-0 w-1/2 h-[2px] bg-gradient-to-r from-primary/20 to-transparent" />
-              )}
+    <section className="py-24 px-4">
+      <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+        className="max-w-4xl mx-auto text-center">
+        <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-4">The command center</motion.p>
+        <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">
+          Do anything in a keystroke.
+        </motion.h2>
+        <motion.p variants={fadeUp} className="text-muted-foreground text-lg mb-10">
+          Press <kbd className="px-2 py-1 rounded-lg bg-muted/60 border border-border/60 text-sm">⌘K</kbd> anywhere to create, navigate, search, or ask Novus.
+        </motion.p>
+        <motion.div variants={fadeUp} className="glass-strong rounded-[24px] overflow-hidden text-left max-w-xl mx-auto ring-1 ring-white/10">
+          <div className="flex items-center gap-3 px-5 h-14 border-b border-border/60">
+            <NovusMark size="sm" />
+            <span className="text-muted-foreground text-sm">Ask Novus anything…</span>
+            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-muted/60 border border-border/60">ESC</kbd>
+          </div>
+          {["Create Task", "Start Workout", "Create Journal Entry", "Ask Novus"].map((c, i) => (
+            <div key={c} className={`flex items-center gap-3 px-5 py-3 text-sm ${i === 3 ? "bg-primary/10" : ""}`}>
+              <span className="w-2 h-2 rounded-full bg-primary/50" />
+              {c}
             </div>
           ))}
-        </div>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── How it works ───────────────────────────────────────────
+function HowItWorks() {
+  const steps = [
+    { n: "01", t: "Bring your life in", d: "Add your habits, goals, finances and more. It takes minutes." },
+    { n: "02", t: "Novus learns the picture", d: "The AI reads your patterns and understands what matters." },
+    { n: "03", t: "Get guided every day", d: "Wake up to a briefing and act with clarity and momentum." },
+  ];
+  return (
+    <section className="py-24 px-4 bg-muted/10">
+      <div className="max-w-5xl mx-auto">
+        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-16">How it works</motion.h2>
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="grid md:grid-cols-3 gap-6">
+          {steps.map((s) => (
+            <motion.div key={s.n} variants={fadeUp} className="glass-panel rounded-[24px] p-7">
+              <div className="text-5xl font-semibold gradient-text mb-4">{s.n}</div>
+              <h3 className="text-lg font-semibold mb-2">{s.t}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{s.d}</p>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
 }
 
-// ============================================================
-// TESTIMONIALS
-// ============================================================
-
+// ── Testimonials ───────────────────────────────────────────
 const testimonials = [
-  {
-    name: "Alex Chen",
-    role: "Software Engineer",
-    avatar: "AC",
-    content: "LifeOS replaced 5 different apps for me. The integration between habits, goals, and the gym tracker is incredible. My Life Score keeps me motivated every day.",
-  },
-  {
-    name: "Sarah Mitchell",
-    role: "Product Designer",
-    avatar: "SM",
-    content: "The journal feature with AI insights helped me understand patterns in my mood I never noticed before. The design is stunning — feels like an Apple product.",
-  },
-  {
-    name: "Marcus Rodriguez",
-    role: "Entrepreneur",
-    avatar: "MR",
-    content: "Finally, one place to manage everything. The dashboard gives me a clear picture of my life in seconds. The gym tracker alone is worth it.",
-  },
-  {
-    name: "Emily Park",
-    role: "Medical Student",
-    avatar: "EP",
-    content: "The habit tracker with heatmaps keeps me accountable during med school. The achievement system makes the grind feel rewarding without being childish.",
-  },
-  {
-    name: "James Wilson",
-    role: "Fitness Coach",
-    avatar: "JW",
-    content: "The workout tracking is on par with dedicated gym apps, but having it connected to my goals and mood data gives me a complete picture of my clients' progress.",
-  },
-  {
-    name: "Lisa Thompson",
-    role: "Writer",
-    avatar: "LT",
-    content: "The journal system is beautiful. Rich text, mood selection, weekly reflections — it's become my daily ritual. The Life Timeline feature is like a personal biography.",
-  },
+  { name: "Alex Chen", role: "Software Engineer", initials: "AC", quote: "Novus replaced five apps. The morning briefing genuinely changes how I start my day." },
+  { name: "Sarah Mitchell", role: "Designer", initials: "SM", quote: "It feels less like software and more like a calm, intelligent companion. The design is breathtaking." },
+  { name: "Marcus Rodriguez", role: "Founder", initials: "MR", quote: "The command center alone is worth it. ⌘K and I'm doing anything in a second." },
+  { name: "Emily Park", role: "Medical Student", initials: "EP", quote: "Novus AI noticed patterns in my mood and study habits I never would have seen myself." },
 ];
 
-function TestimonialsSection() {
+function Testimonials() {
   return (
-    <section className="py-20 md:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">Testimonials</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Loved by{" "}
-            <span className="gradient-text">thousands</span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <Card key={i} className="border-border/50 bg-card/50">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.role}</div>
-                  </div>
+    <section className="py-24 px-4">
+      <div className="max-w-6xl mx-auto">
+        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-16">
+          Loved by people who take growth <span className="gradient-text">seriously.</span>
+        </motion.h2>
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {testimonials.map((t) => (
+            <motion.div key={t.name} variants={fadeUp} className="glass-panel rounded-[24px] p-7">
+              <p className="text-lg leading-relaxed mb-5 text-foreground/90">&ldquo;{t.quote}&rdquo;</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-sm font-semibold text-white">{t.initials}</div>
+                <div>
+                  <div className="text-sm font-medium">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{t.role}</div>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">{t.content}</p>
-                <div className="flex gap-0.5 mt-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg key={star} className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 }
 
-// ============================================================
-// PRICING
-// ============================================================
-
-function PricingSection() {
+// ── Pricing ────────────────────────────────────────────────
+function Pricing() {
   return (
-    <section id="pricing" className="py-20 md:py-32 bg-muted/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">Pricing</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Start free.{" "}
-            <span className="text-muted-foreground">Upgrade when ready.</span>
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            No hidden fees. No surprises. Cancel anytime.
-          </p>
-        </div>
+    <section id="pricing" className="py-24 px-4">
+      <div className="max-w-5xl mx-auto">
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
+          <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight">Start free. Upgrade when ready.</motion.h2>
+        </motion.div>
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <motion.div variants={fadeUp} className="glass-panel rounded-[28px] p-8">
+            <h3 className="text-xl font-semibold mb-1">Free</h3>
+            <p className="text-sm text-muted-foreground mb-6">Everything you need to begin.</p>
+            <div className="text-4xl font-semibold mb-6">$0<span className="text-base text-muted-foreground font-normal">/mo</span></div>
+            <ul className="space-y-3 mb-8">
+              {["Up to 3 habits", "Journal & tasks", "Goals & mood", "Daily AI briefing"].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm"><Check /> {f}</li>
+              ))}
+            </ul>
+            <Link href="/auth/register" className="block text-center py-3 rounded-2xl glass font-medium hover:bg-muted/40 transition-colors">Get started</Link>
+          </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Free Plan */}
-          <Card className="border-border/50 relative">
-            <CardContent className="p-8">
-              <h3 className="text-xl font-bold mb-1">Free</h3>
-              <p className="text-sm text-muted-foreground mb-6">Perfect to get started</p>
-              <div className="text-4xl font-bold mb-6">
-                $0<span className="text-lg text-muted-foreground font-normal">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Up to 3 habits",
-                  "Basic journal (30 entries/mo)",
-                  "Basic task management",
-                  "Limited analytics",
-                  "7-day mood history",
-                ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" className="w-full" size="lg">
-                <a href="/auth/register">Get Started</a>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Pro Plan */}
-          <Card className="border-primary/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg">
-              Popular
-            </div>
-            <CardContent className="p-8">
-              <h3 className="text-xl font-bold mb-1">Pro</h3>
-              <p className="text-sm text-muted-foreground mb-6">For serious self-improvers</p>
-              <div className="text-4xl font-bold mb-6">
-                $9.99<span className="text-lg text-muted-foreground font-normal">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Unlimited habits",
-                  "Unlimited journal entries",
-                  "Advanced analytics & charts",
-                  "Life Timeline",
-                  "AI Insights & Daily Briefing",
-                  "Full statistics hub",
-                  "Workout programs",
-                  "Goal milestones",
-                  "Data export",
-                  "Priority support",
-                ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    <svg className="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Button variant="glow" className="w-full" size="lg">
-                <a href="/auth/register">Start Free Trial</a>
-              </Button>
-              <p className="text-xs text-center text-muted-foreground mt-3">
-                7-day free trial. Cancel anytime.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+          <motion.div variants={fadeUp} className="relative glass-panel rounded-[28px] p-8 ring-2 ring-primary/40 overflow-hidden">
+            <div className="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-medium rounded-bl-2xl">Popular</div>
+            <h3 className="text-xl font-semibold mb-1">Pro</h3>
+            <p className="text-sm text-muted-foreground mb-6">The full Novus intelligence.</p>
+            <div className="text-4xl font-semibold mb-6">$9.99<span className="text-base text-muted-foreground font-normal">/mo</span></div>
+            <ul className="space-y-3 mb-8">
+              {["Unlimited everything", "Advanced Novus AI", "Life Timeline", "Full statistics", "Finance & projects", "Data export"].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm"><Check /> {f}</li>
+              ))}
+            </ul>
+            <Link href="/auth/register" className="block text-center py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium shadow-[0_12px_32px_-8px_rgba(99,102,241,0.7)] hover:opacity-90 transition-opacity">Start 7-day trial</Link>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
 }
 
-// ============================================================
-// FAQ
-// ============================================================
+function Check() {
+  return <span className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg></span>;
+}
 
+// ── FAQ ────────────────────────────────────────────────────
 const faqs = [
-  {
-    q: "Is LifeOS really free?",
-    a: "Yes! The free plan includes essential features to get started with habits, journaling, and task management. Upgrade to Pro for unlimited access and AI features.",
-  },
-  {
-    q: "Can I export my data?",
-    a: "Absolutely. Pro users can export all their data (journal entries, habits, workouts, etc.) in JSON or CSV format at any time. Your data belongs to you.",
-  },
-  {
-    q: "Is my data private and secure?",
-    a: "We use industry-standard encryption and security practices. Your data is never sold or shared. Journal entries are encrypted at rest.",
-  },
-  {
-    q: "Does it work on mobile?",
-    a: "LifeOS is fully responsive and works beautifully on all devices — phone, tablet, and desktop. A native app is coming soon.",
-  },
-  {
-    q: "How does the AI feature work?",
-    a: "Our AI analyzes your patterns across habits, mood, goals, and workouts to provide personalized insights and daily briefings. It helps you understand trends you might miss.",
-  },
-  {
-    q: "Can I cancel my subscription anytime?",
-    a: "Yes, you can cancel your Pro subscription at any time. You'll retain access until the end of your billing period, then revert to the free plan.",
-  },
+  { q: "Is Novus really free?", a: "Yes. The free plan covers the essentials including a daily AI briefing. Upgrade to Pro for unlimited use and advanced intelligence." },
+  { q: "How does Novus AI work?", a: "Novus reads your real data — habits, goals, mood, finances — and generates personalized guidance. It's built on a provider layer (currently Google Gemini) so it can evolve over time." },
+  { q: "Is my data private?", a: "Your data is yours. It's encrypted, never sold, and you can export everything at any time." },
+  { q: "Does it work on mobile?", a: "Novus is fully responsive and beautiful on every device. A native app is on the roadmap." },
 ];
 
-function FAQSection() {
+function FAQ() {
   return (
-    <section id="faq" className="py-20 md:py-32">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">FAQ</Badge>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
-            Common questions
-          </h2>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <Card key={i} className="border-border/50">
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">{faq.q}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </CardContent>
-            </Card>
+    <section id="faq" className="py-24 px-4">
+      <div className="max-w-3xl mx-auto">
+        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-14">Questions</motion.h2>
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="space-y-4">
+          {faqs.map((f) => (
+            <motion.div key={f.q} variants={fadeUp} className="glass-panel rounded-[20px] p-6">
+              <h3 className="font-semibold mb-2">{f.q}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 }
 
-// ============================================================
-// CTA
-// ============================================================
-
-function CTASection() {
+// ── CTA ────────────────────────────────────────────────────
+function CTA() {
   return (
-    <section className="py-20 md:py-32 bg-muted/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-          Ready to take control of your life?
-        </h2>
-        <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-          Join thousands of people who use LifeOS to build better habits, achieve their goals, and live more intentionally.
-        </p>
-        <Button size="xl" variant="glow">
-          <a href="/auth/register" className="flex items-center gap-2">
-            Start Free Today
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </a>
-        </Button>
-      </div>
+    <section className="py-32 px-4">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+        className="relative max-w-4xl mx-auto text-center glass-panel rounded-[36px] p-12 md:p-20 overflow-hidden">
+        <div className="absolute inset-0 mesh-gradient opacity-60" />
+        <div className="relative">
+          <NovusMark size="lg" className="mx-auto mb-8 animate-float" />
+          <h2 className="text-4xl md:text-6xl font-semibold tracking-tight mb-5 text-balance">Begin your operating system.</h2>
+          <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">Join thousands building a more intentional life with Novus.</p>
+          <Link href="/auth/register"
+            className="inline-flex items-center justify-center gap-2 h-14 px-10 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium text-lg shadow-[0_16px_50px_-8px_rgba(99,102,241,0.8)] hover:shadow-[0_20px_60px_-8px_rgba(99,102,241,1)] transition-all">
+            Start free today
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+          </Link>
+        </div>
+      </motion.div>
     </section>
   );
 }
 
-// ============================================================
-// FOOTER
-// ============================================================
-
+// ── Footer ─────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="border-t py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-white font-bold text-sm">L</span>
-              </div>
-              <span className="font-bold text-lg">LifeOS</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Your all-in-one personal operating system.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-sm">Product</h4>
-            <ul className="space-y-2">
-              {["Features", "Pricing", "Changelog", "Roadmap"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-sm">Company</h4>
-            <ul className="space-y-2">
-              {["About", "Blog", "Careers", "Contact"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-sm">Legal</h4>
-            <ul className="space-y-2">
-              {["Privacy", "Terms", "Security", "GDPR"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} LifeOS. All rights reserved.
-          </p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            {["Twitter", "GitHub", "Discord"].map((social) => (
-              <a key={social} href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {social}
-              </a>
-            ))}
-          </div>
-        </div>
+    <footer className="border-t border-border/40 py-12 px-4">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+        <NovusLogo size="sm" />
+        <p className="text-sm text-muted-foreground">Your personal operating system.</p>
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Novus. All rights reserved.</p>
       </div>
     </footer>
   );
