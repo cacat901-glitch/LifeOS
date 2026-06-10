@@ -1,16 +1,19 @@
-// LifeOS Constants
+// Novus Constants
 
-export const APP_NAME = "LifeOS";
-export const APP_DESCRIPTION = "Your All-in-One Personal Operating System";
+export const APP_NAME = "Novus";
+export const APP_DESCRIPTION = "Your personal operating system";
+export const APP_TAGLINE = "Your personal operating system.";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 // Navigation
 export const NAV_ITEMS = [
-  { name: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  { name: "Home", href: "/dashboard", icon: "LayoutDashboard" },
   { name: "Journal", href: "/journal", icon: "BookOpen" },
   { name: "Habits", href: "/habits", icon: "CheckCircle2" },
   { name: "Tasks", href: "/tasks", icon: "ListTodo" },
   { name: "Goals", href: "/goals", icon: "Target" },
+  { name: "Projects", href: "/projects", icon: "FolderKanban" },
+  { name: "Finance", href: "/finance", icon: "Wallet" },
   { name: "Workout", href: "/workout", icon: "Dumbbell" },
   { name: "Mood", href: "/mood", icon: "Heart" },
   { name: "Timeline", href: "/timeline", icon: "Clock" },

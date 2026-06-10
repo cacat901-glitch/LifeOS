@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { getGreeting, formatDate } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useAppStore } from "@/hooks/use-store";
+import { NovusMark } from "@/components/shared/novus-logo";
+import { cn } from "@/lib/utils";
 
+// ── Types ──────────────────────────────────────────────────
 interface DashboardData {
   user: { name: string; xp: number; level: number } | null;
   habits: { list: any[]; completed: number; total: number; bestStreak: number };
@@ -19,49 +19,48 @@ interface DashboardData {
   streaks: { habits: number; journal: number; workout: number; mood: number };
 }
 
-const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "text-red-500", HIGH: "text-orange-500", MEDIUM: "text-yellow-500", LOW: "text-muted-foreground",
+const ease: [number, number, number, number] = [0.2, 0.8, 0.2, 1];
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, ease, delay: i * 0.08 } }),
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { setCommandOpen } = useAppStore();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [briefing, setBriefing] = useState<string>("");
+  const [briefingLoading, setBriefingLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  const greeting = getGreeting();
 
   const fetchDashboard = useCallback(async () => {
     try {
       const res = await fetch("/api/dashboard");
       if (res.ok) setData(await res.json());
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+  const fetchBriefing = useCallback(async () => {
+    try {
+      const res = await fetch("/api/ai/briefing");
+      if (res.ok) { const d = await res.json(); setBriefing(d.briefing || ""); }
+    } finally { setBriefingLoading(false); }
+  }, []);
 
-  const toggleHabit = async (habitId: string, currentlyDone: boolean) => {
-    await fetch("/api/habits", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId, completed: !currentlyDone }),
-    });
+  useEffect(() => { fetchDashboard(); fetchBriefing(); }, [fetchDashboard, fetchBriefing]);
+
+  const toggleHabit = async (habitId: string, done: boolean) => {
+    await fetch("/api/habits", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId, completed: !done }) });
     fetchDashboard();
   };
-
-  const toggleTask = async (taskId: string, currentStatus: string) => {
-    const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
-    await fetch("/api/tasks", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId, status: newStatus }),
-    });
+  const toggleTask = async (taskId: string, status: string) => {
+    await fetch("/api/tasks", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId, status: status === "DONE" ? "TODO" : "DONE" }) });
     fetchDashboard();
   };
 
   if (loading) return <DashboardSkeleton />;
 
   const d = data!;
-  const userName = d?.user?.name?.split(" ")[0] || "there";
   const lifeScore = d?.lifeScore ?? { total: 0, grade: "—", breakdown: {} };
   const habits = d?.habits ?? { list: [], completed: 0, total: 0, bestStreak: 0 };
   const tasks = d?.tasks ?? { list: [], done: 0, total: 0 };
@@ -69,334 +68,280 @@ export default function DashboardPage() {
   const streaks = d?.streaks ?? { habits: 0, journal: 0, workout: 0, mood: 0 };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* AI Daily Briefing */}
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">✨</span>
-                <h2 className="text-xl font-semibold">{greeting}, {userName}</h2>
-              </div>
-              <div className="text-sm text-muted-foreground space-y-1 max-w-xl pt-1">
-                {habits.total > 0 ? (
-                  <p>You&apos;ve completed <span className="text-foreground font-medium">{habits.completed}/{habits.total}</span> habits today.</p>
-                ) : (
-                  <p>No habits yet — <Link href="/habits" className="text-primary underline">add your first habit</Link> to get started.</p>
-                )}
-                {d?.mood ? (
-                  <p>Today&apos;s mood: <span className="text-foreground font-medium">{d.mood.emoji} {d.mood.label}</span></p>
-                ) : (
-                  <p className="text-primary font-medium">Don&apos;t forget to <Link href="/mood" className="underline">log your mood</Link> today.</p>
-                )}
-              </div>
+    <div className="space-y-8 pb-12">
+
+      {/* ════════ AI BRIEFING — the centerpiece ════════ */}
+      <motion.section variants={fadeUp} initial="hidden" animate="show"
+        className="relative overflow-hidden rounded-[28px] glass-panel p-7 md:p-10">
+        <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+
+        <div className="relative flex items-start gap-4">
+          <div className="relative shrink-0">
+            <div className="pulse-ring relative">
+              <NovusMark size="lg" />
             </div>
-            <Badge variant="secondary" className="hidden sm:flex shrink-0">AI Insight</Badge>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Life Score" value={String(lifeScore.total)} suffix={`/100 · ${lifeScore.grade}`} trend="" color="text-primary" />
-        <StatCard title="Habits" value={`${habits.completed}/${habits.total}`} suffix="today" trend={habits.bestStreak > 0 ? `🔥 ${habits.bestStreak} streak` : "No streak yet"} color="text-green-500" />
-        <StatCard title="Tasks" value={String(tasks.total - tasks.done)} suffix="remaining" trend={`${tasks.done} done`} color="text-blue-500" />
-        <StatCard
-          title="Mood"
-          value={d?.mood ? d.mood.emoji : "—"}
-          suffix={d?.mood ? d.mood.label : "Not logged"}
-          trend=""
-          color="text-yellow-500"
-        />
-      </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-medium tracking-wide uppercase text-primary/80">Novus Briefing</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+              <span className="text-xs text-muted-foreground">
+                {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </span>
+            </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Habits */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Today&apos;s Habits</CardTitle>
-            <Link href="/habits" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
-          </CardHeader>
-          <CardContent>
-            {habits.list.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">No habits yet.</p>
-                <Link href="/habits" className="inline-flex items-center justify-center h-8 rounded-lg px-3 text-xs font-medium bg-primary text-primary-foreground mt-3">Add your first habit</Link>
+            {briefingLoading ? (
+              <div className="space-y-3 max-w-2xl">
+                <div className="h-6 w-3/4 rounded-lg shimmer" />
+                <div className="h-6 w-full rounded-lg shimmer" />
+                <div className="h-6 w-2/3 rounded-lg shimmer" />
               </div>
             ) : (
-              <div className="space-y-2">
-                {habits.list.map((habit) => (
-                  <div key={habit.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
-                    <button
-                      onClick={() => toggleHabit(habit.id, habit.isCompleted)}
-                      className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${habit.isCompleted ? "bg-green-500 border-green-500 text-white" : "border-muted-foreground/30 hover:border-primary"}`}
-                    >
-                      {habit.isCompleted && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                    </button>
-                    <span className="text-lg">{habit.icon || "✅"}</span>
-                    <span className={`flex-1 text-sm ${habit.isCompleted ? "line-through text-muted-foreground" : ""}`}>{habit.name}</span>
-                    {habit.streak > 0 && <Badge variant="secondary" className="text-xs">🔥 {habit.streak}</Badge>}
-                  </div>
-                ))}
-              </div>
+              <motion.p
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
+                className="text-lg md:text-2xl leading-relaxed font-medium text-balance max-w-3xl text-foreground/90"
+              >
+                {briefing}
+              </motion.p>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* Life Score */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Life Score</CardTitle></CardHeader>
-            <CardContent>
-              <div className="text-center py-3">
-                <div className="text-5xl font-bold gradient-text">{lifeScore.total}</div>
-                <div className="text-sm text-muted-foreground mt-1">Grade: {lifeScore.grade}</div>
-              </div>
-              <div className="space-y-3 mt-2">
-                {[
-                  { label: "Habits", key: "habits", color: "bg-green-500" },
-                  { label: "Tasks", key: "tasks", color: "bg-blue-500" },
-                  { label: "Goals", key: "goals", color: "bg-purple-500" },
-                  { label: "Mood", key: "mood", color: "bg-yellow-500" },
-                  { label: "Workout", key: "workout", color: "bg-red-500" },
-                ].map(({ label, key, color }) => (
-                  <div key={label} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{label}</span>
-                      <span className="font-medium">{lifeScore.breakdown[key] ?? 0}%</span>
-                    </div>
-                    <Progress value={lifeScore.breakdown[key] ?? 0} indicatorClassName={color} />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Workout */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Workout</CardTitle></CardHeader>
-            <CardContent>
-              {d?.recentWorkout ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{d.recentWorkout.name}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(d.recentWorkout.startTime)}</p>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    {d.recentWorkout.duration && <span>⏱ {d.recentWorkout.duration}min</span>}
-                    {d.recentWorkout.totalVolume > 0 && <span>🏋️ {Math.round(d.recentWorkout.totalVolume)}kg</span>}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <span className="text-2xl">🏋️</span>
-                  <p className="text-xs text-muted-foreground mt-2">No workouts yet</p>
-                </div>
-              )}
-              <Link href="/workout" className="inline-flex items-center justify-center w-full h-8 rounded-lg px-3 text-xs font-medium bg-primary text-primary-foreground mt-3">Log Workout</Link>
-            </CardContent>
-          </Card>
+            <div className="flex flex-wrap gap-2 mt-6">
+              <ActionChip label="Ask Novus" onClick={() => setCommandOpen(true)} primary
+                icon="M13 10V3L4 14h7v7l9-11h-7z" />
+              <ActionChip label="Log mood" onClick={() => router.push("/mood")}
+                icon="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <ActionChip label="Review goals" onClick={() => router.push("/goals")}
+                icon="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064" />
+            </div>
+          </div>
         </div>
+      </motion.section>
+
+      {/* ════════ Vital signs row ════════ */}
+      <motion.section
+        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
+        initial="hidden" animate="show"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <VitalCard i={0} label="Life Score" value={String(lifeScore.total)} sub={`Grade ${lifeScore.grade}`} accent="from-indigo-500 to-violet-500" />
+        <VitalCard i={1} label="Habits today" value={`${habits.completed}/${habits.total}`} sub={habits.bestStreak > 0 ? `${habits.bestStreak}-day streak` : "Build momentum"} accent="from-emerald-500 to-teal-500" />
+        <VitalCard i={2} label="Tasks left" value={String(Math.max(tasks.total - tasks.done, 0))} sub={`${tasks.done} done today`} accent="from-sky-500 to-cyan-500" />
+        <VitalCard i={3} label="Mood" value={d?.mood ? d.mood.emoji : "—"} sub={d?.mood ? d.mood.label : "Not logged"} accent="from-pink-500 to-rose-500" />
+      </motion.section>
+
+      {/* ════════ Main grid ════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1}
+          className="lg:col-span-2 glass-panel rounded-[24px] p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-semibold">Today&apos;s rhythm</h3>
+            <button onClick={() => router.push("/habits")} className="text-xs text-primary hover:underline">Open habits</button>
+          </div>
+
+          {habits.list.length === 0 ? (
+            <EmptyHint icon="✦" text="No habits yet. Design the rhythm of your days." action="Create a habit" onClick={() => router.push("/habits")} />
+          ) : (
+            <div className="space-y-1.5">
+              {habits.list.map((h, i) => (
+                <motion.button
+                  key={h.id}
+                  initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                  onClick={() => toggleHabit(h.id, h.isCompleted)}
+                  className="w-full group flex items-center gap-3 p-3 rounded-2xl hover:bg-muted/40 transition-colors text-left"
+                >
+                  <span className={cn(
+                    "w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all shrink-0",
+                    h.isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-muted-foreground/30 group-hover:border-primary"
+                  )}>
+                    {h.isCompleted && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </span>
+                  <span className="text-lg">{h.icon || "✦"}</span>
+                  <span className={cn("flex-1 text-sm font-medium", h.isCompleted && "line-through text-muted-foreground")}>{h.name}</span>
+                  {h.streak > 0 && <span className="text-xs text-muted-foreground">{h.streak}d</span>}
+                </motion.button>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2}
+          className="glass-panel rounded-[24px] p-6 flex flex-col">
+          <h3 className="font-semibold mb-4">Life Score</h3>
+          <div className="flex items-center justify-center py-2">
+            <ScoreRing value={lifeScore.total} grade={lifeScore.grade} />
+          </div>
+          <div className="space-y-2.5 mt-4">
+            {[
+              { label: "Habits", key: "habits", c: "bg-emerald-500" },
+              { label: "Tasks", key: "tasks", c: "bg-sky-500" },
+              { label: "Goals", key: "goals", c: "bg-violet-500" },
+              { label: "Mood", key: "mood", c: "bg-pink-500" },
+              { label: "Workout", key: "workout", c: "bg-amber-500" },
+            ].map(({ label, key, c }) => (
+              <div key={label} className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground w-14">{label}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                  <motion.div className={cn("h-full rounded-full", c)}
+                    initial={{ width: 0 }} animate={{ width: `${lifeScore.breakdown[key] ?? 0}%` }}
+                    transition={{ duration: 0.8, ease, delay: 0.3 }} />
+                </div>
+                <span className="text-xs font-medium w-8 text-right">{lifeScore.breakdown[key] ?? 0}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
 
-      {/* Second Row */}
+      {/* ════════ Second grid ════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Tasks */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Tasks</CardTitle>
-            <Link href="/tasks" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
-          </CardHeader>
-          <CardContent>
-            {tasks.list.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                No tasks yet. <Link href="/tasks" className="text-primary underline">Add one</Link>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {tasks.list.map((task) => (
-                  <div key={task.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                    <button
-                      onClick={() => toggleTask(task.id, task.status)}
-                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${task.status === "DONE" ? "bg-primary border-primary text-white" : "border-muted-foreground/30 hover:border-primary"}`}
-                    >
-                      {task.status === "DONE" && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                    </button>
-                    <span className={`flex-1 text-sm ${task.status === "DONE" ? "line-through text-muted-foreground" : ""}`}>{task.title}</span>
-                    <span className={`text-xs font-medium ${PRIORITY_COLORS[task.priority]}`}>{task.priority}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={3} className="glass-panel rounded-[24px] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Focus</h3>
+            <button onClick={() => router.push("/tasks")} className="text-xs text-primary hover:underline">All tasks</button>
+          </div>
+          {tasks.list.length === 0 ? (
+            <EmptyHint icon="◎" text="Nothing on deck." action="Add a task" onClick={() => router.push("/tasks")} small />
+          ) : (
+            <div className="space-y-1.5">
+              {tasks.list.map((t) => (
+                <button key={t.id} onClick={() => toggleTask(t.id, t.status)}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors text-left">
+                  <span className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0",
+                    t.status === "DONE" ? "bg-primary border-primary text-white" : "border-muted-foreground/30")}>
+                    {t.status === "DONE" && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </span>
+                  <span className={cn("flex-1 text-sm", t.status === "DONE" && "line-through text-muted-foreground")}>{t.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.div>
 
-        {/* Goals */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold">Goals</CardTitle>
-            <Link href="/goals" className="text-sm text-muted-foreground hover:text-foreground transition-colors">View All</Link>
-          </CardHeader>
-          <CardContent>
-            {goals.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                No goals yet. <Link href="/goals" className="text-primary underline">Set one</Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {goals.map((goal) => (
-                  <div key={goal.id} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium truncate pr-2">{goal.title}</span>
-                      <span className="text-xs text-muted-foreground shrink-0">{goal.progress}%</span>
-                    </div>
-                    <Progress value={goal.progress} />
-                    {goal.targetDate && <p className="text-xs text-muted-foreground">Target: {formatDate(goal.targetDate)}</p>}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={4} className="glass-panel rounded-[24px] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Trajectory</h3>
+            <button onClick={() => router.push("/goals")} className="text-xs text-primary hover:underline">All goals</button>
+          </div>
+          {goals.length === 0 ? (
+            <EmptyHint icon="✧" text="No goals set." action="Set a goal" onClick={() => router.push("/goals")} small />
+          ) : (
+            <div className="space-y-3.5">
+              {goals.slice(0, 4).map((g) => (
+                <div key={g.id} className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium truncate pr-2">{g.title}</span>
+                    <span className="text-muted-foreground shrink-0">{g.progress}%</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Streaks */}
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Streaks</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Habits", value: streaks.habits, icon: "🔥" },
-                { label: "Journal", value: streaks.journal, icon: "✍️" },
-                { label: "Workout", value: streaks.workout, icon: "💪" },
-                { label: "Mood", value: streaks.mood, icon: "💜" },
-              ].map((s) => (
-                <div key={s.label} className="text-center p-3 rounded-xl bg-muted/50">
-                  <div className="text-xl">{s.icon}</div>
-                  <div className="text-xl font-bold mt-1">{s.value}</div>
-                  <div className="text-xs text-muted-foreground">{s.label}</div>
+                  <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
+                    <motion.div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                      initial={{ width: 0 }} animate={{ width: `${g.progress}%` }} transition={{ duration: 0.8, ease }} />
+                  </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </motion.div>
 
-      {/* Finance Widget */}
-      <FinanceWidget />
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Quick Actions</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <motion.div variants={fadeUp} initial="hidden" animate="show" custom={5} className="glass-panel rounded-[24px] p-6">
+          <h3 className="font-semibold mb-4">Momentum</h3>
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: "📝", label: "New Journal", href: "/journal" },
-              { icon: "✅", label: "Habits", href: "/habits" },
-              { icon: "📋", label: "Add Task", href: "/tasks" },
-              { icon: "🎯", label: "New Goal", href: "/goals" },
-              { icon: "🏋️", label: "Log Workout", href: "/workout" },
-              { icon: "💜", label: "Log Mood", href: "/mood" },
-            ].map((action) => (
-              <Link key={action.label} href={action.href}
-                className="inline-flex flex-col items-center justify-center gap-2 py-4 rounded-xl border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all">
-                <span className="text-xl">{action.icon}</span>
-                <span className="text-xs">{action.label}</span>
-              </Link>
+              { label: "Habits", v: streaks.habits, icon: "✦" },
+              { label: "Journal", v: streaks.journal, icon: "✎" },
+              { label: "Workout", v: streaks.workout, icon: "⟁" },
+              { label: "Mood", v: streaks.mood, icon: "♡" },
+            ].map((s) => (
+              <div key={s.label} className="rounded-2xl bg-muted/30 p-4 text-center">
+                <div className="text-xl mb-1">{s.icon}</div>
+                <div className="text-2xl font-semibold gradient-text">{s.v}</div>
+                <div className="text-[11px] text-muted-foreground">{s.label}</div>
+              </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }
 
-function StatCard({ title, value, suffix, trend, color }: { title: string; value: string; suffix: string; trend: string; color: string }) {
+function ActionChip({ label, onClick, icon, primary }: { label: string; onClick: () => void; icon: string; primary?: boolean }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground mb-1">{title}</p>
-        <div className="flex items-baseline gap-1 flex-wrap">
-          <span className={`text-2xl font-bold ${color}`}>{value}</span>
-          <span className="text-xs text-muted-foreground">{suffix}</span>
-        </div>
-        {trend && <p className="text-xs text-muted-foreground mt-1">{trend}</p>}
-      </CardContent>
-    </Card>
+    <button onClick={onClick} className={cn(
+      "inline-flex items-center gap-2 h-9 px-4 rounded-full text-sm font-medium transition-all",
+      primary
+        ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_8px_24px_-8px_rgba(99,102,241,0.8)] hover:opacity-90"
+        : "bg-muted/50 hover:bg-muted text-foreground border border-border/50"
+    )}>
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={icon} /></svg>
+      {label}
+    </button>
+  );
+}
+
+function VitalCard({ i, label, value, sub, accent }: { i: number; label: string; value: string; sub: string; accent: string }) {
+  return (
+    <motion.div variants={fadeUp} custom={i} className="relative glass-panel rounded-[22px] p-5 overflow-hidden lift">
+      <div className={cn("absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-80", accent)} />
+      <p className="text-xs text-muted-foreground mb-2">{label}</p>
+      <p className="text-3xl font-semibold tracking-tight">{value}</p>
+      <p className="text-xs text-muted-foreground mt-1.5">{sub}</p>
+    </motion.div>
+  );
+}
+
+function ScoreRing({ value, grade }: { value: number; grade: string }) {
+  const r = 52;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (value / 100) * circ;
+  return (
+    <div className="relative w-36 h-36">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+        <motion.circle
+          cx="60" cy="60" r={r} fill="none" stroke="url(#scoreGrad)" strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease }}
+        />
+        <defs>
+          <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="50%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#38bdf8" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-semibold tracking-tight">{value}</span>
+        <span className="text-xs text-muted-foreground">Grade {grade}</span>
+      </div>
+    </div>
+  );
+}
+
+function EmptyHint({ icon, text, action, onClick, small }: { icon: string; text: string; action: string; onClick: () => void; small?: boolean }) {
+  return (
+    <div className={cn("text-center", small ? "py-6" : "py-10")}>
+      <div className="text-2xl mb-2 text-muted-foreground">{icon}</div>
+      <p className="text-sm text-muted-foreground mb-3">{text}</p>
+      <button onClick={onClick} className="text-sm font-medium text-primary hover:underline">{action} →</button>
+    </div>
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
-      <div className="h-28 rounded-2xl bg-muted/50" />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-muted/50" />)}
+    <div className="space-y-8">
+      <div className="h-52 rounded-[28px] shimmer" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-[22px] shimmer" />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-64 rounded-2xl bg-muted/50" />
-        <div className="space-y-4">
-          <div className="h-48 rounded-2xl bg-muted/50" />
-          <div className="h-28 rounded-2xl bg-muted/50" />
-        </div>
+        <div className="lg:col-span-2 h-72 rounded-[24px] shimmer" />
+        <div className="h-72 rounded-[24px] shimmer" />
       </div>
     </div>
-  );
-}
-
-
-// ── Finance Widget ─────────────────────────────────────────────────────────
-function FinanceWidget() {
-  const [data, setData] = useState<{ stats: any; accounts: any[]; transactions: any[] } | null>(null);
-
-  useEffect(() => {
-    fetch("/api/finance?months=1")
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(() => {});
-  }, []);
-
-  if (!data || data.accounts.length === 0) return null;
-
-  const { stats, accounts, transactions } = data;
-
-  function fmt(n: number) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-  }
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base font-semibold">Finance</CardTitle>
-        <Link href="/finance" className="text-xs text-primary hover:underline">View All</Link>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="text-center p-3 rounded-xl bg-muted/50">
-            <div className={`text-lg font-bold ${stats.netWorth >= 0 ? "text-green-500" : "text-red-500"}`}>{fmt(stats.netWorth)}</div>
-            <div className="text-xs text-muted-foreground">Net Worth</div>
-          </div>
-          <div className="text-center p-3 rounded-xl bg-muted/50">
-            <div className="text-lg font-bold text-green-500">+{fmt(stats.income)}</div>
-            <div className="text-xs text-muted-foreground">Income</div>
-          </div>
-          <div className="text-center p-3 rounded-xl bg-muted/50">
-            <div className="text-lg font-bold text-red-500">-{fmt(stats.expenses)}</div>
-            <div className="text-xs text-muted-foreground">Expenses</div>
-          </div>
-        </div>
-        {transactions.slice(0, 3).map((tx: any) => (
-          <div key={tx.id} className="flex items-center gap-3 py-2 border-t first:border-0">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 ${tx.type === "INCOME" ? "bg-green-500/15 text-green-500" : "bg-red-500/15 text-red-500"}`}>
-              {tx.type === "INCOME" ? "↑" : "↓"}
-            </div>
-            <span className="flex-1 text-sm truncate">{tx.title}</span>
-            <span className={`text-sm font-medium shrink-0 ${tx.type === "INCOME" ? "text-green-500" : "text-red-500"}`}>
-              {tx.type === "INCOME" ? "+" : "-"}{fmt(tx.amount)}
-            </span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }

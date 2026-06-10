@@ -52,7 +52,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // LifeOS brand colors
+        // Novus brand colors
         brand: {
           50: "#f0f4ff",
           100: "#e0e9ff",

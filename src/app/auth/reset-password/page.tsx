@@ -98,9 +98,9 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold">L</span>
+              <span className="text-white font-bold">N</span>
             </div>
-            <span className="font-bold text-2xl">LifeOS</span>
+            <span className="font-bold text-2xl">Novus</span>
           </Link>
         </div>
         <Suspense fallback={<div className="text-center text-muted-foreground">Loading…</div>}>

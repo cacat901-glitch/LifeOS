@@ -11,14 +11,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LifeOS - Your Personal Operating System",
+  title: "Novus — Your personal operating system",
   description:
-    "One app to run your entire life. Journal, habits, goals, workouts, mood tracking, and more — all in one premium platform.",
-  keywords: ["productivity", "habits", "journal", "goals", "workout tracker", "mood tracking"],
-  authors: [{ name: "LifeOS" }],
+    "Novus is your personal operating system — an intelligent companion that helps you manage every aspect of your life from a single platform. Journal, habits, goals, finance, workouts, and AI guidance.",
+  keywords: ["personal operating system", "AI life coach", "second brain", "productivity", "habits", "journal", "goals"],
+  authors: [{ name: "Novus" }],
   openGraph: {
-    title: "LifeOS - Your Personal Operating System",
-    description: "One app to run your entire life.",
+    title: "Novus — Your personal operating system",
+    description: "An intelligent companion for your entire life.",
     type: "website",
   },
 };

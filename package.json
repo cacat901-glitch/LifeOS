@@ -1,8 +1,8 @@
 {
-  "name": "lifeos",
+  "name": "novus",
   "version": "1.0.0",
   "private": true,
-  "description": "LifeOS - Your All-in-One Personal Operating System",
+  "description": "Novus - Your personal operating system",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
+    "@google/generative-ai": "^0.21.0",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.2.2",

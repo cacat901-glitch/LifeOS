@@ -76,16 +76,16 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold">L</span>
+              <span className="text-white font-bold">N</span>
             </div>
-            <span className="font-bold text-2xl">LifeOS</span>
+            <span className="font-bold text-2xl">Novus</span>
           </Link>
         </div>
 
         <Card className="border-border/50 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Create your account</CardTitle>
-            <CardDescription>Start your journey with LifeOS</CardDescription>
+            <CardDescription>Start your journey with Novus</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Google Sign Up */}

@@ -13,6 +13,11 @@ interface AppState {
   openQuickAdd: (type: AppState["quickAddType"]) => void;
   closeQuickAdd: () => void;
 
+  // Command Center (⌘K)
+  commandOpen: boolean;
+  setCommandOpen: (open: boolean) => void;
+  toggleCommand: () => void;
+
   // Notifications
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, "id" | "timestamp">) => void;
@@ -40,6 +45,11 @@ export const useAppStore = create<AppState>((set) => ({
   quickAddType: null,
   openQuickAdd: (type) => set({ quickAddOpen: true, quickAddType: type }),
   closeQuickAdd: () => set({ quickAddOpen: false, quickAddType: null }),
+
+  // Command Center
+  commandOpen: false,
+  setCommandOpen: (open) => set({ commandOpen: open }),
+  toggleCommand: () => set((state) => ({ commandOpen: !state.commandOpen })),
 
   // Notifications
   notifications: [],
