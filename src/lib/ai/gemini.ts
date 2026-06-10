@@ -2,8 +2,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AIProvider, AIMessage, AICompletionOptions, NovusContext } from "./types";
 import { NOVUS_PERSONA, buildBriefingPrompt, fallbackBriefing } from "./prompts";
 
-// Use the stable v2 flash model. Falls back down the list if one isn't available.
-const MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash-latest"];
+// Model priority list — ordered by free-tier quota availability.
+// gemini-1.5-flash-latest has the most generous free quota (1,500 req/day).
+// gemini-2.0-flash has stricter free limits; used as fallback if 1.5 is unavailable.
+const MODELS = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b", "gemini-2.0-flash-lite"];
 const MODEL = MODELS[0];
 
 export class GeminiProvider implements AIProvider {
@@ -53,8 +55,8 @@ export class GeminiProvider implements AIProvider {
         const result = await chat.sendMessage(last.parts[0].text);
         return result.response.text().trim();
       } catch (e: any) {
-        // 404 = model not found, try next one
-        if (e?.status === 404 || e?.message?.includes("not found")) {
+        // 404 = model not found, 429 = quota exceeded — try next model
+        if (e?.status === 404 || e?.status === 429 || e?.message?.includes("not found") || e?.message?.includes("quota")) {
           lastError = e;
           continue;
         }
