@@ -72,14 +72,14 @@ export default function DashboardPage() {
 
       {/* ════════ AI BRIEFING — the centerpiece ════════ */}
       <motion.section variants={fadeUp} initial="hidden" animate="show"
-        className="relative overflow-hidden rounded-[28px] glass-panel p-7 md:p-10">
+        className="relative overflow-hidden rounded-[24px] glass-panel p-5 sm:p-7 md:p-10">
         <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative flex items-start gap-4">
+        <div className="relative flex flex-col sm:flex-row items-start gap-4">
           <div className="relative shrink-0">
             <div className="pulse-ring relative">
-              <NovusMark size="lg" />
+              <NovusMark size="md" />
             </div>
           </div>
 
@@ -87,32 +87,32 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs font-medium tracking-wide uppercase text-primary/80">Novus Briefing</span>
               <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground hidden sm:inline">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </span>
             </div>
 
             {briefingLoading ? (
               <div className="space-y-3 max-w-2xl">
-                <div className="h-6 w-3/4 rounded-lg shimmer" />
-                <div className="h-6 w-full rounded-lg shimmer" />
-                <div className="h-6 w-2/3 rounded-lg shimmer" />
+                <div className="h-5 w-3/4 rounded-lg shimmer" />
+                <div className="h-5 w-full rounded-lg shimmer" />
+                <div className="h-5 w-2/3 rounded-lg shimmer" />
               </div>
             ) : (
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
-                className="text-lg md:text-2xl leading-relaxed font-medium text-balance max-w-3xl text-foreground/90"
+                className="text-base md:text-xl lg:text-2xl leading-relaxed font-medium text-balance max-w-3xl text-foreground/90"
               >
                 {briefing}
               </motion.p>
             )}
 
-            <div className="flex flex-wrap gap-2 mt-6">
+            <div className="flex flex-wrap gap-2 mt-5">
               <ActionChip label="Ask Novus" onClick={() => setCommandOpen(true)} primary
                 icon="M13 10V3L4 14h7v7l9-11h-7z" />
               <ActionChip label="Log mood" onClick={() => router.push("/mood")}
                 icon="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              <ActionChip label="Review goals" onClick={() => router.push("/goals")}
+              <ActionChip label="Goals" onClick={() => router.push("/goals")}
                 icon="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064" />
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
       </motion.section>
 
       {/* ════════ Main grid ════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1}
           className="lg:col-span-2 glass-panel rounded-[24px] p-6">
           <div className="flex items-center justify-between mb-5">
@@ -195,7 +195,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ════════ Second grid ════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <motion.div variants={fadeUp} initial="hidden" animate="show" custom={3} className="glass-panel rounded-[24px] p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Focus</h3>
@@ -282,11 +282,11 @@ function ActionChip({ label, onClick, icon, primary }: { label: string; onClick:
 
 function VitalCard({ i, label, value, sub, accent }: { i: number; label: string; value: string; sub: string; accent: string }) {
   return (
-    <motion.div variants={fadeUp} custom={i} className="relative glass-panel rounded-[22px] p-5 overflow-hidden lift">
+    <motion.div variants={fadeUp} custom={i} className="relative glass-panel rounded-[20px] p-4 md:p-5 overflow-hidden lift">
       <div className={cn("absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-80", accent)} />
-      <p className="text-xs text-muted-foreground mb-2">{label}</p>
-      <p className="text-3xl font-semibold tracking-tight">{value}</p>
-      <p className="text-xs text-muted-foreground mt-1.5">{sub}</p>
+      <p className="text-[10px] md:text-xs text-muted-foreground mb-1.5">{label}</p>
+      <p className="text-2xl md:text-3xl font-semibold tracking-tight truncate">{value}</p>
+      <p className="text-[10px] md:text-xs text-muted-foreground mt-1 truncate">{sub}</p>
     </motion.div>
   );
 }

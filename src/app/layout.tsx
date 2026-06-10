@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     description: "An intelligent companion for your entire life.",
     type: "website",
   },
+  other: {
+    "theme-color": "#06060a",
+  },
 };
 
 export default function RootLayout({

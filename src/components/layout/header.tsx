@@ -74,11 +74,11 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 px-4 md:px-6 lg:px-10 pt-4">
-      <div className="mx-auto max-w-6xl flex items-center justify-between h-14 px-4 glass rounded-2xl">
+    <header className="sticky top-0 z-30 px-3 md:px-6 lg:px-10 pt-3 md:pt-4">
+      <div className="mx-auto max-w-6xl flex items-center justify-between h-12 md:h-14 px-3 md:px-4 glass rounded-2xl">
         <div className="flex items-center gap-3">
-          <div className="lg:hidden w-8" />
-          <h1 className="text-base font-semibold tracking-tight">{title}</h1>
+          {/* On mobile, just show the page title — sidebar is replaced by bottom nav */}
+          <h1 className="text-sm md:text-base font-semibold tracking-tight">{title}</h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export function AppHeader() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  className="absolute right-0 top-12 w-80 glass-strong rounded-2xl shadow-2xl z-50 overflow-hidden ring-1 ring-white/10"
+                  className="absolute right-0 top-12 w-[min(320px,calc(100vw-1.5rem))] glass-strong rounded-2xl shadow-2xl z-50 overflow-hidden ring-1 ring-white/10"
                 >
                   <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
                     <h3 className="font-semibold text-sm">Notifications</h3>
