@@ -68,30 +68,14 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay — only shown when sidebar is open (desktop only use case) */}
       {isMobileOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileOpen(false)} />
       )}
 
-      {/* Mobile toggle */}
-      <button
-        className="fixed top-4 left-4 z-50 lg:hidden p-2.5 rounded-xl glass-strong"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        aria-label="Toggle menu"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 z-40 h-screen w-[260px] p-3 transition-transform duration-300",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        <div className="h-full flex flex-col glass-panel rounded-[28px] overflow-hidden">
+      {/* Sidebar — desktop always visible, hidden on mobile (bottom nav used instead) */}
+      <aside className="hidden lg:flex fixed top-0 left-0 z-40 h-screen w-[260px] p-3">
+        <div className="h-full w-full flex flex-col glass-panel rounded-[28px] overflow-hidden">
           {/* Logo */}
           <div className="p-5 pb-3">
             <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setIsMobileOpen(false)}>

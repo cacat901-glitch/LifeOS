@@ -154,7 +154,7 @@ export function CommandCenter() {
     <AnimatePresence>
       {commandOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] px-4"
+          className="fixed inset-0 z-[100] flex items-end sm:items-start justify-center sm:pt-[12vh] px-0 sm:px-4"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
@@ -166,10 +166,10 @@ export function CommandCenter() {
 
           {/* Palette */}
           <motion.div
-            className="relative w-full max-w-2xl glass-strong rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10"
-            initial={{ opacity: 0, y: -16, scale: 0.97 }}
+            className="relative w-full max-w-2xl glass-strong sm:rounded-3xl rounded-t-3xl overflow-hidden shadow-2xl ring-1 ring-white/10"
+            initial={{ opacity: 0, y: 40, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
           >
             {/* Input row */}
@@ -192,7 +192,7 @@ export function CommandCenter() {
             </div>
 
             {/* Body */}
-            <div ref={scrollRef} className="max-h-[52vh] overflow-y-auto p-2">
+            <div ref={scrollRef} className="max-h-[60vh] sm:max-h-[52vh] overflow-y-auto p-2">
               {askMode ? (
                 <div className="p-3 space-y-4">
                   {messages.length === 0 && !thinking && (
