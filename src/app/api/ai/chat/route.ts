@@ -35,8 +35,12 @@ ${ctx.mood ? `- Mood: ${ctx.mood.label} (${ctx.mood.score}/10)` : ""}`;
     const reply = await provider.complete(messages, { system, temperature: 0.8, maxTokens: 800 });
 
     return NextResponse.json({ reply, provider: provider.name });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat error:", error);
-    return NextResponse.json({ error: "Failed to get a response" }, { status: 500 });
+    // Return a graceful message instead of a 500 so the UI can display it
+    return NextResponse.json({
+      reply: "I'm having trouble connecting right now. Please try again in a moment.",
+      error: true,
+    });
   }
 }
