@@ -18,7 +18,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #06060a; color: #e2e8f0; margin: 0; padding: 0;">
   <div style="max-width: 560px; margin: 40px auto; padding: 40px; background: #0d0d16; border-radius: 20px; border: 1px solid #1e1e2e;">
     <div style="text-align: center; margin-bottom: 32px;">
-      <div style="display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 16px; font-size: 26px; font-weight: bold; color: white; margin-bottom: 16px;">N</div>
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 16px; overflow: hidden; margin-bottom: 16px;"><img src="${APP_URL}/logo.png" width="54" height="54" alt="Novus" style="display:block;" /></div>
       <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.02em;">Welcome to Novus</h1>
       <p style="margin: 8px 0 0; font-size: 15px; color: #818cf8;">Your personal operating system.</p>
     </div>
@@ -64,7 +64,7 @@ export async function sendPasswordResetEmail(to: string, token: string) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #06060a; color: #e2e8f0; margin: 0; padding: 0;">
   <div style="max-width: 560px; margin: 40px auto; padding: 40px; background: #0d0d16; border-radius: 20px; border: 1px solid #1e1e2e;">
     <div style="text-align: center; margin-bottom: 32px;">
-      <div style="display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 16px; font-size: 26px; font-weight: bold; color: white; margin-bottom: 16px;">N</div>
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 16px; overflow: hidden; margin-bottom: 16px;"><img src="${APP_URL}/logo.png" width="54" height="54" alt="Novus" style="display:block;" /></div>
       <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.02em;">Reset your password</h1>
     </div>
     <p style="font-size: 16px; color: #94a3b8; line-height: 1.6;">
