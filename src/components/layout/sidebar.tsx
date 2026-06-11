@@ -11,17 +11,20 @@ import { NovusMark } from "@/components/shared/novus-logo";
 import { useAppStore } from "@/hooks/use-store";
 
 const navItems = [
-  { name: "Home", href: "/dashboard", icon: "home" },
-  { name: "Journal", href: "/journal", icon: "book" },
-  { name: "Habits", href: "/habits", icon: "check" },
-  { name: "Tasks", href: "/tasks", icon: "list" },
-  { name: "Goals", href: "/goals", icon: "target" },
-  { name: "Projects", href: "/projects", icon: "briefcase" },
-  { name: "Finance", href: "/finance", icon: "wallet" },
-  { name: "Workout", href: "/workout", icon: "dumbbell" },
-  { name: "Mood", href: "/mood", icon: "heart" },
-  { name: "Timeline", href: "/timeline", icon: "clock" },
-  { name: "Statistics", href: "/statistics", icon: "chart" },
+  { name: "Home",         href: "/dashboard", icon: "home" },
+  { name: "Journal",      href: "/journal",   icon: "book" },
+  { name: "Habits",       href: "/habits",    icon: "check" },
+  { name: "Tasks",        href: "/tasks",     icon: "list" },
+  { name: "Goals",        href: "/goals",     icon: "target" },
+  { name: "Projects",     href: "/projects",  icon: "briefcase" },
+  { name: "Finance",      href: "/finance",   icon: "wallet" },
+  { name: "Workout",      href: "/workout",   icon: "dumbbell" },
+  { name: "Mood",         href: "/mood",      icon: "heart" },
+  { name: "──────",       href: "",           icon: "" },   // divider
+  { name: "Weekly Review",href: "/review",    icon: "review" },
+  { name: "Life Analyst", href: "/analyst",   icon: "brain" },
+  { name: "Timeline",     href: "/timeline",  icon: "clock" },
+  { name: "Statistics",   href: "/statistics",icon: "chart" },
 ];
 
 const iconMap: Record<string, string> = {
@@ -33,6 +36,8 @@ const iconMap: Record<string, string> = {
   briefcase: "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
   wallet: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
   dumbbell: "M3 12h1m16 0h1M5.6 5.6l.7.7m12.1-.7l-.7.7M8 12a4 4 0 118 0 4 4 0 01-8 0zm-3 0h2m10 0h2",
+  review: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+  brain: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z",
   heart: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
   clock: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
   chart: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
@@ -104,6 +109,9 @@ export function AppSidebar() {
           {/* Navigation */}
           <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
             {navItems.map((item) => {
+              // Divider
+              if (!item.href) return <div key={item.name} className="mx-3 my-1 border-t border-border/30" />;
+
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link

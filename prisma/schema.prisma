@@ -845,6 +845,12 @@ enum AIReportType {
   HABIT_ANALYSIS
   MOOD_ANALYSIS
   GOAL_PROGRESS
+  LIFE_ANALYSIS
+  PATTERN_REPORT
+  GOAL_COACH
+  JOURNAL_ANALYSIS
+  PREDICTIVE_INSIGHT
+  LIFE_MEMORY
 }
 
 // ============================================================

@@ -8,12 +8,22 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+import { NovusMark } from "@/components/shared/novus-logo";
+import { motion } from "framer-motion";
 
 interface Milestone { id: string; title: string; isCompleted: boolean; order: number }
 interface Goal {
   id: string; title: string; description?: string; type: string; status: string;
   currentValue: number; targetValue: number; color: string; targetDate?: string;
   milestones: Milestone[];
+}
+interface GoalCoachPlan {
+  assessment: string;
+  suggestedMilestones: Array<{ title: string; timeframe: string; description: string }>;
+  recommendedHabits: string[];
+  recommendedActions: string[];
+  estimatedTimeline: string;
+  motivationalNote: string;
 }
 
 const COLORS = ["#6366f1","#3b82f6","#10b981","#f59e0b","#ec4899","#8b5cf6","#ef4444","#06b6d4"];
@@ -28,6 +38,12 @@ export default function GoalsPage() {
   const [milestoneInput, setMilestoneInput] = useState("");
   const [milestones, setMilestones] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Goal Coach state
+  const [showCoach, setShowCoach] = useState(false);
+  const [coachGoal, setCoachGoal] = useState<Goal | null>(null);
+  const [coachPlan, setCoachPlan] = useState<GoalCoachPlan | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/goals");
@@ -84,6 +100,23 @@ export default function GoalsPage() {
   };
 
   const active = goals.filter((g) => g.status === "ACTIVE");
+
+  const openCoach = async (goal: Goal) => {
+    setCoachGoal(goal);
+    setCoachPlan(null);
+    setShowCoach(true);
+    setCoachLoading(true);
+    try {
+      const pct = Math.min(Math.round((goal.currentValue / (goal.targetValue || 100)) * 100), 100);
+      const r = await fetch("/api/ai/goal-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goalTitle: goal.title, goalDescription: goal.description, currentProgress: pct, goalId: goal.id }),
+      });
+      if (r.ok) { const d = await r.json(); setCoachPlan(d.plan); }
+    } catch {}
+    setCoachLoading(false);
+  };
   const avgProgress = active.length > 0
     ? Math.round(active.reduce((s, g) => s + (g.currentValue / (g.targetValue || 100)) * 100, 0) / active.length)
     : 0;
@@ -149,6 +182,13 @@ export default function GoalsPage() {
                       <div className="text-xs text-muted-foreground">{goal.milestones.filter((m) => m.isCompleted).length}/{goal.milestones.length} milestones</div>
                     </div>
                   )}
+                  <div className="mt-4 pt-3 border-t border-border/40 flex gap-2">
+                    <button onClick={(e) => { e.stopPropagation(); openCoach(goal); }}
+                      className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+                      <NovusMark size="sm" className="!h-4 !w-4 !text-[8px] !rounded-md" />
+                      AI Coach
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -200,6 +240,105 @@ export default function GoalsPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Goal Coach Dialog */}
+      <Dialog open={showCoach} onOpenChange={setShowCoach}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <NovusMark size="sm" />
+              <div>
+                <DialogTitle>Goal Coach</DialogTitle>
+                {coachGoal && <p className="text-sm text-muted-foreground mt-0.5">{coachGoal.title}</p>}
+              </div>
+            </div>
+          </DialogHeader>
+          {coachLoading ? (
+            <div className="space-y-3 py-4">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <NovusMark size="sm" />
+                <span>Analyzing your goal…</span>
+                <div className="flex gap-1">
+                  {[0,1,2].map((i) => (
+                    <motion.span key={i} className="w-1.5 h-1.5 rounded-full bg-primary"
+                      animate={{ opacity: [0.3,1,0.3] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} />
+                  ))}
+                </div>
+              </div>
+              {[...Array(4)].map((_, i) => <div key={i} className="h-12 rounded-xl shimmer" />)}
+            </div>
+          ) : coachPlan ? (
+            <div className="space-y-5">
+              {/* Assessment */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 to-violet-500/5 border border-primary/20">
+                <p className="text-sm leading-relaxed text-foreground/90">{coachPlan.assessment}</p>
+                {coachPlan.motivationalNote && (
+                  <p className="text-xs text-primary/80 mt-2 italic">{coachPlan.motivationalNote}</p>
+                )}
+              </div>
+
+              {/* Timeline */}
+              {coachPlan.estimatedTimeline && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Estimated:</span>
+                  <span className="font-medium">{coachPlan.estimatedTimeline}</span>
+                </div>
+              )}
+
+              {/* Milestones */}
+              {coachPlan.suggestedMilestones.length > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-primary/70 mb-3">Suggested Milestones</p>
+                  <div className="space-y-2">
+                    {coachPlan.suggestedMilestones.map((m, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i+1}</div>
+                        <div>
+                          <div className="text-sm font-medium">{m.title}</div>
+                          <div className="text-xs text-primary/70">{m.timeframe}</div>
+                          {m.description && <div className="text-xs text-muted-foreground mt-0.5">{m.description}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommended habits */}
+              {coachPlan.recommendedHabits.length > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-emerald-400/70 mb-2">Recommended Habits</p>
+                  <div className="space-y-1.5">
+                    {coachPlan.recommendedHabits.map((h, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="text-emerald-400">✦</span>
+                        <span>{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions this week */}
+              {coachPlan.recommendedActions.length > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-sky-400/70 mb-2">This Week</p>
+                  <div className="space-y-1.5">
+                    {coachPlan.recommendedActions.map((a, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="text-sky-400">→</span>
+                        <span>{a}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-4">Could not generate coaching plan. Try again.</p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

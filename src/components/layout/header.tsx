@@ -16,6 +16,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Home", "/journal": "Journal", "/habits": "Habits", "/tasks": "Tasks",
   "/goals": "Goals", "/projects": "Projects", "/finance": "Finance", "/workout": "Workout",
   "/mood": "Mood", "/timeline": "Your Life", "/statistics": "Statistics", "/settings": "Settings",
+  "/review": "Weekly Review", "/analyst": "Life Analyst",
 };
 
 const TYPE_ICON: Record<string, string> = {
