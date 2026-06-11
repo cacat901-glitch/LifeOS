@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/hooks/use-store";
 import { NovusMark } from "@/components/shared/novus-logo";
+import { AIStatusBadge } from "@/components/shared/ai-status";
 import { cn } from "@/lib/utils";
 
 interface DashboardData {
@@ -127,6 +128,7 @@ export default function DashboardPage() {
               <span className="text-xs text-muted-foreground hidden sm:inline">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </span>
+              <AIStatusBadge variant="dot" className="ml-auto" />
             </div>
             {briefingLoading ? (
               <div className="space-y-2.5 max-w-2xl">
