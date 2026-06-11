@@ -103,7 +103,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">{insight.message}</p>
                 <p className={cn("mt-1.5 text-xs font-medium", s.text)}>{insight.action}</p>
               </div>
-              <button onClick={() => setDismissedInsights(p => new Set([...p, insight.title]))}
+              <button onClick={() => setDismissedInsights(p => new Set(Array.from(p).concat(insight.title)))}
                 className="text-muted-foreground hover:text-foreground shrink-0 mt-0.5 tap-small">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
