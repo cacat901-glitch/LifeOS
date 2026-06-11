@@ -47,7 +47,8 @@ export default function AuthErrorPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <img src="/logo.png" alt="Novus" className="h-10 w-10 rounded-xl object-cover" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://raw.githubusercontent.com/cacat901-glitch/LifeOS/main/logo.png" alt="Novus" className="h-10 w-10 rounded-xl object-cover" />
             <span className="font-bold text-2xl">Novus</span>
           </Link>
         </div>

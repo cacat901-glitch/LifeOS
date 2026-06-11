@@ -1,5 +1,7 @@
-import Image from "next/image";
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface NovusLogoProps {
   size?: "sm" | "md" | "lg";
@@ -8,15 +10,18 @@ interface NovusLogoProps {
 }
 
 const sizeMap = {
-  sm: { px: 32,  rounded: "rounded-xl",  text: "text-lg"   },
-  md: { px: 40,  rounded: "rounded-2xl", text: "text-xl"   },
-  lg: { px: 56,  rounded: "rounded-2xl", text: "text-3xl"  },
+  sm: { px: 32,  text: "text-lg",  rounded: "rounded-xl"  },
+  md: { px: 40,  text: "text-xl",  rounded: "rounded-2xl" },
+  lg: { px: 56,  text: "text-3xl", rounded: "rounded-2xl" },
 };
 
+// Raw GitHub URL — works immediately regardless of where logo.png is in the repo.
+// Once logo.png is moved to /public/logo.png this can switch to just "/logo.png".
+const LOGO_URL = "https://raw.githubusercontent.com/cacat901-glitch/LifeOS/main/logo.png";
+
 /**
- * The Novus mark — uses /public/logo.png.
- * The logo is a dark navy rounded-square icon so it naturally
- * looks correct on both dark and light backgrounds.
+ * NovusMark — the Novus app icon.
+ * Falls back to the gradient N if the image fails to load.
  */
 export function NovusMark({
   size = "md",
@@ -25,26 +30,41 @@ export function NovusMark({
   size?: NovusLogoProps["size"];
   className?: string;
 }) {
+  const [failed, setFailed] = useState(false);
   const s = sizeMap[size!];
+
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden",
+        "relative shrink-0 overflow-hidden flex items-center justify-center",
         s.rounded,
-        // Subtle drop-shadow matching the navy logo colour
-        "shadow-[0_8px_24px_-6px_rgba(30,58,138,0.5)]",
         className
       )}
-      style={{ width: s.px, height: s.px }}
+      style={{ width: s.px, height: s.px, minWidth: s.px }}
     >
-      <Image
-        src="/logo.png"
-        alt="Novus"
-        fill
-        sizes={`${s.px}px`}
-        className="object-cover"
-        priority
-      />
+      {!failed ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={LOGO_URL}
+          alt="Novus"
+          width={s.px}
+          height={s.px}
+          onError={() => setFailed(true)}
+          className="w-full h-full object-cover block"
+          style={{ display: "block" }}
+        />
+      ) : (
+        /* Fallback: gradient N while image loads or if it fails */
+        <div
+          className="w-full h-full flex items-center justify-center font-bold text-white"
+          style={{
+            background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)",
+            fontSize: s.px * 0.45,
+          }}
+        >
+          N
+        </div>
+      )}
     </div>
   );
 }
