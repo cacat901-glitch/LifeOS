@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAIProvider, type AIMessage } from "@/lib/ai";
 import { buildNovusContext } from "@/lib/ai/context";
-import { NOVUS_PERSONA } from "@/lib/ai/prompts";
+import { NOVUS_PERSONA, fallbackChatReply } from "@/lib/ai/prompts";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/ai/chat — Ask Novus
 // body: { messages: { role, content }[] }
 export async function POST(req: Request) {
+  let ctx: Awaited<ReturnType<typeof buildNovusContext>> | null = null;
+  let lastUserMessage = "";
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -19,9 +22,10 @@ export async function POST(req: Request) {
     if (!messages?.length) {
       return NextResponse.json({ error: "No messages provided" }, { status: 400 });
     }
+    lastUserMessage = messages.filter((m) => m.role === "user").pop()?.content || "";
 
     // Ground the AI with the user's live context
-    const ctx = await buildNovusContext(session.user.id);
+    ctx = await buildNovusContext(session.user.id);
     const contextBlock = `Here is the current context about the person you're helping (use it only when relevant):
 - Name: ${ctx.name}
 - Habits today: ${ctx.habits.completedToday}/${ctx.habits.total}, best streak ${ctx.habits.bestStreak}d
@@ -37,10 +41,19 @@ ${ctx.mood ? `- Mood: ${ctx.mood.label} (${ctx.mood.score}/10)` : ""}`;
     return NextResponse.json({ reply, provider: provider.name });
   } catch (error: any) {
     console.error("Chat error:", error);
-    // Return a graceful message instead of a 500 so the UI can display it
+    // Live model unavailable (quota / region / network) — degrade gracefully
+    // to Novus's built-in intelligence so the user still gets a useful reply.
+    if (ctx) {
+      return NextResponse.json({
+        reply: fallbackChatReply(lastUserMessage, ctx),
+        provider: "fallback",
+        degraded: true,
+      });
+    }
     return NextResponse.json({
-      reply: "I'm having trouble connecting right now. Please try again in a moment.",
-      error: true,
+      reply: "I couldn't reach my full intelligence right now — give it another try in a moment.",
+      provider: "fallback",
+      degraded: true,
     });
   }
 }
