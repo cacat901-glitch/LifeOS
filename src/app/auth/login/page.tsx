@@ -47,9 +47,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-white font-bold">N</span>
-            </div>
+            <img src="/logo.png" alt="Novus" className="h-10 w-10 rounded-xl object-cover" />
             <span className="font-bold text-2xl">Novus</span>
           </Link>
         </div>

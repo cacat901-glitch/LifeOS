@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface NovusLogoProps {
@@ -7,37 +8,60 @@ interface NovusLogoProps {
 }
 
 const sizeMap = {
-  sm: { box: "h-8 w-8 rounded-xl text-sm", text: "text-lg" },
-  md: { box: "h-10 w-10 rounded-2xl text-lg", text: "text-xl" },
-  lg: { box: "h-14 w-14 rounded-2xl text-2xl", text: "text-3xl" },
+  sm: { px: 32,  rounded: "rounded-xl",  text: "text-lg"   },
+  md: { px: 40,  rounded: "rounded-2xl", text: "text-xl"   },
+  lg: { px: 56,  rounded: "rounded-2xl", text: "text-3xl"  },
 };
 
-/** The Novus mark — a glowing gradient glyph. */
-export function NovusMark({ size = "md", className }: { size?: NovusLogoProps["size"]; className?: string }) {
+/**
+ * The Novus mark — uses /public/logo.png.
+ * The logo is a dark navy rounded-square icon so it naturally
+ * looks correct on both dark and light backgrounds.
+ */
+export function NovusMark({
+  size = "md",
+  className,
+}: {
+  size?: NovusLogoProps["size"];
+  className?: string;
+}) {
   const s = sizeMap[size!];
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center font-bold text-white shrink-0",
-        "bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400",
-        "shadow-[0_8px_24px_-6px_rgba(99,102,241,0.7)]",
-        s.box,
+        "relative shrink-0 overflow-hidden",
+        s.rounded,
+        // Subtle drop-shadow matching the navy logo colour
+        "shadow-[0_8px_24px_-6px_rgba(30,58,138,0.5)]",
         className
       )}
+      style={{ width: s.px, height: s.px }}
     >
-      <span className="relative z-10 tracking-tight">N</span>
-      <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/30 to-transparent opacity-60" />
+      <Image
+        src="/logo.png"
+        alt="Novus"
+        fill
+        sizes={`${s.px}px`}
+        className="object-cover"
+        priority
+      />
     </div>
   );
 }
 
-export function NovusLogo({ size = "md", withWordmark = true, className }: NovusLogoProps) {
+export function NovusLogo({
+  size = "md",
+  withWordmark = true,
+  className,
+}: NovusLogoProps) {
   const s = sizeMap[size];
   return (
     <div className={cn("inline-flex items-center gap-2.5", className)}>
       <NovusMark size={size} />
       {withWordmark && (
-        <span className={cn("font-semibold tracking-tight", s.text)}>Novus</span>
+        <span className={cn("font-semibold tracking-tight", s.text)}>
+          Novus
+        </span>
       )}
     </div>
   );

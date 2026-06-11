@@ -16,13 +16,18 @@ export const metadata: Metadata = {
     "Novus is your personal operating system — an intelligent companion that helps you manage every aspect of your life from a single platform. Journal, habits, goals, finance, workouts, and AI guidance.",
   keywords: ["personal operating system", "AI life coach", "second brain", "productivity", "habits", "journal", "goals"],
   authors: [{ name: "Novus" }],
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Novus — Your personal operating system",
     description: "An intelligent companion for your entire life.",
     type: "website",
+    images: [{ url: "/logo.png", width: 128, height: 128, alt: "Novus" }],
   },
   other: {
-    "theme-color": "#06060a",
+    "theme-color": "#1e3a8a",
   },
 };
 
