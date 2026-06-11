@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Navy rounded background -->
+  <rect width="128" height="128" rx="26" ry="26" fill="#1a3a6e"/>
+  <!-- White N with upward arrow — stylized chart/growth mark -->
+  <path d="M28 96 L28 44 L52 78 L52 44" stroke="#f0f4ff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Right leg with upward arrow -->
+  <path d="M52 78 L76 44 L76 62" stroke="#f0f4ff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Arrow head pointing up-right -->
+  <path d="M64 38 L90 38 L90 64" stroke="#f0f4ff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M76 44 L90 38" stroke="#f0f4ff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
