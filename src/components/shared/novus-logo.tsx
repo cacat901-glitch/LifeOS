@@ -20,7 +20,7 @@ const sizeMap = {
  * To activate the real logo: upload logo.png to the /public/ folder in GitHub.
  * Then change USE_IMAGE_LOGO to true and redeploy.
  */
-const USE_IMAGE_LOGO = false; // flip to true once /public/logo.png exists
+const USE_IMAGE_LOGO = true; // logo.png is in /public/
 
 export function NovusMark({
   size = "md",
