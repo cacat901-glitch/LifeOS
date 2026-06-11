@@ -47,8 +47,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://raw.githubusercontent.com/cacat901-glitch/LifeOS/main/logo.png" alt="Novus" className="h-10 w-10 rounded-xl object-cover" />
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">N</span>
+            </div>
             <span className="font-bold text-2xl">Novus</span>
           </Link>
         </div>
