@@ -76,3 +76,34 @@ export function fallbackBriefing(ctx: NovusContext): string {
 
   return parts.join(" ");
 }
+
+
+/**
+ * Context-aware fallback reply for the chat ("Ask Novus") when the live
+ * AI provider is unavailable (no key, quota exhausted, region-locked, etc.).
+ * Still feels intelligent because it reasons over the user's real data.
+ */
+export function fallbackChatReply(question: string, ctx: NovusContext): string {
+  const q = question.toLowerCase();
+  const first = ctx.name?.split(" ")[0] || "there";
+
+  // Focus / what should I do
+  if (q.includes("focus") || q.includes("today") || q.includes("do ") || q.includes("priorit")) {
+    if (ctx.topGoal) return `${first}, the highest-leverage move today is one concrete step toward "${ctx.topGoal}". You have ${ctx.tasks.total} open task${ctx.tasks.total === 1 ? "" : "s"} and ${ctx.habits.total - ctx.habits.completedToday} habit${ctx.habits.total - ctx.habits.completedToday === 1 ? "" : "s"} still to complete — pick the one that moves the needle, and protect your ${ctx.habits.bestStreak}-day streak while you're at it.`;
+    if (ctx.tasks.total > 0) return `Start with the most important of your ${ctx.tasks.total} open tasks, ${first}. Clear that one thing first — momentum compounds from there.`;
+    return `Decide the single thing that would make today a win, ${first}, and do it before anything else. You can always add goals and habits to give Novus more to work with.`;
+  }
+
+  // Progress / how am I doing
+  if (q.includes("track") || q.includes("progress") || q.includes("doing") || q.includes("how am")) {
+    return `Here's where you stand, ${first}: ${ctx.habits.completedToday}/${ctx.habits.total} habits done today, ${ctx.tasks.doneToday} tasks completed, and your active goals average ${ctx.goals.avgProgress}% progress. ${ctx.goals.avgProgress >= 60 ? "You're genuinely on pace — keep the rhythm." : "Steady, consistent steps will move those numbers. Pick one area to push today."}`;
+  }
+
+  // Motivation
+  if (q.includes("motivat") || q.includes("tired") || q.includes("stuck") || q.includes("hard")) {
+    return `${first}, you've already built a ${ctx.habits.bestStreak}-day streak — that's proof you can show up. You don't need a perfect day, just the next small action. Do one thing now, however small, and let it carry you.`;
+  }
+
+  // Default
+  return `I'm running on Novus's built-in intelligence right now (the live AI model isn't reachable). Based on your data, ${first}: ${ctx.habits.completedToday}/${ctx.habits.total} habits today, ${ctx.tasks.total} open tasks, ${ctx.goals.active} active goals at ${ctx.goals.avgProgress}%. Tell me what you'd like to focus on and I'll help you prioritize.`;
+}
