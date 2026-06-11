@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AIStatusBadge } from "@/components/shared/ai-status";
 
 interface UserData {
   id: string; name: string; email: string; bio?: string; location?: string; timezone?: string;
@@ -26,8 +27,9 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: "profile", label: "Profile" }, { id: "appearance", label: "Appearance" },
-    { id: "notifications", label: "Notifications" }, { id: "subscription", label: "Subscription" },
-    { id: "data", label: "Data & Export" }, { id: "account", label: "Account" },
+    { id: "notifications", label: "Notifications" }, { id: "novus-ai", label: "Novus AI" },
+    { id: "subscription", label: "Subscription" }, { id: "data", label: "Data & Export" },
+    { id: "account", label: "Account" },
   ];
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-20 rounded-2xl bg-muted/50" />)}</div>;
@@ -48,6 +50,7 @@ export default function SettingsPage() {
           {activeTab === "profile" && <ProfileTab user={user} onUpdate={setUser} />}
           {activeTab === "appearance" && <AppearanceTab />}
           {activeTab === "notifications" && <NotificationsTab user={user} onUpdate={setUser} />}
+          {activeTab === "novus-ai" && <NovusAITab />}
           {activeTab === "subscription" && <SubscriptionTab user={user} />}
           {activeTab === "data" && <DataTab />}
           {activeTab === "account" && <AccountTab />}
@@ -292,5 +295,52 @@ function DataTab() {
         ))}
       </CardContent>
     </Card>
+  );
+}
+
+
+function NovusAITab() {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Novus AI</CardTitle>
+          <CardDescription>Check which AI provider is powering your experience and whether it&apos;s working correctly.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AIStatusBadge variant="full" />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Provider</CardTitle>
+          <CardDescription>How Novus chooses which AI to use.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>Novus auto-detects the provider based on which API key is set in your environment:</p>
+          <div className="space-y-2">
+            {[
+              { key: "GROQ_API_KEY", label: "Groq (recommended)", desc: "Free, fast, no region restrictions. Uses Llama 3.3.", href: "https://console.groq.com/keys", badge: "Recommended" },
+              { key: "GEMINI_API_KEY", label: "Google Gemini", desc: "Requires billing enabled for EU/UK. Uses gemini-1.5-flash.", href: "https://aistudio.google.com/app/apikey", badge: "" },
+            ].map((p) => (
+              <div key={p.key} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">{p.key}</code>
+                    {p.badge && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-medium">{p.badge}</span>}
+                  </div>
+                  <p className="text-xs mt-1">{p.desc}</p>
+                </div>
+                <a href={p.href} target="_blank" rel="noopener" className="text-xs text-primary hover:underline shrink-0">Get key →</a>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs pt-1">
+            Set keys in <strong className="text-foreground">Vercel → Settings → Environment Variables</strong>, then redeploy.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
