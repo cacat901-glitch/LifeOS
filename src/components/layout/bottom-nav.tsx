@@ -136,15 +136,17 @@ function MobileMoreButton() {
   React.useEffect(() => { setOpen(false); }, [pathname]);
 
   const moreItems = [
-    { name: "Journal", href: "/journal", icon: "📓" },
-    { name: "Tasks", href: "/tasks", icon: "📋" },
-    { name: "Projects", href: "/projects", icon: "📁" },
-    { name: "Finance", href: "/finance", icon: "💳" },
-    { name: "Workout", href: "/workout", icon: "💪" },
-    { name: "Mood", href: "/mood", icon: "💜" },
-    { name: "Timeline", href: "/timeline", icon: "⏳" },
-    { name: "Statistics", href: "/statistics", icon: "📊" },
-    { name: "Settings", href: "/settings", icon: "⚙️" },
+    { name: "Journal",       href: "/journal",    icon: "📓" },
+    { name: "Tasks",         href: "/tasks",      icon: "📋" },
+    { name: "Projects",      href: "/projects",   icon: "📁" },
+    { name: "Finance",       href: "/finance",    icon: "💳" },
+    { name: "Workout",       href: "/workout",    icon: "💪" },
+    { name: "Mood",          href: "/mood",       icon: "💜" },
+    { name: "Weekly Review", href: "/review",     icon: "📊" },
+    { name: "Life Analyst",  href: "/analyst",    icon: "🧠" },
+    { name: "Timeline",      href: "/timeline",   icon: "⏳" },
+    { name: "Statistics",    href: "/statistics", icon: "📈" },
+    { name: "Settings",      href: "/settings",   icon: "⚙️" },
   ];
 
   return (
