@@ -166,7 +166,7 @@ export default function WeeklyReviewPage() {
               onClick={() => { setReview(r.parsed); setShowHistory(false); }}>
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{new Date(r.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
-                <span className="text-xs text-muted-foreground">Week {new Date(r.createdAt).getWeek?.() || ""}</span>
+                <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString("en-US", { weekday: "short" })}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.parsed?.narrative?.slice(0, 120)}…</p>
             </div>
