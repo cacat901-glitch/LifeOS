@@ -76,6 +76,8 @@ export function CommandCenter() {
   const [askMode, setAskMode] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [thinking, setThinking] = useState(false);
+  const [pending, setPending] = useState<{ actions: any[]; summary: string[] } | null>(null);
+  const [executing, setExecuting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +97,7 @@ export function CommandCenter() {
   // Reset on open
   useEffect(() => {
     if (commandOpen) {
-      setQuery(""); setActive(0); setAskMode(false); setMessages([]);
+      setQuery(""); setActive(0); setAskMode(false); setMessages([]); setPending(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [commandOpen]);
@@ -121,6 +123,7 @@ export function CommandCenter() {
     setMessages(next);
     setQuery("");
     setThinking(true);
+    setPending(null);
     try {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -129,16 +132,52 @@ export function CommandCenter() {
       });
       const data = await res.json();
       setMessages((m) => [...m, { role: "assistant", content: data.reply || "I couldn't respond just now." }]);
+      if (data.requiresConfirmation && Array.isArray(data.pendingActions)) {
+        setPending({ actions: data.pendingActions, summary: data.confirmationSummary || [] });
+      } else if (data.executed) {
+        // Real changes were made — refresh the underlying pages.
+        router.refresh();
+      }
     } catch {
       setMessages((m) => [...m, { role: "assistant", content: "Something went wrong reaching Novus AI." }]);
     } finally {
       setThinking(false);
     }
-  }, [messages]);
+  }, [messages, router]);
+
+  const confirmPending = useCallback(async () => {
+    if (!pending) return;
+    setExecuting(true);
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmActions: pending.actions }),
+      });
+      const data = await res.json();
+      setMessages((m) => [...m, { role: "assistant", content: data.reply || "Done." }]);
+      setPending(null);
+      if (data.accountDeleted) {
+        setMessages((m) => [...m, { role: "assistant", content: "Signing you out…" }]);
+        setTimeout(() => { window.location.href = "/auth/login"; }, 1400);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: "Something went wrong performing that action." }]);
+    } finally {
+      setExecuting(false);
+    }
+  }, [pending, router]);
+
+  const cancelPending = useCallback(() => {
+    setPending(null);
+    setMessages((m) => [...m, { role: "assistant", content: "Okay — I've cancelled that. Nothing was changed." }]);
+  }, []);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (askMode) {
-      if (e.key === "Enter" && query.trim() && !thinking) { e.preventDefault(); askNovus(query.trim()); }
+      if (e.key === "Enter" && query.trim() && !thinking && !pending && !executing) { e.preventDefault(); askNovus(query.trim()); }
       return;
     }
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, filtered.length)); }
@@ -204,7 +243,7 @@ export function CommandCenter() {
                   {messages.map((m, i) => (
                     <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                       <div className={cn(
-                        "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                        "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
                         m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/70 text-foreground"
                       )}>
                         {m.content}
@@ -221,6 +260,40 @@ export function CommandCenter() {
                         ))}
                       </div>
                     </div>
+                  )}
+
+                  {pending && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      className="rounded-2xl border border-red-500/30 bg-red-500/[0.08] p-4 space-y-3"
+                    >
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
+                        Confirm before I continue
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        {pending.summary.map((s, i) => (
+                          <li key={i} className="flex gap-2"><span className="text-red-400">•</span><span>{s}</span></li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-red-400/90">This permanently changes your data and can&apos;t be undone.</p>
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={confirmPending}
+                          disabled={executing}
+                          className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-sm font-medium py-2 transition-colors"
+                        >
+                          {executing ? "Working…" : "Yes, do it"}
+                        </button>
+                        <button
+                          onClick={cancelPending}
+                          disabled={executing}
+                          className="flex-1 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-sm font-medium py-2 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
               ) : (

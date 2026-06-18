@@ -60,9 +60,9 @@ export async function POST(req: Request) {
       const habit = await prisma.habit.create({
         data: {
           userId: session.user.id,
-          title: action.extracted.title || input.slice(0, 100),
+          name: action.extracted.title || input.slice(0, 100),
           frequency: "DAILY",
-        } as any,
+        },
       });
       created.habit = habit;
     }
