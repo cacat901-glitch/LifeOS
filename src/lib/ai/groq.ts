@@ -40,6 +40,7 @@ export class GroqProvider implements AIProvider {
             messages: payload,
             temperature: options.temperature ?? 0.8,
             max_tokens: options.maxTokens ?? 600,
+            ...(options.jsonMode ? { response_format: { type: "json_object" } } : {}),
           }),
         });
 

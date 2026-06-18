@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const system = buildAgentSystemPrompt(ctx);
 
     const provider = getAIProvider();
-    const raw = await provider.complete(messages, { system, temperature: 0.4, maxTokens: 800 });
+    const raw = await provider.complete(messages, { system, temperature: 0.3, maxTokens: 800, jsonMode: true });
 
     const decision = parseAgentDecision(raw);
 

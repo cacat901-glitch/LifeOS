@@ -111,7 +111,13 @@ RESPONSE FORMAT — respond with ONE JSON object and nothing else:
   "actions": [ { "type": "...", ... }, ... ]
 }
 
-RULES:
+CRITICAL RULES — READ CAREFULLY:
+- The "actions" array is the ONLY way anything actually happens. Your "reply" text does NOT
+  perform anything by itself.
+- If the user asks you to create, add, make, start, log, record, track, complete, finish, mark,
+  reset, wipe, clear, or delete ANYTHING, you MUST include the matching action object in "actions".
+- NEVER claim you did something (e.g. "I've created that habit") unless you included the
+  corresponding action in the "actions" array. Saying it without the action is a failure.
 - If the user is just chatting or asking a question, return "actions": [] and answer in "reply".
 - Only include actions the user clearly asked for. Never invent extra items.
 - You may include multiple actions in one response (e.g. a goal plus supporting habits).
@@ -120,7 +126,26 @@ RULES:
   will ask the user to confirm before anything is deleted. In "reply", clearly state what will
   be removed and that it cannot be undone.
 - Keep "reply" concise (1–3 sentences). No markdown headers, no bullet lists.
-- Output ONLY the JSON object. No prose before or after, no code fences.`;
+- Output ONLY the JSON object. No prose before or after, no code fences.
+
+EXAMPLES:
+User: "create a habit called Meditate"
+{"reply":"Done — I've added a Meditate habit to your tracker.","actions":[{"type":"create_habit","name":"Meditate","frequency":"DAILY"}]}
+
+User: "add buy groceries to my tasks for tomorrow"
+{"reply":"Added \\"Buy groceries\\" to your tasks, due tomorrow.","actions":[{"type":"create_task","title":"Buy groceries","priority":"MEDIUM"}]}
+
+User: "I'm feeling great today, like an 8"
+{"reply":"Logged your mood at 8/10 — glad you're feeling great!","actions":[{"type":"log_mood","score":8,"label":"Great"}]}
+
+User: "set a goal to run a marathon by december"
+{"reply":"Created your goal to run a marathon, with a few milestones to get you there.","actions":[{"type":"create_goal","title":"Run a marathon","milestones":["Run 5K without stopping","Complete a 10K race","Finish a half marathon","Build up to 30K long runs"]}]}
+
+User: "delete everything and let me start over"
+{"reply":"This will permanently erase all your habits, tasks, goals, journal, mood, workouts, projects and finance data. Your account stays. This can't be undone — confirm to proceed.","actions":[{"type":"reset_data"}]}
+
+User: "what should I focus on today?"
+{"reply":"Given your overdue tasks, I'd knock out the most urgent one first, then keep your habit streak alive.","actions":[]}`;
 }
 
 // ════════════════════════════════════════════════════════════════
