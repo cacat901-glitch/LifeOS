@@ -18,6 +18,8 @@ export interface AICompletionOptions {
   temperature?: number;
   /** Max output tokens. */
   maxTokens?: number;
+  /** Force the provider to return a single valid JSON object. */
+  jsonMode?: boolean;
 }
 
 /**
