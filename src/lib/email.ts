@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-init: instantiating Resend at module load throws "Missing API key" when
+// RESEND_API_KEY is absent (e.g. during `next build` data collection), which
+// crashes the whole build. Construct it only on first actual use.
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 // Resend rejects sends from unverified domains. Default to Resend's shared
 // onboarding domain (works without verification); override with EMAIL_FROM
 // once a custom domain is verified in Resend.
@@ -11,7 +18,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://novus.vercel.app";
 export async function sendWelcomeEmail(to: string, name: string) {
   if (!process.env.RESEND_API_KEY) return; // graceful no-op if not configured
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: "Welcome to Novus",
@@ -57,7 +64,7 @@ export async function sendPasswordResetEmail(to: string, token: string) {
 
   const resetUrl = `${APP_URL}/auth/reset-password?token=${token}`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: "Reset your Novus password",
