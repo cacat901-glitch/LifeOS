@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
@@ -8,6 +8,21 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+// Characterful display face for headlines (editorial "Novus OS" direction)
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+// Monospace for "system" metadata, labels, and code-like accents
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +42,7 @@ export const metadata: Metadata = {
     images: [{ url: "/logo.png", width: 128, height: 128, alt: "Novus" }],
   },
   other: {
-    "theme-color": "#1e3a8a",
+    "theme-color": "#0a0a0b",
   },
 };
 
@@ -38,7 +53,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${display.variable} ${mono.variable} font-sans antialiased`}>
         <SessionProvider>
           <ThemeProvider
             attribute="class"

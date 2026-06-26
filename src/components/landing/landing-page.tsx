@@ -1,65 +1,123 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, type Variants } from "framer-motion";
-import { NovusMark, NovusLogo } from "@/components/shared/novus-logo";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  NotebookPen,
+  Flame,
+  Target,
+  Dumbbell,
+  Wallet,
+  KanbanSquare,
+  Sparkles,
+  Command,
+  Plus,
+  Minus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const ease: [number, number, number, number] = [0.2, 0.8, 0.2, 1];
+const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease } },
 };
 const stagger: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.12 } },
+  show: { transition: { staggerChildren: 0.08 } },
 };
 
 export function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="aurora"><div className="aurora-blob" /></div>
-      <div className="noise" />
-      <Nav />
-      <Hero />
-      <Marquee />
-      <Manifesto />
-      <Features />
-      <AISection />
-      <CommandSection />
-      <HowItWorks />
-      <Testimonials />
-      <Pricing />
-      <FAQ />
-      <CTA />
-      <Footer />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#0a0a0b] font-sans text-neutral-300 antialiased selection:bg-[var(--signal)] selection:text-black">
+      <div className="grid-bg pointer-events-none fixed inset-0 z-0 opacity-60" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="relative z-10">
+        <Nav />
+        <Hero />
+        <Bento />
+        <Marquee />
+        <Manifesto />
+        <Features />
+        <AISection />
+        <HowItWorks />
+        <Pricing />
+        <FAQ />
+        <CTA />
+        <Footer />
+      </div>
     </div>
+  );
+}
+
+// ── Wordmark ───────────────────────────────────────────────
+function Wordmark({ className }: { className?: string }) {
+  return (
+    <Link href="/" className={cn("group inline-flex items-center gap-2.5", className)}>
+      <span className="h-2.5 w-2.5 rounded-[3px] bg-[var(--signal)] transition-transform duration-500 group-hover:rotate-[225deg]" />
+      <span className="font-display text-[19px] font-semibold leading-none tracking-tight text-white">
+        Novus
+      </span>
+    </Link>
   );
 }
 
 // ── Nav ────────────────────────────────────────────────────
 function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const links = [
+    { label: "Product", href: "#bento" },
+    { label: "Intelligence", href: "#ai" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "FAQ", href: "#faq" },
+  ];
+
   return (
     <motion.nav
-      initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease }}
-      className="fixed top-0 inset-x-0 z-50"
+      initial={{ y: -24, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.7, ease }}
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300",
+        scrolled ? "border-white/[0.08] bg-[#0a0a0b]/80 backdrop-blur-xl" : "border-transparent"
+      )}
     >
-      <div className="max-w-6xl mx-auto px-4 mt-4">
-        <div className="flex items-center justify-between h-14 px-5 glass rounded-2xl">
-          <NovusLogo size="sm" />
-          <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#ai" className="hover:text-foreground transition-colors">Novus AI</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-            <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="text-sm px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors">Log in</Link>
-            <Link href="/auth/register" className="text-sm font-medium px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_8px_24px_-8px_rgba(99,102,241,0.8)] hover:opacity-90 transition-opacity">
-              Start free
-            </Link>
-          </div>
+      <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between px-5 md:px-8">
+        <Wordmark />
+        <div className="hidden items-center gap-9 md:flex">
+          {links.map((l) => (
+            <a
+              key={l.label}
+              href={l.href}
+              className="hover-line font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-400 transition-colors hover:text-white"
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Link
+            href="/auth/login"
+            className="hidden rounded-full px-4 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-300 transition-colors hover:text-white sm:inline-block"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/auth/register"
+            className="group inline-flex items-center gap-1.5 rounded-full bg-[var(--signal)] px-4 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-black transition-transform hover:scale-[1.03]"
+          >
+            Start free
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </div>
     </motion.nav>
@@ -70,104 +128,323 @@ function Nav() {
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.94]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
+
+  const [clock, setClock] = useState<string>("");
+  useEffect(() => {
+    const tick = () =>
+      setClock(
+        new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <section ref={ref} className="relative pt-40 md:pt-52 pb-24 px-4">
-      <motion.div style={{ y, opacity, scale }} className="max-w-5xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-medium text-muted-foreground mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Now with Novus AI — powered by Gemini
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.1 }}
-          className="text-5xl sm:text-6xl md:text-8xl font-semibold tracking-tight leading-[0.95] text-balance"
-        >
-          Your personal
-          <br />
-          <span className="gradient-text-aurora">operating system.</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.25 }}
-          className="mt-7 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty"
-        >
-          Novus is the intelligent companion for your entire life. One calm, beautiful place to think, plan, reflect, and grow — guided by an AI that understands the bigger picture.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.4 }}
-          className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
-        >
-          <Link href="/auth/register"
-            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium text-base shadow-[0_12px_40px_-8px_rgba(99,102,241,0.7)] hover:shadow-[0_16px_50px_-8px_rgba(99,102,241,0.9)] transition-all">
-            Start free
-            <svg className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-          </Link>
-          <a href="#ai"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-2xl glass font-medium text-base hover:bg-muted/40 transition-colors">
-            See Novus AI
-          </a>
-        </motion.div>
-        <p className="mt-4 text-xs text-muted-foreground">Free forever. No credit card required.</p>
+    <section ref={ref} className="relative px-5 pt-40 md:px-8 md:pt-52">
+      {/* system metadata row */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1, ease, delay: 0.2 }}
+        className="mx-auto flex max-w-[1240px] items-center justify-between border-b border-white/[0.08] pb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500"
+      >
+        <span>[ Personal Operating System ]</span>
+        <span className="hidden sm:inline">
+          <span className="text-[var(--signal)]">●</span> Live {clock || "--:--:--"}
+        </span>
+        <span>v1.0 — 2026</span>
       </motion.div>
 
-      {/* Floating product mock */}
-      <motion.div
-        initial={{ opacity: 0, y: 60, rotateX: 12 }} animate={{ opacity: 1, y: 0, rotateX: 0 }}
-        transition={{ duration: 1, ease, delay: 0.5 }}
-        className="relative max-w-4xl mx-auto mt-20"
-        style={{ perspective: 1200 }}
-      >
-        <div className="glass-panel rounded-[28px] p-2 shadow-2xl">
-          <div className="rounded-[22px] overflow-hidden bg-background/60 border border-border/40">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40">
-              <div className="flex gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-red-400/70" />
-                <span className="w-3 h-3 rounded-full bg-amber-400/70" />
-                <span className="w-3 h-3 rounded-full bg-emerald-400/70" />
-              </div>
-            </div>
-            <div className="p-7">
-              <div className="flex items-start gap-4">
-                <div className="pulse-ring relative"><NovusMark size="md" /></div>
-                <div className="flex-1">
-                  <div className="text-[11px] uppercase tracking-wide text-primary/70 mb-2">Novus Briefing</div>
-                  <p className="text-base md:text-lg font-medium leading-relaxed text-foreground/90">
-                    Good evening, David. Today was productive — you completed your workout and held your 12-day streak. You&apos;re 68% toward your marathon goal. Today&apos;s focus: one deep-work block on your project.
-                  </p>
-                  <div className="flex gap-2 mt-4">
-                    <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-medium">Ask Novus</span>
-                    <span className="px-3 py-1.5 rounded-full bg-muted/50 text-xs">Review goals</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <motion.div style={{ y, opacity }} className="mx-auto max-w-[1240px]">
+        <h1 className="mt-10 font-display font-semibold leading-[0.92] tracking-[-0.03em] text-white">
+          <Reveal delay={0.05}>
+            <span className="block text-[length:clamp(2.6rem,11vw,9.5rem)]">Your entire life,</span>
+          </Reveal>
+          <Reveal delay={0.14}>
+            <span className="block text-[length:clamp(2.6rem,11vw,9.5rem)] text-neutral-500">
+              one&nbsp;<span className="italic text-[var(--signal)]">operating system.</span>
+            </span>
+          </Reveal>
+        </h1>
+
+        <div className="mt-10 grid gap-10 md:grid-cols-[1.4fr_1fr] md:items-end">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease, delay: 0.4 }}
+            className="max-w-xl text-pretty text-lg leading-relaxed text-neutral-400"
+          >
+            Habits, goals, journal, finance, workouts — unified, and run by an intelligence that
+            understands the whole picture. Not another tracker. The mind that ties it together.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease, delay: 0.5 }}
+            className="flex flex-col gap-3 sm:flex-row md:justify-end"
+          >
+            <Link
+              href="/auth/register"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--signal)] px-7 py-4 text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+            >
+              Start free
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#bento"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-7 py-4 text-sm font-medium text-white transition-colors hover:bg-white/5"
+            >
+              See it in motion
+            </a>
+          </motion.div>
         </div>
-        <div className="absolute -inset-x-12 -bottom-12 h-40 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+
+        {/* index strip */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, ease, delay: 0.7 }}
+          className="mt-14 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/[0.08] pt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500"
+        >
+          {["AI-native", "Journal", "Habits", "Goals", "Finance", "Workouts", "Mood", "Timeline"].map(
+            (t, i) => (
+              <span key={t} className="flex items-center gap-6">
+                {i !== 0 && <span className="text-neutral-700">/</span>}
+                {t}
+              </span>
+            )
+          )}
+        </motion.div>
       </motion.div>
     </section>
   );
 }
 
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  return (
+    <span className="block overflow-hidden">
+      <motion.span
+        initial={{ y: "110%" }}
+        animate={{ y: "0%" }}
+        transition={{ duration: 0.9, ease, delay }}
+        className="block"
+      >
+        {children}
+      </motion.span>
+    </span>
+  );
+}
+
+// ── Bento product showcase ─────────────────────────────────
+function Bento() {
+  return (
+    <section id="bento" className="px-5 py-28 md:px-8 md:py-36">
+      <div className="mx-auto max-w-[1240px]">
+        <SectionLabel index="01" label="The Workspace" />
+        <motion.h2
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="mt-6 max-w-3xl font-display text-[length:clamp(2rem,5vw,3.6rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-white"
+        >
+          Everything in one calm canvas.
+        </motion.h2>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-6 md:grid-rows-2"
+        >
+          {/* Briefing — large */}
+          <Panel className="md:col-span-4 md:row-span-1">
+            <div className="flex items-center justify-between">
+              <Kicker icon={Sparkles}>Novus Briefing</Kicker>
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600">07:14</span>
+            </div>
+            <p className="mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-neutral-200 md:text-xl">
+              Good morning, David. You held your 12-day meditation streak and you&apos;re{" "}
+              <span className="text-[var(--signal)]">68% toward your marathon goal</span>. Your energy
+              peaks before noon — block one deep-work session on the project first.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Chip active>Ask Novus</Chip>
+              <Chip>Review goals</Chip>
+              <Chip>Start focus block</Chip>
+            </div>
+          </Panel>
+
+          {/* Life score ring */}
+          <Panel className="md:col-span-2 md:row-span-1">
+            <Kicker icon={Target}>Life Score</Kicker>
+            <div className="mt-4 flex items-center gap-5">
+              <Ring value={82} />
+              <div>
+                <div className="font-display text-4xl font-semibold text-white">82</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
+                  +6 this week
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          {/* Habits */}
+          <Panel className="md:col-span-2 md:row-span-1">
+            <Kicker icon={Flame}>Habits</Kicker>
+            <div className="mt-5 flex items-center gap-1.5">
+              {[1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1].map((on, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "h-7 flex-1 rounded-[4px]",
+                    on ? "bg-[var(--signal)]" : "border border-white/10 bg-transparent"
+                  )}
+                  style={on ? { opacity: 0.35 + (i / 12) * 0.65 } : undefined}
+                />
+              ))}
+            </div>
+            <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
+              12-day streak · meditation
+            </div>
+          </Panel>
+
+          {/* Finance sparkline */}
+          <Panel className="md:col-span-2 md:row-span-1">
+            <Kicker icon={Wallet}>Net worth</Kicker>
+            <div className="mt-3 font-display text-3xl font-semibold text-white">£24,180</div>
+            <Sparkline />
+          </Panel>
+
+          {/* Command */}
+          <Panel className="group md:col-span-2 md:row-span-1">
+            <Kicker icon={Command}>Command</Kicker>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+              Create, navigate or ask — anywhere.
+            </p>
+            <div className="mt-5 flex items-center gap-2">
+              <Key>⌘</Key>
+              <Key>K</Key>
+              <span className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-600">
+                to summon
+              </span>
+            </div>
+          </Panel>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      className={cn(
+        "rounded-2xl border border-white/[0.08] bg-white/[0.015] p-6 transition-colors duration-300 hover:border-white/20",
+        className
+      )}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function Kicker({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+      <Icon className="h-3.5 w-3.5 text-[var(--signal)]" />
+      {children}
+    </div>
+  );
+}
+
+function Chip({ children, active }: { children: React.ReactNode; active?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "bg-[var(--signal)] text-black"
+          : "border border-white/12 text-neutral-300 hover:bg-white/5"
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Key({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex h-8 min-w-8 items-center justify-center rounded-lg border border-white/15 bg-white/[0.03] px-2 font-mono text-sm text-white">
+      {children}
+    </span>
+  );
+}
+
+function Ring({ value }: { value: number }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const dash = (value / 100) * c;
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
+      <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+      <circle
+        cx="32"
+        cy="32"
+        r={r}
+        fill="none"
+        stroke="var(--signal)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${c}`}
+      />
+    </svg>
+  );
+}
+
+function Sparkline() {
+  const pts = [12, 14, 13, 17, 16, 20, 19, 24, 23, 28, 31, 30];
+  const max = Math.max(...pts);
+  const min = Math.min(...pts);
+  const w = 220;
+  const h = 48;
+  const path = pts
+    .map((p, i) => {
+      const x = (i / (pts.length - 1)) * w;
+      const yv = h - ((p - min) / (max - min)) * h;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${yv.toFixed(1)}`;
+    })
+    .join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="mt-4 h-12 w-full" preserveAspectRatio="none">
+      <path d={path} fill="none" stroke="var(--signal)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 // ── Marquee ────────────────────────────────────────────────
 function Marquee() {
-  const items = ["Journal", "Habits", "Goals", "Tasks", "Projects", "Finance", "Workouts", "Mood", "Timeline", "AI Coach"];
+  const items = ["Think", "Plan", "Reflect", "Track", "Build", "Grow", "Focus", "Review"];
   return (
-    <div className="relative py-8 overflow-hidden border-y border-border/40">
+    <div className="mask-x relative overflow-hidden border-y border-white/[0.08] py-7">
       <motion.div
-        className="flex gap-10 whitespace-nowrap"
+        className="flex gap-12 whitespace-nowrap pr-12"
         animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
       >
-        {[...items, ...items].map((it, i) => (
-          <span key={i} className="text-2xl font-medium text-muted-foreground/40 flex items-center gap-10">
-            {it} <span className="text-primary/30">✦</span>
+        {[...items, ...items, ...items, ...items].map((it, i) => (
+          <span
+            key={i}
+            className="flex items-center gap-12 font-display text-3xl font-medium tracking-tight text-neutral-700"
+          >
+            {it}
+            <span className="text-[#c8f94e66]">✦</span>
           </span>
         ))}
       </motion.div>
@@ -178,212 +455,187 @@ function Marquee() {
 // ── Manifesto ──────────────────────────────────────────────
 function Manifesto() {
   return (
-    <section className="py-28 md:py-40 px-4">
-      <motion.div
-        variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}
-        className="max-w-4xl mx-auto text-center"
-      >
-        <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-6">The philosophy</motion.p>
-        <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight text-balance">
-          Not another habit tracker. Not another to-do list.
-          <span className="text-muted-foreground"> A second brain that helps you run your entire life.</span>
-        </motion.h2>
-      </motion.div>
-    </section>
-  );
-}
-
-// ── Features ───────────────────────────────────────────────
-const features = [
-  { icon: "✦", title: "Living journal", desc: "Write, reflect, and watch patterns emerge across your moods and days." },
-  { icon: "◎", title: "Habits & streaks", desc: "Design the rhythm of your days with heatmaps and momentum tracking." },
-  { icon: "✧", title: "Goals & milestones", desc: "Set meaningful goals and see your trajectory toward them, visually." },
-  { icon: "⟁", title: "Workout intelligence", desc: "Log sessions, sets, and PRs. Novus connects training to your wellbeing." },
-  { icon: "◈", title: "Finance clarity", desc: "Track income, expenses and net worth with calm, beautiful charts." },
-  { icon: "❖", title: "Projects", desc: "Plan work with kanban boards, notes and progress — all in one canvas." },
-];
-
-function Features() {
-  return (
-    <section id="features" className="py-24 px-4">
-      <div className="max-w-6xl mx-auto">
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
-          <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-4">Everything, unified</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl md:text-6xl font-semibold tracking-tight">One canvas for your life.</motion.h2>
-        </motion.div>
-
+    <section className="px-5 py-28 md:px-8 md:py-40">
+      <div className="mx-auto max-w-[1240px]">
         <motion.div
-          variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-100px" }}
         >
-          {features.map((f) => (
-            <motion.div key={f.title} variants={fadeUp}
-              className="group glass-panel rounded-[24px] p-7 lift">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
-                {f.icon}
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-            </motion.div>
-          ))}
+          <motion.p
+            variants={fadeUp}
+            className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500"
+          >
+            The philosophy
+          </motion.p>
+          <motion.h2
+            variants={fadeUp}
+            className="mt-8 max-w-5xl font-display text-[length:clamp(1.9rem,5.2vw,4.2rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-white"
+          >
+            Most apps track a slice of you.
+            <span className="text-neutral-600"> Novus understands the whole — and tells you what actually matters today.</span>
+          </motion.h2>
         </motion.div>
       </div>
     </section>
   );
 }
 
-// ── AI Section ─────────────────────────────────────────────
-function AISection() {
+// ── Features (editorial index) ─────────────────────────────
+const features = [
+  { n: "01", icon: NotebookPen, title: "Living journal", desc: "Write and reflect. Patterns surface across your moods and days." },
+  { n: "02", icon: Flame, title: "Habits & streaks", desc: "Design the rhythm of your days with heatmaps and momentum." },
+  { n: "03", icon: Target, title: "Goals & milestones", desc: "Set goals that matter and watch your trajectory toward them." },
+  { n: "04", icon: Dumbbell, title: "Workout intelligence", desc: "Log sessions, sets and PRs. Training connects to your wellbeing." },
+  { n: "05", icon: Wallet, title: "Finance clarity", desc: "Income, expenses and net worth in calm, legible detail." },
+  { n: "06", icon: KanbanSquare, title: "Projects", desc: "Plan work with boards, notes and progress on one canvas." },
+];
+
+function Features() {
   return (
-    <section id="ai" className="py-28 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="relative glass-panel rounded-[36px] p-8 md:p-16 overflow-hidden">
-          <div className="absolute -top-32 -right-20 w-96 h-96 rounded-full bg-violet-500/20 blur-3xl" />
-          <div className="absolute -bottom-32 -left-20 w-96 h-96 rounded-full bg-indigo-500/20 blur-3xl" />
-
-          <div className="relative grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium mb-6">
-                <NovusMark size="sm" className="!h-4 !w-4 !text-[9px] !rounded-md" /> Novus AI
-              </motion.div>
-              <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-5">
-                A companion that actually <span className="gradient-text">knows you.</span>
-              </motion.h2>
-              <motion.p variants={fadeUp} className="text-muted-foreground text-lg leading-relaxed mb-6">
-                Every morning, Novus reads your whole life — habits, goals, mood, training, finances — and tells you what matters today. It&apos;s not a chatbot in a corner. It&apos;s the intelligence at the center of everything.
-              </motion.p>
-              <motion.ul variants={fadeUp} className="space-y-3">
-                {["Personalized daily briefings", "Pattern recognition across your life", "Ask anything, grounded in your real data", "Built on a swappable provider layer"].map((t) => (
-                  <li key={t} className="flex items-center gap-3 text-sm">
-                    <span className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    </span>
-                    {t}
-                  </li>
-                ))}
-              </motion.ul>
-            </motion.div>
-
-            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-              className="glass rounded-[24px] p-6 space-y-4">
-              <ChatBubble role="user">What should I focus on today?</ChatBubble>
-              <ChatBubble role="ai">
-                You&apos;ve held your meditation streak for 15 days — keep that anchor. Your mathematics project is the highest-leverage thing on your list. Block two focused hours this morning while your energy is highest, then reward yourself with the workout you planned.
-              </ChatBubble>
-              <ChatBubble role="user">Am I on track for my savings goal?</ChatBubble>
-              <ChatBubble role="ai">
-                You&apos;re at 82% with two months to spare. At your current pace you&apos;ll arrive early — nicely done.
-              </ChatBubble>
-            </motion.div>
-          </div>
+    <section id="features" className="px-5 py-24 md:px-8">
+      <div className="mx-auto max-w-[1240px]">
+        <SectionLabel index="02" label="Capabilities" />
+        <div className="mt-10 border-t border-white/[0.08]">
+          {features.map((f) => (
+            <motion.a
+              key={f.n}
+              href="/auth/register"
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.6, ease }}
+              className="group grid grid-cols-[auto_1fr_auto] items-center gap-5 border-b border-white/[0.08] py-7 transition-colors hover:bg-white/[0.02] md:gap-10 md:py-9"
+            >
+              <span className="font-mono text-xs text-neutral-600 md:text-sm">{f.n}</span>
+              <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:gap-8">
+                <div className="flex items-center gap-3">
+                  <f.icon className="h-5 w-5 shrink-0 text-[var(--signal)]" />
+                  <h3 className="font-display text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                    {f.title}
+                  </h3>
+                </div>
+                <p className="max-w-md text-sm leading-relaxed text-neutral-500">{f.desc}</p>
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-neutral-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--signal)]" />
+            </motion.a>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function ChatBubble({ role, children }: { role: "user" | "ai"; children: React.ReactNode }) {
+// ── AI section ─────────────────────────────────────────────
+function AISection() {
+  return (
+    <section id="ai" className="px-5 py-28 md:px-8 md:py-36">
+      <div className="mx-auto grid max-w-[1240px] gap-14 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+          <motion.div variants={fadeUp}>
+            <SectionLabel index="03" label="Intelligence" />
+          </motion.div>
+          <motion.h2
+            variants={fadeUp}
+            className="mt-6 font-display text-[length:clamp(2rem,5vw,3.8rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-white"
+          >
+            A companion that actually <span className="italic text-[var(--signal)]">knows you.</span>
+          </motion.h2>
+          <motion.p variants={fadeUp} className="mt-6 max-w-md text-pretty text-lg leading-relaxed text-neutral-400">
+            Novus reads your whole life and acts on it. Ask it to create a habit, plan a goal, log
+            your mood, or reset your data — and it actually does it. Not a chatbot in a corner; the
+            intelligence at the center.
+          </motion.p>
+          <motion.ul variants={fadeUp} className="mt-8 space-y-px">
+            {[
+              "Personalized daily briefings",
+              "Real actions — create, plan, log, on command",
+              "Grounded in your real data",
+              "Swappable AI provider layer",
+            ].map((t) => (
+              <li
+                key={t}
+                className="flex items-center gap-3 border-t border-white/[0.08] py-3.5 text-sm text-neutral-300"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
+                {t}
+              </li>
+            ))}
+          </motion.ul>
+        </motion.div>
+
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="rounded-2xl border border-white/[0.08] bg-white/[0.015] p-5 md:p-7"
+        >
+          <div className="flex items-center gap-2 border-b border-white/[0.08] pb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            <span className="h-2 w-2 rounded-full bg-[var(--signal)]" />
+            Novus — session
+          </div>
+          <div className="mt-5 space-y-3">
+            <Bubble role="user">Create a habit to read 20 minutes every night.</Bubble>
+            <Bubble role="ai">Done — &quot;Read 20 minutes&quot; added to your habits, nightly. Want me to set an 8pm reminder?</Bubble>
+            <Bubble role="user">What should I focus on today?</Bubble>
+            <Bubble role="ai">
+              Your project is the highest-leverage item. Block two hours this morning while your
+              energy peaks, then the workout you planned.
+            </Bubble>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function Bubble({ role, children }: { role: "user" | "ai"; children: React.ReactNode }) {
   const isUser = role === "user";
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-        isUser ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white" : "bg-muted/60 text-foreground"
-      }`}>
+    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+      <div
+        className={cn(
+          "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+          isUser ? "bg-[var(--signal)] text-black" : "border border-white/10 bg-white/[0.03] text-neutral-200"
+        )}
+      >
         {children}
       </div>
     </div>
   );
 }
 
-// ── Command Section ────────────────────────────────────────
-function CommandSection() {
-  return (
-    <section className="py-24 px-4">
-      <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-        className="max-w-4xl mx-auto text-center">
-        <motion.p variants={fadeUp} className="text-sm uppercase tracking-widest text-primary/70 mb-4">The command center</motion.p>
-        <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">
-          Do anything in a keystroke.
-        </motion.h2>
-        <motion.p variants={fadeUp} className="text-muted-foreground text-lg mb-10">
-          Press <kbd className="px-2 py-1 rounded-lg bg-muted/60 border border-border/60 text-sm">⌘K</kbd> anywhere to create, navigate, search, or ask Novus.
-        </motion.p>
-        <motion.div variants={fadeUp} className="glass-strong rounded-[24px] overflow-hidden text-left max-w-xl mx-auto ring-1 ring-white/10">
-          <div className="flex items-center gap-3 px-5 h-14 border-b border-border/60">
-            <NovusMark size="sm" />
-            <span className="text-muted-foreground text-sm">Ask Novus anything…</span>
-            <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-muted/60 border border-border/60">ESC</kbd>
-          </div>
-          {["Create Task", "Start Workout", "Create Journal Entry", "Ask Novus"].map((c, i) => (
-            <div key={c} className={`flex items-center gap-3 px-5 py-3 text-sm ${i === 3 ? "bg-primary/10" : ""}`}>
-              <span className="w-2 h-2 rounded-full bg-primary/50" />
-              {c}
-            </div>
-          ))}
-        </motion.div>
-      </motion.div>
-    </section>
-  );
-}
-
 // ── How it works ───────────────────────────────────────────
 function HowItWorks() {
   const steps = [
-    { n: "01", t: "Bring your life in", d: "Add your habits, goals, finances and more. It takes minutes." },
+    { n: "01", t: "Bring your life in", d: "Add habits, goals, finances and more. Minutes, not hours." },
     { n: "02", t: "Novus learns the picture", d: "The AI reads your patterns and understands what matters." },
-    { n: "03", t: "Get guided every day", d: "Wake up to a briefing and act with clarity and momentum." },
+    { n: "03", t: "Get guided every day", d: "Wake to a briefing and act with clarity and momentum." },
   ];
   return (
-    <section className="py-24 px-4 bg-muted/10">
-      <div className="max-w-5xl mx-auto">
-        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-16">How it works</motion.h2>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="grid md:grid-cols-3 gap-6">
+    <section className="px-5 py-24 md:px-8">
+      <div className="mx-auto max-w-[1240px]">
+        <SectionLabel index="04" label="How it works" />
+        <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] md:grid-cols-3">
           {steps.map((s) => (
-            <motion.div key={s.n} variants={fadeUp} className="glass-panel rounded-[24px] p-7">
-              <div className="text-5xl font-semibold gradient-text mb-4">{s.n}</div>
-              <h3 className="text-lg font-semibold mb-2">{s.t}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{s.d}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
-// ── Testimonials ───────────────────────────────────────────
-const testimonials = [
-  { name: "Alex Chen", role: "Software Engineer", initials: "AC", quote: "Novus replaced five apps. The morning briefing genuinely changes how I start my day." },
-  { name: "Sarah Mitchell", role: "Designer", initials: "SM", quote: "It feels less like software and more like a calm, intelligent companion. The design is breathtaking." },
-  { name: "Marcus Rodriguez", role: "Founder", initials: "MR", quote: "The command center alone is worth it. ⌘K and I'm doing anything in a second." },
-  { name: "Emily Park", role: "Medical Student", initials: "EP", quote: "Novus AI noticed patterns in my mood and study habits I never would have seen myself." },
-];
-
-function Testimonials() {
-  return (
-    <section className="py-24 px-4">
-      <div className="max-w-6xl mx-auto">
-        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-16">
-          Loved by people who take growth <span className="gradient-text">seriously.</span>
-        </motion.h2>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {testimonials.map((t) => (
-            <motion.div key={t.name} variants={fadeUp} className="glass-panel rounded-[24px] p-7">
-              <p className="text-lg leading-relaxed mb-5 text-foreground/90">&ldquo;{t.quote}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-sm font-semibold text-white">{t.initials}</div>
-                <div>
-                  <div className="text-sm font-medium">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
-                </div>
+            <motion.div
+              key={s.n}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease }}
+              className="bg-white/[0.015] p-8 md:p-10"
+            >
+              <div className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--signal)]">
+                {s.n}
               </div>
+              <h3 className="mt-5 font-display text-xl font-semibold text-white">{s.t}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-500">{s.d}</p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -392,69 +644,151 @@ function Testimonials() {
 // ── Pricing ────────────────────────────────────────────────
 function Pricing() {
   return (
-    <section id="pricing" className="py-24 px-4">
-      <div className="max-w-5xl mx-auto">
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-          <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-semibold tracking-tight">Start free. Upgrade when ready.</motion.h2>
-        </motion.div>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          <motion.div variants={fadeUp} className="glass-panel rounded-[28px] p-8">
-            <h3 className="text-xl font-semibold mb-1">Free</h3>
-            <p className="text-sm text-muted-foreground mb-6">Everything you need to begin.</p>
-            <div className="text-4xl font-semibold mb-6">$0<span className="text-base text-muted-foreground font-normal">/mo</span></div>
-            <ul className="space-y-3 mb-8">
-              {["Up to 3 habits", "Journal & tasks", "Goals & mood", "Daily AI briefing"].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm"><Check /> {f}</li>
-              ))}
-            </ul>
-            <Link href="/auth/register" className="block text-center py-3 rounded-2xl glass font-medium hover:bg-muted/40 transition-colors">Get started</Link>
-          </motion.div>
+    <section id="pricing" className="px-5 py-28 md:px-8">
+      <div className="mx-auto max-w-[1240px]">
+        <SectionLabel index="05" label="Pricing" />
+        <motion.h2
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="mt-6 font-display text-[length:clamp(2rem,5vw,3.6rem)] font-semibold tracking-[-0.02em] text-white"
+        >
+          Start free. Upgrade when ready.
+        </motion.h2>
 
-          <motion.div variants={fadeUp} className="relative glass-panel rounded-[28px] p-8 ring-2 ring-primary/40 overflow-hidden">
-            <div className="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-medium rounded-bl-2xl">Popular</div>
-            <h3 className="text-xl font-semibold mb-1">Pro</h3>
-            <p className="text-sm text-muted-foreground mb-6">The full Novus intelligence.</p>
-            <div className="text-4xl font-semibold mb-6">$9.99<span className="text-base text-muted-foreground font-normal">/mo</span></div>
-            <ul className="space-y-3 mb-8">
-              {["Unlimited everything", "Advanced Novus AI", "Life Timeline", "Full statistics", "Finance & projects", "Data export"].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm"><Check /> {f}</li>
-              ))}
-            </ul>
-            <Link href="/auth/register" className="block text-center py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium shadow-[0_12px_32px_-8px_rgba(99,102,241,0.7)] hover:opacity-90 transition-opacity">Start 7-day trial</Link>
-          </motion.div>
-        </motion.div>
+        <div className="mt-12 grid gap-4 md:grid-cols-2">
+          <PriceCard
+            name="Free"
+            price="£0"
+            blurb="Everything you need to begin."
+            features={["Up to 3 habits", "Journal & tasks", "Goals & mood", "Daily AI briefing"]}
+            cta="Get started"
+          />
+          <PriceCard
+            featured
+            name="Pro"
+            price="£9.99"
+            blurb="The full Novus intelligence."
+            features={[
+              "Unlimited everything",
+              "Advanced Novus AI + actions",
+              "Life Timeline & statistics",
+              "Finance & projects",
+              "Data export",
+            ]}
+            cta="Start 7-day trial"
+          />
+        </div>
       </div>
     </section>
   );
 }
 
-function Check() {
-  return <span className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg></span>;
+function PriceCard({
+  name,
+  price,
+  blurb,
+  features,
+  cta,
+  featured,
+}: {
+  name: string;
+  price: string;
+  blurb: string;
+  features: string[];
+  cta: string;
+  featured?: boolean;
+}) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true }}
+      className={cn(
+        "flex flex-col rounded-2xl border p-8 md:p-10",
+        featured ? "border-[#c8f94e66] bg-[#c8f94e0a]" : "border-white/[0.08] bg-white/[0.015]"
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-display text-xl font-semibold text-white">{name}</h3>
+        {featured && (
+          <span className="rounded-full bg-[var(--signal)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-black">
+            Popular
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-sm text-neutral-500">{blurb}</p>
+      <div className="mt-6 font-display text-5xl font-semibold text-white">
+        {price}
+        <span className="text-base font-normal text-neutral-500">/mo</span>
+      </div>
+      <ul className="mt-8 flex-1 space-y-px">
+        {features.map((f) => (
+          <li key={f} className="flex items-center gap-3 border-t border-white/[0.08] py-3 text-sm text-neutral-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />
+            {f}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href="/auth/register"
+        className={cn(
+          "mt-8 inline-flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold transition-transform hover:scale-[1.02]",
+          featured ? "bg-[var(--signal)] text-black" : "border border-white/15 text-white hover:bg-white/5"
+        )}
+      >
+        {cta}
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </motion.div>
+  );
 }
 
 // ── FAQ ────────────────────────────────────────────────────
 const faqs = [
   { q: "Is Novus really free?", a: "Yes. The free plan covers the essentials including a daily AI briefing. Upgrade to Pro for unlimited use and advanced intelligence." },
-  { q: "How does Novus AI work?", a: "Novus reads your real data — habits, goals, mood, finances — and generates personalized guidance. It's built on a provider layer (currently Google Gemini) so it can evolve over time." },
+  { q: "How does Novus AI work?", a: "Novus reads your real data — habits, goals, mood, finances — and generates guidance and can take real actions. It runs on a swappable provider layer." },
+  { q: "Can it actually do things for me?", a: "Yes. Ask it to create a habit, plan a goal, log your mood or reset your data and it performs the action, asking you to confirm anything destructive first." },
   { q: "Is my data private?", a: "Your data is yours. It's encrypted, never sold, and you can export everything at any time." },
-  { q: "Does it work on mobile?", a: "Novus is fully responsive and beautiful on every device. A native app is on the roadmap." },
+  { q: "Does it work on mobile?", a: "Novus is fully responsive with a dedicated mobile layout. A native app is on the roadmap." },
 ];
 
 function FAQ() {
+  const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faq" className="py-24 px-4">
-      <div className="max-w-3xl mx-auto">
-        <motion.h2 variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-          className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-14">Questions</motion.h2>
-        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="space-y-4">
-          {faqs.map((f) => (
-            <motion.div key={f.q} variants={fadeUp} className="glass-panel rounded-[20px] p-6">
-              <h3 className="font-semibold mb-2">{f.q}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.a}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+    <section id="faq" className="px-5 py-24 md:px-8">
+      <div className="mx-auto max-w-[1240px]">
+        <SectionLabel index="06" label="Questions" />
+        <div className="mt-10 border-t border-white/[0.08]">
+          {faqs.map((f, i) => {
+            const isOpen = open === i;
+            return (
+              <div key={f.q} className="border-b border-white/[0.08]">
+                <button
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  className="flex w-full items-center justify-between gap-6 py-6 text-left"
+                >
+                  <span className="font-display text-lg font-medium text-white md:text-xl">{f.q}</span>
+                  {isOpen ? (
+                    <Minus className="h-5 w-5 shrink-0 text-[var(--signal)]" />
+                  ) : (
+                    <Plus className="h-5 w-5 shrink-0 text-neutral-500" />
+                  )}
+                </button>
+                <motion.div
+                  initial={false}
+                  animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+                  transition={{ duration: 0.4, ease }}
+                  className="overflow-hidden"
+                >
+                  <p className="max-w-2xl pb-6 text-sm leading-relaxed text-neutral-400">{f.a}</p>
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -463,19 +797,30 @@ function FAQ() {
 // ── CTA ────────────────────────────────────────────────────
 function CTA() {
   return (
-    <section className="py-32 px-4">
-      <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-        className="relative max-w-4xl mx-auto text-center glass-panel rounded-[36px] p-12 md:p-20 overflow-hidden">
-        <div className="absolute inset-0 mesh-gradient opacity-60" />
-        <div className="relative">
-          <NovusMark size="lg" className="mx-auto mb-8 animate-float" />
-          <h2 className="text-4xl md:text-6xl font-semibold tracking-tight mb-5 text-balance">Begin your operating system.</h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">Join thousands building a more intentional life with Novus.</p>
-          <Link href="/auth/register"
-            className="inline-flex items-center justify-center gap-2 h-14 px-10 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white font-medium text-lg shadow-[0_16px_50px_-8px_rgba(99,102,241,0.8)] hover:shadow-[0_20px_60px_-8px_rgba(99,102,241,1)] transition-all">
+    <section className="px-5 py-32 md:px-8 md:py-44">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.9, ease }}
+        className="mx-auto max-w-[1240px] text-center"
+      >
+        <h2 className="font-display text-[length:clamp(2.8rem,12vw,11rem)] font-semibold leading-[0.9] tracking-[-0.03em] text-white">
+          Begin your
+          <br />
+          <span className="italic text-[var(--signal)]">operating system.</span>
+        </h2>
+        <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/auth/register"
+            className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--signal)] px-8 py-4 text-base font-semibold text-black transition-transform hover:scale-[1.02]"
+          >
             Start free today
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
           </Link>
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+            No credit card · Free forever
+          </span>
         </div>
       </motion.div>
     </section>
@@ -484,13 +829,57 @@ function CTA() {
 
 // ── Footer ─────────────────────────────────────────────────
 function Footer() {
+  const cols = [
+    { h: "Product", items: ["Features", "Intelligence", "Pricing", "Changelog"] },
+    { h: "Company", items: ["About", "Manifesto", "Contact"] },
+    { h: "Legal", items: ["Privacy", "Terms", "Security"] },
+  ];
   return (
-    <footer className="border-t border-border/40 py-12 px-4">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <NovusLogo size="sm" />
-        <p className="text-sm text-muted-foreground">Your personal operating system.</p>
-        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Novus. All rights reserved.</p>
+    <footer className="border-t border-white/[0.08] px-5 pt-16 md:px-8">
+      <div className="mx-auto max-w-[1240px]">
+        <div className="grid gap-10 pb-16 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div>
+            <Wordmark />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-neutral-500">
+              Your personal operating system. One calm place to run your entire life.
+            </p>
+          </div>
+          {cols.map((c) => (
+            <div key={c.h}>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600">{c.h}</div>
+              <ul className="mt-4 space-y-2.5">
+                {c.items.map((it) => (
+                  <li key={it}>
+                    <span className="text-sm text-neutral-400 transition-colors hover:text-white">{it}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/[0.08] py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600 md:flex-row">
+          <span>© {new Date().getFullYear()} Novus</span>
+          <span className="hidden md:inline">Personal Operating System</span>
+          <span>Made for a more intentional life</span>
+        </div>
       </div>
     </footer>
+  );
+}
+
+// ── Shared section label ───────────────────────────────────
+function SectionLabel({ index, label }: { index: string; label: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease }}
+      className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500"
+    >
+      <span className="text-[var(--signal)]">{index}</span>
+      <span className="h-px w-8 bg-white/15" />
+      {label}
+    </motion.div>
   );
 }
