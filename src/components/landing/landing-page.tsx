@@ -2,7 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, type Variants } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useInView,
+  useReducedMotion,
+  animate,
+  type Variants,
+} from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -31,9 +39,24 @@ const stagger: Variants = {
 };
 
 export function LandingPage() {
+  const { scrollYProgress } = useScroll();
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0a0a0b] font-sans text-neutral-300 antialiased selection:bg-[var(--signal)] selection:text-black">
+      {/* scroll progress */}
+      <motion.div
+        style={{ scaleX: scrollYProgress }}
+        className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-[var(--signal)]"
+      />
       <div className="grid-bg pointer-events-none fixed inset-0 z-0 opacity-60" />
+      {/* film grain for depth */}
+      <div
+        className="pointer-events-none fixed inset-0 z-[1] opacity-[0.04] mix-blend-soft-light"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+        }}
+      />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       <div className="relative z-10">
         <Nav />
@@ -51,6 +74,38 @@ export function LandingPage() {
       </div>
     </div>
   );
+}
+
+// ── Animated number counter ────────────────────────────────
+function Counter({
+  to,
+  duration = 1.6,
+  format,
+}: {
+  to: number;
+  duration?: number;
+  format?: (v: number) => string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const reduce = useReducedMotion();
+  const [val, setVal] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    if (reduce) {
+      setVal(to);
+      return;
+    }
+    const controls = animate(0, to, {
+      duration,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setVal(v),
+    });
+    return () => controls.stop();
+  }, [inView, to, duration, reduce]);
+
+  return <span ref={ref}>{format ? format(val) : Math.round(val).toString()}</span>;
 }
 
 // ── Wordmark ───────────────────────────────────────────────
@@ -127,8 +182,10 @@ function Nav() {
 // ── Hero ───────────────────────────────────────────────────
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const yRaw = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const y = reduce ? 0 : yRaw;
   const opacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
 
   const [clock, setClock] = useState<string>("");
@@ -144,12 +201,17 @@ function Hero() {
 
   return (
     <section ref={ref} className="relative px-5 pt-40 md:px-8 md:pt-52">
+      {/* faint accent glow for depth */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-24 h-[460px] w-[min(900px,90vw)] -translate-x-1/2 rounded-full blur-[130px]"
+        style={{ background: "radial-gradient(circle, rgba(200,249,78,0.06), transparent 70%)" }}
+      />
       {/* system metadata row */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, ease, delay: 0.2 }}
-        className="mx-auto flex max-w-[1240px] items-center justify-between border-b border-white/[0.08] pb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500"
+        className="relative mx-auto flex max-w-[1240px] items-center justify-between border-b border-white/[0.08] pb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500"
       >
         <span>[ Personal Operating System ]</span>
         <span className="hidden sm:inline">
@@ -158,7 +220,7 @@ function Hero() {
         <span>v1.0 — 2026</span>
       </motion.div>
 
-      <motion.div style={{ y, opacity }} className="mx-auto max-w-[1240px]">
+      <motion.div style={{ y, opacity }} className="relative mx-auto max-w-[1240px]">
         <h1 className="mt-10 font-display font-semibold leading-[0.92] tracking-[-0.03em] text-white">
           <Reveal delay={0.05}>
             <span className="block text-[length:clamp(2.6rem,11vw,9.5rem)]">Your entire life,</span>
@@ -286,7 +348,9 @@ function Bento() {
             <div className="mt-4 flex items-center gap-5">
               <Ring value={82} />
               <div>
-                <div className="font-display text-4xl font-semibold text-white">82</div>
+                <div className="font-display text-4xl font-semibold text-white">
+                  <Counter to={82} />
+                </div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
                   +6 this week
                 </div>
@@ -317,7 +381,9 @@ function Bento() {
           {/* Finance sparkline */}
           <Panel className="md:col-span-2 md:row-span-1">
             <Kicker icon={Wallet}>Net worth</Kicker>
-            <div className="mt-3 font-display text-3xl font-semibold text-white">£24,180</div>
+            <div className="mt-3 font-display text-3xl font-semibold text-white">
+              £<Counter to={24180} format={(v) => Math.round(v).toLocaleString("en-GB")} />
+            </div>
             <Sparkline />
           </Panel>
 
@@ -342,15 +408,28 @@ function Bento() {
 }
 
 function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+  };
   return (
     <motion.div
       variants={fadeUp}
+      onMouseMove={onMove}
       className={cn(
-        "rounded-2xl border border-white/[0.08] bg-white/[0.015] p-6 transition-colors duration-300 hover:border-white/20",
+        "group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.015] p-6 transition-colors duration-300 hover:border-white/20",
         className
       )}
     >
-      {children}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background:
+            "radial-gradient(480px circle at var(--mx) var(--my), rgba(200,249,78,0.07), transparent 42%)",
+        }}
+      />
+      <div className="relative">{children}</div>
     </motion.div>
   );
 }
@@ -394,7 +473,7 @@ function Ring({ value }: { value: number }) {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
       <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
-      <circle
+      <motion.circle
         cx="32"
         cy="32"
         r={r}
@@ -402,7 +481,11 @@ function Ring({ value }: { value: number }) {
         stroke="var(--signal)"
         strokeWidth="4"
         strokeLinecap="round"
-        strokeDasharray={`${dash} ${c}`}
+        strokeDasharray={c}
+        initial={{ strokeDashoffset: c }}
+        whileInView={{ strokeDashoffset: c - dash }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
       />
     </svg>
   );
@@ -430,12 +513,13 @@ function Sparkline() {
 
 // ── Marquee ────────────────────────────────────────────────
 function Marquee() {
+  const reduce = useReducedMotion();
   const items = ["Think", "Plan", "Reflect", "Track", "Build", "Grow", "Focus", "Review"];
   return (
     <div className="mask-x relative overflow-hidden border-y border-white/[0.08] py-7">
       <motion.div
         className="flex gap-12 whitespace-nowrap pr-12"
-        animate={{ x: ["0%", "-50%"] }}
+        animate={reduce ? undefined : { x: ["0%", "-50%"] }}
         transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
       >
         {[...items, ...items, ...items, ...items].map((it, i) => (
