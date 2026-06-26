@@ -114,9 +114,9 @@ export default function TasksPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-blue-500">{active.length}</div><div className="text-xs text-muted-foreground">Active</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-500">{done.length}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Rate</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{active.length}</div><div className="text-xs text-muted-foreground">Active</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{done.length}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{tasks.length > 0 ? Math.round((done.length / tasks.length) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Rate</div></CardContent></Card>
       </div>
 
       {/* Filters */}
@@ -142,7 +142,7 @@ export default function TasksPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleTask(task.id, task.status)}
-                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${task.status === "DONE" ? "bg-green-500 border-green-500 text-white" : "border-muted-foreground/30 hover:border-primary"}`}
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${task.status === "DONE" ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"}`}
                   >
                     {task.status === "DONE" && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                   </button>

@@ -23,9 +23,9 @@ interface AIStatusBadgeProps {
 }
 
 const PROVIDER_ICONS: Record<string, string> = {
-  groq:     "⚡",
-  gemini:   "✦",
-  fallback: "◎",
+  groq:     "",
+  gemini:   "",
+  fallback: "",
 };
 
 const STATUS_STYLES = {

@@ -153,10 +153,10 @@ export default function MoodPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-3xl font-bold">{stats.average || "—"}</div><div className="text-xs text-muted-foreground">30-day Avg</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-3xl font-bold">{stats.total}</div><div className="text-xs text-muted-foreground">Entries</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-3xl font-bold text-green-500">{stats.highest || "—"}</div><div className="text-xs text-muted-foreground">Best Day</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-3xl font-bold text-red-500">{stats.lowest || "—"}</div><div className="text-xs text-muted-foreground">Lowest Day</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-3xl font-bold">{stats.average || "—"}</div><div className="text-xs text-muted-foreground">30-day Avg</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-3xl font-bold">{stats.total}</div><div className="text-xs text-muted-foreground">Entries</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-3xl font-bold text-primary">{stats.highest || "—"}</div><div className="text-xs text-muted-foreground">Best Day</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-3xl font-bold text-muted-foreground">{stats.lowest || "—"}</div><div className="text-xs text-muted-foreground">Lowest Day</div></CardContent></Card>
       </div>
 
       {/* History */}

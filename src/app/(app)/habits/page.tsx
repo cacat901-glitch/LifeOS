@@ -154,28 +154,28 @@ export default function HabitsPage() {
 
       {/* Today's Progress */}
       {total > 0 && (
-        <Card className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 border-green-500/20">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <h3 className="font-semibold">Today&apos;s Progress</h3>
                 <p className="text-sm text-muted-foreground">{completed} of {total} completed</p>
               </div>
-              <div className="text-3xl font-bold text-green-500">
+              <div className="font-display text-3xl font-bold text-primary">
                 {Math.round((completed / total) * 100)}%
               </div>
             </div>
-            <Progress value={(completed / total) * 100} indicatorClassName="bg-green-500" />
+            <Progress value={(completed / total) * 100} indicatorClassName="bg-primary" />
           </CardContent>
         </Card>
       )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">🔥 {bestStreak}</div><div className="text-xs text-muted-foreground">Best Streak</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{total > 0 ? Math.round((completed / total) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Today</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{totalCompletions}</div><div className="text-xs text-muted-foreground">Total Completions</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{total}</div><div className="text-xs text-muted-foreground">Active Habits</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{bestStreak}</div><div className="text-xs text-muted-foreground">Best Streak</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{total > 0 ? Math.round((completed / total) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Today</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{totalCompletions}</div><div className="text-xs text-muted-foreground">Total Completions</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{total}</div><div className="text-xs text-muted-foreground">Active Habits</div></CardContent></Card>
       </div>
 
       {/* Habits List */}
@@ -199,19 +199,19 @@ export default function HabitsPage() {
                     <button
                       onClick={() => toggle(habit.id, done)}
                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-                        done ? "bg-green-500/20 ring-2 ring-green-500" : "bg-muted hover:ring-2 hover:ring-primary"
+                        done ? "bg-primary/20 ring-2 ring-primary" : "bg-muted hover:ring-2 hover:ring-primary"
                       }`}
                     >
                       {done
-                        ? <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                        : <span className="text-lg">{habit.icon || "✅"}</span>
+                        ? <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                        : <span className="text-lg">{habit.icon || "•"}</span>
                       }
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{habit.name}</span>
                         {habit.currentStreak >= 3 && (
-                          <Badge variant="warning" className="text-[10px]">🔥 {habit.currentStreak}</Badge>
+                          <Badge variant="secondary" className="text-[10px]">{habit.currentStreak}d streak</Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">

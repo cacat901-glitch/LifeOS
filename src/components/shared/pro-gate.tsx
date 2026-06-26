@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { Crown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -33,10 +34,10 @@ export function ProGate({ feature, description, children }: ProGateProps) {
   if (plan === "PRO") return <>{children}</>;
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
-      <CardContent className="p-8 text-center space-y-4">
-        <div className="text-4xl">⭐</div>
-        <h3 className="font-semibold text-lg">{feature} is a Pro feature</h3>
+    <Card className="border-primary/20 bg-primary/[0.04]">
+      <CardContent className="space-y-4 p-8 text-center">
+        <Crown className="mx-auto h-8 w-8 text-primary" strokeWidth={1.75} />
+        <h3 className="text-lg font-semibold">{feature} is a Pro feature</h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
           {description || `Upgrade to Novus Pro to unlock ${feature} and all other premium features.`}
         </p>
