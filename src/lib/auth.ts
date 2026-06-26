@@ -14,7 +14,8 @@ export const {
 } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   trustHost: true,
-  secret: process.env.NEXTAUTH_SECRET,
+  // Support both the NextAuth v4 (NEXTAUTH_SECRET) and v5 (AUTH_SECRET) names.
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
