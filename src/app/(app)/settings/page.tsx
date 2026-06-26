@@ -106,7 +106,7 @@ function AppearanceTab() {
   const { theme, setTheme } = useTheme();
   return (
     <Card>
-      <CardHeader><CardTitle>Appearance</CardTitle><CardDescription>Customize how LifeOS looks</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Appearance</CardTitle><CardDescription>Customize how Novus looks</CardDescription></CardHeader>
       <CardContent className="space-y-6">
         <div>
           <h4 className="text-sm font-medium mb-3">Theme</h4>

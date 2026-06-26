@@ -16,6 +16,31 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// GET /api/ai/chat — lightweight diagnostic.
+// Lets you verify (from a browser) that the agentic action code is actually
+// deployed. The OLD chat route has no GET handler and returns 405, so if you
+// see this JSON, the new code is live.
+export async function GET() {
+  let provider = "unknown";
+  try {
+    provider = getAIProvider().name;
+  } catch {
+    /* ignore */
+  }
+  return NextResponse.json({
+    ok: true,
+    build: "agentic-actions-v2",
+    actionsEnabled: true,
+    supportedActions: Array.from(KNOWN_ACTION_TYPES),
+    provider,
+    providerLive: provider !== "fallback",
+    note:
+      provider === "fallback"
+        ? "No AI key detected at runtime — set GROQ_API_KEY in Vercel and redeploy. Without it, Ask Novus cannot extract actions."
+        : `AI provider '${provider}' is configured. Ask Novus can perform real actions.`,
+  });
+}
+
 // POST /api/ai/chat — Ask Novus (agentic: can take real actions)
 //
 // Request shapes:

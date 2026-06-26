@@ -1,7 +1,10 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = "Novus <noreply@novus.app>";
+// Resend rejects sends from unverified domains. Default to Resend's shared
+// onboarding domain (works without verification); override with EMAIL_FROM
+// once a custom domain is verified in Resend.
+const FROM = process.env.EMAIL_FROM || "Novus <onboarding@resend.dev>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://novus.vercel.app";
 
 // ── Welcome email ──────────────────────────────────────────────────────────

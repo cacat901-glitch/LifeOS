@@ -5,10 +5,7 @@
  */
 import type { DeepContext } from "./deep-context";
 
-const P = NOVUS_PERSONA;
-function NOVUS_PERSONA() { return ""; } // placeholder — real import below
-// ↑ We'll inline the persona string to avoid circular deps.
-
+// Persona is inlined here (not imported) to keep this module free of circular deps.
 const PERSONA = `You are Novus — an intelligent personal operating system and life companion.
 You are perceptive, warm, honest, and deeply helpful. You write in flowing prose, not bullet lists.
 You speak like a trusted life coach who has access to the person's real data.
@@ -70,7 +67,7 @@ export function parseWeeklyReview(raw: string, ctx: DeepContext): WeeklyReviewRe
     biggestWin: extract("BIGGEST WIN") || `Maintained a ${ctx.habits.bestStreak}-day streak.`,
     biggestWeakness: extract("BIGGEST WEAKNESS") || "Consistency could be improved.",
     keyLesson: extract("KEY LESSON") || "Small steps compound over time.",
-    focusNextWeek: extract("FOCUS FOR NEXT WEEK") || ctx.goals.topGoal ? `Move forward on "${ctx.goals.topGoal}".` : "Rebuild daily habits.",
+    focusNextWeek: extract("FOCUS FOR NEXT WEEK") || (ctx.goals.topGoal ? `Move forward on "${ctx.goals.topGoal}".` : "Rebuild daily habits."),
     stats: {
       habitRate: ctx.habits.last7Rate,
       workouts: ctx.workout.last7Sessions,
@@ -152,7 +149,7 @@ export function parseMonthlyInsights(raw: string, ctx: DeepContext): MonthlyInsi
     workoutSummary: extract("WORKOUT SUMMARY") || `${ctx.workout.last30Sessions} sessions completed.`,
     financeSummary: extract("FINANCE") || "",
     growthIndicator: extract("GROWTH INDICATOR") || "Progress is steady.",
-    nextMonthFocus: extract("NEXT MONTH FOCUS") || ctx.goals.topGoal ? `Accelerate "${ctx.goals.topGoal}".` : "Build a stronger daily routine.",
+    nextMonthFocus: extract("NEXT MONTH FOCUS") || (ctx.goals.topGoal ? `Accelerate "${ctx.goals.topGoal}".` : "Build a stronger daily routine."),
   };
 }
 

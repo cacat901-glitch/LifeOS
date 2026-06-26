@@ -38,7 +38,7 @@ export function ProGate({ feature, description, children }: ProGateProps) {
         <div className="text-4xl">⭐</div>
         <h3 className="font-semibold text-lg">{feature} is a Pro feature</h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          {description || `Upgrade to LifeOS Pro to unlock ${feature} and all other premium features.`}
+          {description || `Upgrade to Novus Pro to unlock ${feature} and all other premium features.`}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <UpgradeButton />

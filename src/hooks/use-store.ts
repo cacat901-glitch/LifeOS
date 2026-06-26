@@ -73,24 +73,3 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   clearNotifications: () => set({ notifications: [] }),
 }));
-
-// Dashboard Data Store
-interface DashboardState {
-  isLoading: boolean;
-  lifeScore: number;
-  habitProgress: { completed: number; total: number };
-  taskProgress: { completed: number; total: number };
-  currentMood: number | null;
-  streaks: { habits: number; journal: number; workout: number; mood: number };
-  setLoading: (loading: boolean) => void;
-}
-
-export const useDashboardStore = create<DashboardState>((set) => ({
-  isLoading: false,
-  lifeScore: 87,
-  habitProgress: { completed: 5, total: 7 },
-  taskProgress: { completed: 2, total: 5 },
-  currentMood: 8,
-  streaks: { habits: 12, journal: 8, workout: 5, mood: 22 },
-  setLoading: (loading) => set({ isLoading: loading }),
-}));
