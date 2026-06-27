@@ -184,9 +184,9 @@ export default function WorkoutPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{totalSessions}</div><div className="text-xs text-muted-foreground">Sessions</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-500">{thisWeekCount}</div><div className="text-xs text-muted-foreground">This Week</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-purple-500">{totalVolume > 999 ? `${(totalVolume/1000).toFixed(1)}k` : Math.round(totalVolume)}</div><div className="text-xs text-muted-foreground">kg Lifted</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{totalSessions}</div><div className="text-xs text-muted-foreground">Sessions</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{thisWeekCount}</div><div className="text-xs text-muted-foreground">This Week</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{totalVolume > 999 ? `${(totalVolume/1000).toFixed(1)}k` : Math.round(totalVolume)}</div><div className="text-xs text-muted-foreground">kg Lifted</div></CardContent></Card>
       </div>
 
       {/* Tabs */}

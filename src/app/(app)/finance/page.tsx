@@ -200,7 +200,7 @@ export default function FinancePage() {
         <>
           {/* Net Worth + Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="col-span-2 md:col-span-1 bg-gradient-to-br from-primary/5 to-violet-500/5 border-primary/20">
+            <Card className="col-span-2 md:col-span-1 border-primary/20 bg-primary/[0.04]">
               <CardContent className="p-4">
                 <div className="text-xs text-muted-foreground mb-1">Net Worth</div>
                 <div className={`text-2xl font-bold ${stats.netWorth >= 0 ? "text-green-500" : "text-red-500"}`}>

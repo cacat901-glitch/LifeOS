@@ -238,10 +238,10 @@ export default function ProjectsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-blue-500">{active}</div><div className="text-xs text-muted-foreground">Active</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-500">{completed}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{totalTasks}</div><div className="text-xs text-muted-foreground">Total Tasks</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-purple-500">{totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Tasks Done</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{active}</div><div className="text-xs text-muted-foreground">Active</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{completed}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{totalTasks}</div><div className="text-xs text-muted-foreground">Total Tasks</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Tasks Done</div></CardContent></Card>
       </div>
 
       {/* Filters */}
