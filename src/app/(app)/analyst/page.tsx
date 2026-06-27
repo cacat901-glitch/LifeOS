@@ -135,7 +135,7 @@ export default function AnalystPage() {
           <div className="space-y-5">
             {/* Score hero */}
             <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-              <div className="relative overflow-hidden glass-panel rounded-[24px] p-6 sm:p-8">
+              className="relative overflow-hidden glass-panel rounded-[24px] p-6 sm:p-8">
               <div className="relative flex flex-col sm:flex-row gap-6 items-start">
                 <div className="text-center sm:text-left shrink-0">
                   <div className="font-display text-6xl font-bold text-primary">{analysis.score}</div>
