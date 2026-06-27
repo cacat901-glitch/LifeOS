@@ -26,6 +26,8 @@ import {
 import { useAppStore } from "@/hooks/use-store";
 import { AIStatusBadge } from "@/components/shared/ai-status";
 import { Discoveries } from "@/components/novus/discoveries";
+import { ExperimentCard } from "@/components/novus/experiments";
+import { Commitments } from "@/components/novus/commitments";
 import { cn } from "@/lib/utils";
 
 interface DashboardData {
@@ -214,6 +216,10 @@ export default function DashboardPage() {
 
       {/* ══ DISCOVERIES (proactive AI) ══ */}
       <Discoveries limit={3} />
+
+      {/* ══ EXPERIMENT + PROMISES ══ */}
+      <ExperimentCard />
+      <Commitments />
 
       {/* ══ VITAL SIGNS ══ */}
       <motion.section
