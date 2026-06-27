@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Sun, Moon, Monitor } from "lucide-react";
 import { AIStatusBadge } from "@/components/shared/ai-status";
 
 interface UserData {
@@ -111,10 +112,10 @@ function AppearanceTab() {
         <div>
           <h4 className="text-sm font-medium mb-3">Theme</h4>
           <div className="grid grid-cols-3 gap-3">
-            {[{ id: "light", label: "Light", icon: "☀️" }, { id: "dark", label: "Dark", icon: "🌙" }, { id: "system", label: "System", icon: "💻" }].map((t) => (
+            {[{ id: "light", label: "Light", Icon: Sun }, { id: "dark", label: "Dark", Icon: Moon }, { id: "system", label: "System", Icon: Monitor }].map((t) => (
               <button key={t.id} onClick={() => setTheme(t.id)}
                 className={`p-4 rounded-xl border text-center transition-all ${theme === t.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
-                <span className="text-2xl block mb-1">{t.icon}</span>
+                <t.Icon className={`mx-auto mb-1.5 h-5 w-5 ${theme === t.id ? "text-primary" : "text-muted-foreground"}`} strokeWidth={1.75} />
                 <span className="text-sm">{t.label}</span>
               </button>
             ))}

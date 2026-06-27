@@ -110,7 +110,7 @@ export default function StatisticsPage() {
       </div>
 
       {/* Life Score Hero */}
-      <Card className="bg-gradient-to-br from-primary/5 to-violet-500/5 border-primary/20">
+      <Card className="border-primary/20 bg-primary/[0.04]">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Life Score</h3>
@@ -125,22 +125,22 @@ export default function StatisticsPage() {
 
       {/* Category Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <StatCard title="✅ Habits" color="bg-green-500"
-          stats={[{ label: "Today's Rate", value: `${stats.habits.rate}%` }, { label: "Active Habits", value: String(stats.habits.total) }, { label: "Best Streak", value: `🔥 ${stats.habits.streak}` }]}
+        <StatCard title="Habits" color="bg-primary"
+          stats={[{ label: "Today's Rate", value: `${stats.habits.rate}%` }, { label: "Active Habits", value: String(stats.habits.total) }, { label: "Best Streak", value: `${stats.habits.streak}d` }]}
           chartData={stats.habits.chartData} chartMax={100} />
-        <StatCard title="📋 Tasks" color="bg-blue-500"
+        <StatCard title="Tasks" color="bg-primary"
           stats={[{ label: "Completed", value: String(stats.tasks.completed) }, { label: "Total", value: String(stats.tasks.total) }, { label: "Rate", value: `${stats.tasks.rate}%` }]}
           chartData={stats.tasks.chartData} chartMax={10} />
-        <StatCard title="🎯 Goals" color="bg-purple-500"
+        <StatCard title="Goals" color="bg-primary"
           stats={[{ label: "Active", value: String(stats.goals.active) }, { label: "Avg Progress", value: `${stats.goals.avgProgress}%` }, { label: "Completed", value: String(stats.goals.completed) }]}
           chartData={[]} chartMax={100} />
-        <StatCard title="💜 Mood" color="bg-pink-500"
+        <StatCard title="Mood" color="bg-primary"
           stats={[{ label: "30-day Avg", value: String(stats.mood.average) }, { label: "Entries", value: String(stats.mood.total) }, { label: "Tracked Days", value: String(stats.mood.total) }]}
           chartData={stats.mood.chartData} chartMax={10} />
-        <StatCard title="💪 Workout" color="bg-orange-500"
+        <StatCard title="Workout" color="bg-primary"
           stats={[{ label: "Total Sessions", value: String(stats.workout.sessions) }, { label: "This Week", value: String(stats.workout.thisWeek) }, { label: "Volume", value: stats.workout.totalVolume > 999 ? `${(stats.workout.totalVolume/1000).toFixed(1)}k kg` : `${Math.round(stats.workout.totalVolume)}kg` }]}
           chartData={stats.workout.chartData} chartMax={3} />
-        <StatCard title="📝 Journal" color="bg-cyan-500"
+        <StatCard title="Journal" color="bg-primary"
           stats={[{ label: "Total Entries", value: String(stats.journal.total) }, { label: "Words Written", value: stats.journal.words > 999 ? `${(stats.journal.words/1000).toFixed(1)}k` : String(stats.journal.words) }, { label: "This Week", value: String(stats.journal.chartData.reduce((a,b)=>a+b,0)) }]}
           chartData={stats.journal.chartData} chartMax={3} />
       </div>
@@ -229,7 +229,7 @@ function FinanceStats() {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">💳 Finance</h3>
+      <h3 className="font-semibold text-lg">Finance</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Summary card */}
         <Card>

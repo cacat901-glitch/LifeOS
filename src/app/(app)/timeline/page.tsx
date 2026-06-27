@@ -112,7 +112,6 @@ export default function TimelinePage() {
       {/* Hero */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}
         className="relative overflow-hidden rounded-[28px] glass-panel p-8 md:p-10">
-        <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" />
         <div className="relative">
           <p className="text-xs uppercase tracking-widest text-primary/70 mb-2">Your Life</p>
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2">A visual map of your journey</h1>
@@ -185,16 +184,13 @@ export default function TimelinePage() {
                       >
                         {/* Node */}
                         <div className="relative shrink-0 z-10">
-                          <div className={cn(
-                            "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white text-xl ring-4 ring-background shadow-lg",
-                            meta.gradient
-                          )}>
+                          <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center text-primary text-xl ring-4 ring-background">
                             {meta.icon}
                           </div>
                         </div>
 
                         {/* Card */}
-                        <div className={cn("flex-1 glass-panel rounded-[20px] p-4 lift", `ring-1 ${meta.ring}`)}>
+                        <div className="flex-1 glass-panel rounded-[20px] p-4 lift">
                           <div className="flex items-start justify-between gap-2">
                             <p className="font-medium text-sm leading-snug">{event.title}</p>
                             <span className="text-[10px] uppercase tracking-wide text-muted-foreground shrink-0">{meta.label}</span>
