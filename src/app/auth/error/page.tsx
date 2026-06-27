@@ -3,7 +3,8 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle } from "lucide-react";
+import { AuthShell } from "@/components/auth/auth-shell";
 
 const ERROR_MESSAGES: Record<string, string> = {
   OAuthAccountNotLinked: "This email is already registered with a different sign-in method. Please sign in with your original method.",
@@ -21,42 +22,32 @@ function ErrorContent() {
   const message = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.Default;
 
   return (
-    <Card className="border-border/50 shadow-xl">
-      <CardHeader className="text-center">
-        <div className="text-4xl mb-2">⚠️</div>
-        <CardTitle>Sign In Error</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 text-center">
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <div className="flex flex-col gap-2">
-          <Link href="/auth/login" className="inline-flex items-center justify-center w-full h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-            Try Again
-          </Link>
-          <Link href="/auth/register" className="text-sm text-primary hover:underline">
-            Create an account
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-5">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
+        <AlertTriangle className="h-7 w-7 text-amber-400" strokeWidth={1.6} />
+        <p className="text-sm text-neutral-400">{message}</p>
+      </div>
+      <Link
+        href="/auth/login"
+        className="flex w-full items-center justify-center rounded-lg bg-[var(--signal)] py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.01]"
+      >
+        Try again
+      </Link>
+      <p className="text-center text-sm text-neutral-500">
+        <Link href="/auth/register" className="hover:text-[var(--signal)]">
+          Create an account
+        </Link>
+      </p>
+    </div>
   );
 }
 
 export default function AuthErrorPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 mesh-gradient">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <span className="font-bold text-2xl">Novus</span>
-          </Link>
-        </div>
-        <Suspense fallback={<div className="text-center text-muted-foreground">Loading…</div>}>
-          <ErrorContent />
-        </Suspense>
-      </div>
-    </div>
+    <AuthShell title="Sign-in error">
+      <Suspense fallback={<div className="text-center text-sm text-neutral-500">Loading…</div>}>
+        <ErrorContent />
+      </Suspense>
+    </AuthShell>
   );
 }

@@ -3,9 +3,8 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AuthShell, AuthField, AuthSubmit, authInputClass } from "@/components/auth/auth-shell";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -19,9 +18,8 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (password !== confirm) { setError("Passwords do not match"); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (password !== confirm) return setError("Passwords do not match");
+    if (password.length < 8) return setError("Password must be at least 8 characters");
 
     setIsLoading(true);
     try {
@@ -31,8 +29,8 @@ function ResetPasswordForm() {
         body: JSON.stringify({ token, password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Something went wrong"); }
-      else { setSuccess(true); }
+      if (!res.ok) setError(data.error || "Something went wrong");
+      else setSuccess(true);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -42,71 +40,57 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <Card className="border-border/50 shadow-xl">
-        <CardContent className="p-8 text-center">
-          <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-sm text-muted-foreground mb-4">Invalid reset link. Please request a new one.</p>
-          <Link href="/auth/forgot-password" className="text-primary hover:underline text-sm">Request new reset link</Link>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
+        <AlertTriangle className="h-7 w-7 text-amber-400" strokeWidth={1.6} />
+        <p className="text-sm text-neutral-400">This reset link is invalid or expired.</p>
+        <Link href="/auth/forgot-password" className="text-sm font-medium text-[var(--signal)] hover:underline">
+          Request a new link
+        </Link>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="space-y-5">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
+          <CheckCircle2 className="h-7 w-7 text-[var(--signal)]" strokeWidth={1.6} />
+          <p className="text-sm text-neutral-400">Your password has been reset.</p>
+        </div>
+        <Link
+          href="/auth/login"
+          className="flex w-full items-center justify-center rounded-lg bg-[var(--signal)] py-2.5 text-sm font-semibold text-black transition-transform hover:scale-[1.01]"
+        >
+          Sign in with new password
+        </Link>
+      </div>
     );
   }
 
   return (
-    <Card className="border-border/50 shadow-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Choose a new password</CardTitle>
-        <CardDescription>
-          {success ? "Your password has been updated" : "Enter your new password below"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {success ? (
-          <div className="text-center space-y-4">
-            <div className="text-4xl mb-4">✅</div>
-            <p className="text-sm text-muted-foreground">Your password has been reset successfully.</p>
-            <Link href="/auth/login"
-              className="inline-flex items-center justify-center w-full h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-              Sign In with New Password
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">New Password</label>
-              <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm Password</label>
-              <Input type="password" placeholder="••••••••" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Updating…" : "Reset Password"}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      <AuthField label="New password">
+        <input type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required className={authInputClass} />
+      </AuthField>
+      <AuthField label="Confirm password">
+        <input type="password" placeholder="••••••••" value={confirm} onChange={(e) => setConfirm(e.target.value)} required className={authInputClass} />
+      </AuthField>
+      <AuthSubmit loading={isLoading}>{isLoading ? "Updating…" : "Reset password"}</AuthSubmit>
+    </form>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 mesh-gradient">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <span className="font-bold text-2xl">Novus</span>
-          </Link>
-        </div>
-        <Suspense fallback={<div className="text-center text-muted-foreground">Loading…</div>}>
-          <ResetPasswordForm />
-        </Suspense>
-      </div>
-    </div>
+    <AuthShell title="Choose a new password" subtitle="Enter your new password below.">
+      <Suspense fallback={<div className="text-center text-sm text-neutral-500">Loading…</div>}>
+        <ResetPasswordForm />
+      </Suspense>
+    </AuthShell>
   );
 }

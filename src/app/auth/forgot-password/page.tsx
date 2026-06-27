@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { MailCheck } from "lucide-react";
+import { AuthShell, AuthField, AuthSubmit, authInputClass } from "@/components/auth/auth-shell";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -14,7 +13,6 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       await fetch("/api/auth/forgot-password", {
         method: "POST",
@@ -23,72 +21,52 @@ export default function ForgotPasswordPage() {
       });
       setIsSent(true);
     } catch {
-      // Always show success to prevent email enumeration
-      setIsSent(true);
+      setIsSent(true); // always succeed to prevent enumeration
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 mesh-gradient">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">N</span>
-            </div>
-            <span className="font-bold text-2xl">Novus</span>
+    <AuthShell
+      title="Reset your password"
+      subtitle={isSent ? "Check your email for a reset link." : "We'll email you a link to reset it."}
+    >
+      {isSent ? (
+        <div className="space-y-5">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
+            <MailCheck className="h-7 w-7 text-[var(--signal)]" strokeWidth={1.6} />
+            <p className="text-sm text-neutral-400">
+              If an account exists with that email, a password reset link is on its way.
+            </p>
+          </div>
+          <Link
+            href="/auth/login"
+            className="flex w-full items-center justify-center rounded-lg border border-white/12 bg-white/[0.02] py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/[0.06]"
+          >
+            Back to sign in
           </Link>
         </div>
-
-        <Card className="border-border/50 shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Reset your password</CardTitle>
-            <CardDescription>
-              {isSent
-                ? "Check your email for a reset link"
-                : "Enter your email and we'll send you a reset link"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isSent ? (
-              <div className="text-center space-y-4">
-                <div className="text-4xl mb-4">📧</div>
-                <p className="text-sm text-muted-foreground">
-                  If an account exists with that email, you&apos;ll receive a password reset link shortly.
-                </p>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/auth/login"}>
-                  Back to Sign In
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <Input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send Reset Link"}
-                </Button>
-
-                <p className="text-center text-sm text-muted-foreground">
-                  <Link href="/auth/login" className="text-primary hover:underline">
-                    Back to Sign In
-                  </Link>
-                </p>
-              </form>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <AuthField label="Email">
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className={authInputClass}
+            />
+          </AuthField>
+          <AuthSubmit loading={isLoading}>{isLoading ? "Sending…" : "Send reset link"}</AuthSubmit>
+          <p className="text-center text-sm text-neutral-500">
+            <Link href="/auth/login" className="hover:text-[var(--signal)]">
+              Back to sign in
+            </Link>
+          </p>
+        </form>
+      )}
+    </AuthShell>
   );
 }
