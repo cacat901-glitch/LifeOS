@@ -657,3 +657,89 @@ function listJoin(items: string[]): string {
   if (items.length === 2) return `${items[0]} and ${items[1]}`;
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
+
+
+// ════════════════════════════════════════════════════════════════
+// 8. TIMELINE NARRATIVE — life chapters + reflections
+// ════════════════════════════════════════════════════════════════
+
+export interface TimelineChapter {
+  title: string;
+  period: string;
+  reflection: string;
+}
+export interface TimelineNarrative {
+  currentChapter: TimelineChapter;
+  chapters: TimelineChapter[];
+}
+
+export function fallbackTimelineNarrative(ctx: DeepContext): TimelineNarrative {
+  const days = ctx.user.joinedDaysAgo;
+  const delta = ctx.habits.last7Rate - ctx.habits.last30Rate;
+
+  let title: string;
+  let reflection: string;
+  if (delta > 8) {
+    title = "Building Momentum";
+    reflection = `You're on an upswing — consistency climbing to ${ctx.habits.last7Rate}% and ${ctx.mood.trend === "improving" ? "your mood rising with it" : "your routine tightening"}. This is the part of the story where habits become identity.`;
+  } else if (delta < -8) {
+    title = "A Quieter Season";
+    reflection = "Things have slowed recently. Every life has seasons like this — they're not failures, they're the dips that make the next climb mean something.";
+  } else if (ctx.habits.last30Rate >= 60) {
+    title = "Steady State";
+    reflection = `You've found a rhythm — holding around ${ctx.habits.last30Rate}% consistency. The work now is to keep it from becoming autopilot.`;
+  } else {
+    title = "Finding Your Footing";
+    reflection = "You're still building the foundation — testing what sticks. This is the most important chapter, even if it doesn't feel dramatic.";
+  }
+
+  const currentChapter: TimelineChapter = { title, period: "Now", reflection };
+
+  const chapters: TimelineChapter[] = [];
+  chapters.push({
+    title: "The Beginning",
+    period: days > 30 ? `${Math.round(days / 30)} month${days > 60 ? "s" : ""} ago` : "Your first weeks",
+    reflection: `You started with Novus ${days} day${days === 1 ? "" : "s"} ago, choosing to actually pay attention to your life. That decision is the root of everything that follows.`,
+  });
+  if (days > 21) {
+    chapters.push({
+      title: "Laying Tracks",
+      period: "The weeks since",
+      reflection: `Across this stretch you logged ${ctx.habits.totalCompletions} habit completions${ctx.journal.totalEntries ? ` and ${ctx.journal.totalEntries} journal entries` : ""}. Quiet, repeated effort — the kind that doesn't feel like much day to day but builds a person over time.`,
+    });
+  }
+  chapters.push(currentChapter);
+
+  return { currentChapter, chapters };
+}
+
+export function buildTimelineNarrativePrompt(ctx: DeepContext): string {
+  return `You are Novus, narrating this person's life as a series of chapters from their real data. Be warm, literary and specific — like a thoughtful biographer, not a coach.
+
+DATA:
+${JSON.stringify(summariseForPrompt(ctx), null, 2)}
+
+Return ONLY this JSON:
+{
+  "currentChapter": { "title": "evocative 2-4 word chapter name", "period": "Now", "reflection": "2-3 sentences on where they are right now" },
+  "chapters": [ { "title": "...", "period": "e.g. 'Your first weeks'", "reflection": "2-3 sentences" } ]
+}
+Provide 2-4 chapters ending with the current one. JSON only, no markdown.`;
+}
+
+export function parseTimelineNarrative(raw: string): TimelineNarrative | null {
+  try {
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start === -1 || end === -1) return null;
+    const p = JSON.parse(raw.slice(start, end + 1));
+    const norm = (c: any): TimelineChapter | null =>
+      c && c.title ? { title: String(c.title), period: String(c.period || ""), reflection: String(c.reflection || "") } : null;
+    const current = norm(p.currentChapter);
+    const chapters = Array.isArray(p.chapters) ? p.chapters.map(norm).filter(Boolean) as TimelineChapter[] : [];
+    if (!current && !chapters.length) return null;
+    return { currentChapter: current || chapters[chapters.length - 1], chapters: chapters.length ? chapters : [current!] };
+  } catch {
+    return null;
+  }
+}

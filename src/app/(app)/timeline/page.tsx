@@ -15,6 +15,7 @@ const TYPE_META: Record<string, { icon: string; gradient: string; ring: string; 
   MOOD_HIGH:            { icon: "♡",  gradient: "from-pink-500 to-rose-500",     ring: "ring-pink-500/30",    label: "Mood" },
   TASK_COMPLETED:       { icon: "◎",  gradient: "from-emerald-500 to-green-500", ring: "ring-emerald-500/30", label: "Task" },
   MILESTONE_REACHED:    { icon: "◈",  gradient: "from-indigo-500 to-violet-500", ring: "ring-indigo-500/30",  label: "Milestone" },
+  EXPERIMENT_COMPLETED: { icon: "⚗",  gradient: "from-lime-500 to-green-500",    ring: "ring-lime-500/30",    label: "Experiment" },
   CUSTOM:               { icon: "•",  gradient: "from-slate-500 to-gray-500",    ring: "ring-slate-500/30",   label: "Event" },
 };
 
@@ -38,15 +39,18 @@ function monthLabel(key: string) {
 
 export default function TimelinePage() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [narrative, setNarrative] = useState<{ currentChapter: any; chapters: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
 
   const load = useCallback(async () => {
+    fetch("/api/ai/timeline-narrative").then((r) => r.json()).then((d) => setNarrative(d.narrative)).catch(() => {});
     const results = await Promise.allSettled([
       fetch("/api/journal?limit=80").then((r) => r.json()),
       fetch("/api/mood?days=180").then((r) => r.json()),
       fetch("/api/workout?limit=80").then((r) => r.json()),
       fetch("/api/goals").then((r) => r.json()),
+      fetch("/api/experiments").then((r) => r.json()),
     ]);
     const all: TimelineEvent[] = [];
 
@@ -76,6 +80,12 @@ export default function TimelinePage() {
         id: `ms-${m.id}`, type: "MILESTONE_REACHED", title: m.title, description: g.title, date: m.completedAt || m.updatedAt || g.updatedAt,
       })));
     }
+    if (results[4].status === "fulfilled") {
+      (results[4].value.completed || []).forEach((e: any) => all.push({
+        id: `x-${e.id}`, type: "EXPERIMENT_COMPLETED", title: `Experiment: ${e.title}`,
+        description: e.aiSummary || e.actualOutcome || undefined, date: e.completedAt || e.endDate,
+      }));
+    }
 
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setEvents(all);
@@ -86,6 +96,12 @@ export default function TimelinePage() {
 
   const filtered = filter === "all" ? events : events.filter((e) => e.type === filter);
   const groups = groupByMonth(filtered);
+
+  const today = new Date();
+  const todayInHistory = events.filter((e) => {
+    const d = new Date(e.date);
+    return d.getMonth() === today.getMonth() && d.getDate() === today.getDate() && today.getTime() - d.getTime() > 20 * 86400000;
+  }).slice(0, 3);
 
   const stats = [
     { label: "Moments", value: events.length },
@@ -100,6 +116,7 @@ export default function TimelinePage() {
     { id: "GOAL_ACHIEVED", label: "Goals" },
     { id: "WORKOUT_PR", label: "Workouts" },
     { id: "MOOD_HIGH", label: "Moods" },
+    { id: "EXPERIMENT_COMPLETED", label: "Experiments" },
     { id: "MILESTONE_REACHED", label: "Milestones" },
   ];
 
@@ -126,6 +143,46 @@ export default function TimelinePage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Life chapters (AI narrative) */}
+      {narrative && narrative.chapters && narrative.chapters.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }} className="space-y-3">
+          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Your chapters</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {narrative.chapters.map((c: any, i: number) => {
+              const isCurrent = c.period === "Now" || i === narrative.chapters.length - 1;
+              return (
+                <div key={i} className={cn("rounded-2xl border p-5", isCurrent ? "border-primary/30 bg-primary/[0.04]" : "border-border bg-card/60")}>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{c.period}</div>
+                  <h3 className={cn("mt-1 font-display text-lg font-semibold", isCurrent && "text-primary")}>{c.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.reflection}</p>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Today in history */}
+      {todayInHistory.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}
+          className="rounded-2xl border border-border bg-card/60 p-5">
+          <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">On this day</div>
+          <div className="space-y-2.5">
+            {todayInHistory.map((e) => (
+              <div key={e.id} className="flex items-center gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+                  {(TYPE_META[e.type] || TYPE_META.CUSTOM).icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-foreground">{e.title}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{formatDate(e.date)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1">
