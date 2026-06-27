@@ -13,15 +13,9 @@ const sizeMap = {
 };
 
 /**
- * NovusMark — switches between:
- *  1. /logo.png  (when the file exists in /public/)
- *  2. Gradient N fallback (always looks intentional)
- *
- * To activate the real logo: upload logo.png to the /public/ folder in GitHub.
- * Then change USE_IMAGE_LOGO to true and redeploy.
+ * NovusMark — editorial lime mark (a rounded square with a display "N").
+ * Uses the theme accent so it stays cohesive everywhere it appears.
  */
-const USE_IMAGE_LOGO = true; // logo.png is in /public/
-
 export function NovusMark({
   size = "md",
   className,
@@ -31,33 +25,16 @@ export function NovusMark({
 }) {
   const s = sizeMap[size!];
 
-  if (USE_IMAGE_LOGO) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src="/logo.png"
-        alt="Novus"
-        width={s.px}
-        height={s.px}
-        className={cn("block shrink-0 object-cover", s.rounded, className)}
-        style={{ width: s.px, height: s.px, minWidth: s.px }}
-      />
-    );
-  }
-
   return (
     <div
       className={cn(
-        "relative shrink-0 flex items-center justify-center font-bold text-white",
-        "bg-gradient-to-br from-indigo-500 via-violet-500 to-sky-400",
-        "shadow-[0_8px_24px_-6px_rgba(99,102,241,0.7)]",
+        "relative flex shrink-0 items-center justify-center bg-primary font-display font-bold leading-none text-primary-foreground",
         s.rounded,
         className
       )}
       style={{ width: s.px, height: s.px, minWidth: s.px, fontSize: s.fontSize }}
     >
-      <span className="relative z-10 tracking-tight select-none">N</span>
-      <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/25 to-transparent" />
+      <span className="select-none tracking-tight">N</span>
     </div>
   );
 }

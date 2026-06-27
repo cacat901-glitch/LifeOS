@@ -93,15 +93,15 @@ export default function WeeklyReviewPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1, duration: 0.5 }}
             className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Habit Rate",  value: `${review.stats.habitRate}%`,      accent: "from-emerald-500 to-teal-500" },
-              { label: "Workouts",    value: String(review.stats.workouts),      accent: "from-amber-500 to-orange-500" },
-              { label: "Avg Mood",    value: `${review.stats.avgMood}/10`,       accent: "from-pink-500 to-rose-500" },
-              { label: "Tasks Done",  value: String(review.stats.tasksCompleted),accent: "from-sky-500 to-cyan-500" },
-              { label: "Goal Prog.",  value: `${review.stats.goalsProgress}%`,   accent: "from-violet-500 to-purple-500" },
+              { label: "Habit Rate",  value: `${review.stats.habitRate}%` },
+              { label: "Workouts",    value: String(review.stats.workouts) },
+              { label: "Avg Mood",    value: `${review.stats.avgMood}/10` },
+              { label: "Tasks Done",  value: String(review.stats.tasksCompleted) },
+              { label: "Goal Prog.",  value: `${review.stats.goalsProgress}%` },
             ].map((s) => (
               <div key={s.label} className="relative glass-panel rounded-2xl p-4 overflow-hidden text-center">
-                <div className={cn("absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r", s.accent)} />
-                <div className="text-xl font-semibold">{s.value}</div>
+                <div className="absolute top-0 inset-x-0 h-0.5 bg-primary" />
+                <div className="font-display text-xl font-semibold">{s.value}</div>
                 <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
               </div>
             ))}
@@ -110,9 +110,8 @@ export default function WeeklyReviewPage() {
           {/* Main narrative */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
             className="relative overflow-hidden glass-panel rounded-[24px] p-6 sm:p-8">
-            <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" />
             <div className="relative flex items-start gap-4">
-              <div className="pulse-ring relative shrink-0"><NovusMark size="md" /></div>
+              <NovusMark size="md" className="shrink-0" />
               <div className="flex-1">
                 <p className="text-xs uppercase tracking-widest text-primary/70 mb-3">Novus&apos;s take on your week</p>
                 <p className="text-lg md:text-xl leading-relaxed font-medium text-foreground/90">{review.narrative}</p>

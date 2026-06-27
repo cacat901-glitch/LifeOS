@@ -142,7 +142,7 @@ export default function JournalPage() {
       {/* AI Analysis Panel */}
       {showAnalysis && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-[20px] border border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5 overflow-hidden">
+          className="rounded-[20px] border border-primary/20 bg-card/50 overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-3 border-b border-border/40">
             <NovusMark size="sm" />
             <span className="text-sm font-medium">Journal AI Insights</span>

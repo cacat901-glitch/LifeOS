@@ -90,7 +90,6 @@ export default function AnalystPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
         <div className="relative overflow-hidden glass-panel rounded-[24px] p-6 sm:p-8">
-          <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row items-start gap-4">
             <NovusMark size="lg" className="shrink-0" />
             <div className="flex-1">
@@ -102,7 +101,7 @@ export default function AnalystPage() {
               {cached && <p className="text-xs text-muted-foreground mt-2">Analysis cached — refreshes weekly</p>}
             </div>
             <button onClick={() => loadAnalysis(true)} disabled={generating}
-              className="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+              className="shrink-0 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
               {generating ? "Analyzing…" : "Re-Analyze"}
             </button>
           </div>
@@ -128,7 +127,7 @@ export default function AnalystPage() {
             <NovusMark size="lg" className="mx-auto mb-4" />
             <h3 className="font-semibold mb-2">Ready to analyze your life?</h3>
             <p className="text-sm text-muted-foreground mb-4">Novus will study your habits, goals, mood, journal and more to give you the most comprehensive life review you&apos;ve ever had.</p>
-            <button onClick={() => loadAnalysis(true)} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-sm font-medium">
+            <button onClick={() => loadAnalysis(true)} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
               Analyze My Life
             </button>
           </div>
@@ -136,14 +135,13 @@ export default function AnalystPage() {
           <div className="space-y-5">
             {/* Score hero */}
             <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-              className="glass-panel rounded-[24px] p-6 sm:p-8 relative overflow-hidden">
-              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-violet-500/15 blur-3xl pointer-events-none" />
+              <div className="relative overflow-hidden glass-panel rounded-[24px] p-6 sm:p-8">
               <div className="relative flex flex-col sm:flex-row gap-6 items-start">
                 <div className="text-center sm:text-left shrink-0">
-                  <div className="text-6xl font-bold gradient-text">{analysis.score}</div>
+                  <div className="font-display text-6xl font-bold text-primary">{analysis.score}</div>
                   <div className="text-sm text-muted-foreground mt-1">Life Health Score</div>
                   <div className="mt-3 h-2 w-32 rounded-full bg-muted/60 overflow-hidden mx-auto sm:mx-0">
-                    <motion.div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                    <motion.div className="h-full rounded-full bg-primary"
                       initial={{ width: 0 }} animate={{ width: `${analysis.score}%` }} transition={{ duration: 1.2, ease }} />
                   </div>
                 </div>
@@ -169,7 +167,7 @@ export default function AnalystPage() {
               <div className="space-y-3">
                 {analysis.suggestedPriorities.map((p, i) => (
                   <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/30">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                       {i + 1}
                     </div>
                     <p className="text-sm leading-relaxed">{p}</p>

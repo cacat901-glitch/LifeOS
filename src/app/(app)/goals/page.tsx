@@ -138,10 +138,10 @@ export default function GoalsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-primary">{active.length}</div><div className="text-xs text-muted-foreground">Active Goals</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-green-500">{avgProgress}%</div><div className="text-xs text-muted-foreground">Avg Progress</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-yellow-500">{active.reduce((s, g) => s + g.milestones.filter((m) => m.isCompleted).length, 0)}</div><div className="text-xs text-muted-foreground">Milestones Done</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold text-purple-500">{goals.filter((g) => g.status === "COMPLETED").length}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{active.length}</div><div className="text-xs text-muted-foreground">Active Goals</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{avgProgress}%</div><div className="text-xs text-muted-foreground">Avg Progress</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{active.reduce((s, g) => s + g.milestones.filter((m) => m.isCompleted).length, 0)}</div><div className="text-xs text-muted-foreground">Milestones Done</div></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{goals.filter((g) => g.status === "COMPLETED").length}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
       </div>
 
       {/* Goals Grid */}
@@ -226,9 +226,9 @@ export default function GoalsPage() {
                       <div key={m.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50">
                         <button
                           onClick={() => toggleMilestone(selected.id, m.id, m.isCompleted)}
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${m.isCompleted ? "bg-green-500 border-green-500" : "border-muted-foreground/30 hover:border-primary"}`}
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${m.isCompleted ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"}`}
                         >
-                          {m.isCompleted && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          {m.isCompleted && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                         </button>
                         <span className={`text-sm ${m.isCompleted ? "line-through text-muted-foreground" : ""}`}>{m.title}</span>
                       </div>
@@ -270,7 +270,7 @@ export default function GoalsPage() {
           ) : coachPlan ? (
             <div className="space-y-5">
               {/* Assessment */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 to-violet-500/5 border border-primary/20">
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
                 <p className="text-sm leading-relaxed text-foreground/90">{coachPlan.assessment}</p>
                 {coachPlan.motivationalNote && (
                   <p className="text-xs text-primary/80 mt-2 italic">{coachPlan.motivationalNote}</p>
