@@ -573,3 +573,87 @@ function summariseForPrompt(ctx: DeepContext) {
     patterns: ctx.patterns,
   };
 }
+
+
+// ════════════════════════════════════════════════════════════════
+// 7. WEEKLY REVIEW EXTRAS (upgrades the existing review)
+// ════════════════════════════════════════════════════════════════
+
+export interface PrevWeekStats {
+  habitRate?: number;
+  avgMood?: number;
+  workouts?: number;
+  tasksCompleted?: number;
+  goalsProgress?: number;
+}
+
+export interface WeeklyExtras {
+  consistencyTrend: { direction: "up" | "down" | "steady"; text: string };
+  personalityEvolution: string;
+  recoveryAnalysis: string;
+  whatChanged: string[];
+  emotionalAchievements: EmotionalAchievement[];
+  recommendedExperiment: ExperimentProposal;
+}
+
+export function generateWeeklyExtras(ctx: DeepContext, prev?: PrevWeekStats | null): WeeklyExtras {
+  const delta = ctx.habits.last7Rate - ctx.habits.last30Rate;
+  const direction: "up" | "down" | "steady" = delta > 8 ? "up" : delta < -8 ? "down" : "steady";
+
+  const consistencyTrend = {
+    direction,
+    text:
+      direction === "up"
+        ? `Your consistency rose to ${ctx.habits.last7Rate}% this week, above your ${ctx.habits.last30Rate}% baseline.`
+        : direction === "down"
+        ? `Your consistency slipped to ${ctx.habits.last7Rate}% this week, below your ${ctx.habits.last30Rate}% baseline.`
+        : `Your consistency held steady around ${ctx.habits.last7Rate}%.`,
+  };
+
+  const whatChanged: string[] = [];
+  if (prev) {
+    const cmp = (label: string, now: number, before: number | undefined | null, unit = "") => {
+      if (before === undefined || before === null) return;
+      const diff = Math.round((now - before) * 10) / 10;
+      if (Math.abs(diff) < 0.1) return;
+      whatChanged.push(`${label} ${diff > 0 ? "up" : "down"} ${Math.abs(diff)}${unit} (${before}${unit} → ${now}${unit})`);
+    };
+    cmp("Habit rate", ctx.habits.last7Rate, prev.habitRate, "%");
+    cmp("Avg mood", ctx.mood.last7Avg, prev.avgMood);
+    cmp("Workouts", ctx.workout.last7Sessions, prev.workouts);
+  }
+  if (!whatChanged.length) whatChanged.push(prev ? "Roughly the same rhythm as last week." : "This is your first tracked week — next week I'll compare it to this one.");
+
+  const evoBits: string[] = [];
+  if (direction === "up") evoBits.push("more disciplined");
+  if (ctx.journal.last30Entries >= 8) evoBits.push("more reflective");
+  if (ctx.workout.isConsistent) evoBits.push("more physically grounded");
+  if (ctx.mood.trend === "improving") evoBits.push("emotionally lighter");
+  const personalityEvolution = evoBits.length
+    ? `This week you're becoming ${listJoin(evoBits)}. Small shifts — but the kind that compound into who you become.`
+    : "You're holding your shape this week — steady, not stagnant. Consistency is its own kind of growth.";
+
+  const recoveryAnalysis =
+    direction === "up" && ctx.habits.last30Rate < 55
+      ? "You pulled yourself back up this week after a softer stretch — that rebound is the real skill."
+      : ctx.mood.trend === "improving"
+      ? "Your mood is recovering. Whatever reset you made is working — protect it."
+      : direction === "down"
+      ? "This was more a recovery week than a peak week. That's allowed. One small win tomorrow restarts momentum."
+      : "You stayed level — no crash to recover from, which is a quiet kind of strength.";
+
+  return {
+    consistencyTrend,
+    personalityEvolution,
+    recoveryAnalysis,
+    whatChanged,
+    emotionalAchievements: detectEmotionalAchievements(ctx),
+    recommendedExperiment: proposeExperiment(ctx),
+  };
+}
+
+function listJoin(items: string[]): string {
+  if (items.length <= 1) return items[0] || "";
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}

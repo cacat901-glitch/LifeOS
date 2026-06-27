@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { TrendingUp, TrendingDown, Minus, HeartPulse, Sparkles, FlaskConical, ArrowRight, Award } from "lucide-react";
 import { NovusMark } from "@/components/shared/novus-logo";
+import { Discoveries } from "@/components/novus/discoveries";
 import { cn } from "@/lib/utils";
 
 interface WeeklyReview {
@@ -13,6 +16,13 @@ interface WeeklyReview {
   keyLesson: string;
   focusNextWeek: string;
   stats: { habitRate: number; workouts: number; avgMood: number; tasksCompleted: number; goalsProgress: number };
+  // Upgraded fields (optional for backwards-compat with older cached reviews)
+  consistencyTrend?: { direction: "up" | "down" | "steady"; text: string };
+  personalityEvolution?: string;
+  recoveryAnalysis?: string;
+  whatChanged?: string[];
+  emotionalAchievements?: { key: string; name: string; description: string }[];
+  recommendedExperiment?: { title: string; hypothesis: string; durationDays: number; actions: string[]; predictedOutcome: string };
 }
 
 const ease: [number, number, number, number] = [0.2, 0.8, 0.2, 1];
@@ -25,6 +35,23 @@ export default function WeeklyReviewPage() {
   const [cachedAt, setCachedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const router = useRouter();
+  const [startingExp, setStartingExp] = useState(false);
+
+  const startExperiment = async () => {
+    if (!review?.recommendedExperiment) return;
+    setStartingExp(true);
+    try {
+      const res = await fetch("/api/experiments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(review.recommendedExperiment),
+      });
+      if (res.ok) router.push("/dashboard");
+    } finally {
+      setStartingExp(false);
+    }
+  };
 
   const load = useCallback(async (forceNew = false) => {
     setLoading(true);
@@ -137,6 +164,99 @@ export default function WeeklyReviewPage() {
               </div>
             ))}
           </motion.div>
+
+          {/* ── Upgraded review sections ── */}
+
+          {/* Consistency trend + what changed */}
+          {(review.consistencyTrend || review.whatChanged) && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.34 }}
+              className="glass-panel rounded-[24px] p-6">
+              <div className="flex items-center gap-2 mb-3">
+                {review.consistencyTrend?.direction === "up" ? <TrendingUp className="h-4 w-4 text-primary" />
+                  : review.consistencyTrend?.direction === "down" ? <TrendingDown className="h-4 w-4 text-amber-400" />
+                  : <Minus className="h-4 w-4 text-muted-foreground" />}
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">What changed this week</span>
+              </div>
+              {review.consistencyTrend && <p className="text-sm text-foreground/90 mb-3">{review.consistencyTrend.text}</p>}
+              {review.whatChanged && review.whatChanged.length > 0 && (
+                <ul className="space-y-1.5">
+                  {review.whatChanged.map((c, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                      <span className="text-primary">•</span><span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
+          )}
+
+          {/* Evolution + Recovery */}
+          {(review.personalityEvolution || review.recoveryAnalysis) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {review.personalityEvolution && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
+                  className="glass-panel rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.9} />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Personality evolution</span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground/90">{review.personalityEvolution}</p>
+                </motion.div>
+              )}
+              {review.recoveryAnalysis && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
+                  className="glass-panel rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <HeartPulse className="h-4 w-4 text-primary" strokeWidth={1.9} />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Recovery</span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground/90">{review.recoveryAnalysis}</p>
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* Emotional achievements */}
+          {review.emotionalAchievements && review.emotionalAchievements.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.46 }}
+              className="space-y-3">
+              <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                <Award className="h-3.5 w-3.5 text-primary" strokeWidth={1.9} /> Emotional wins
+              </div>
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                {review.emotionalAchievements.map((a) => (
+                  <div key={a.key} className="flex gap-3 rounded-2xl border border-primary/20 bg-primary/[0.04] p-4">
+                    <Award className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={1.9} />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{a.name}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{a.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Recommended experiment */}
+          {review.recommendedExperiment && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+              className="glass-panel rounded-[24px] p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <FlaskConical className="h-4 w-4 text-primary" strokeWidth={1.9} />
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Recommended experiment for next week</span>
+              </div>
+              <h3 className="font-display text-lg font-semibold">{review.recommendedExperiment.title}</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">{review.recommendedExperiment.hypothesis}</p>
+              <button onClick={startExperiment} disabled={startingExp}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02] disabled:opacity-60">
+                {startingExp ? "Starting…" : `Start ${review.recommendedExperiment.durationDays}-day experiment`}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </motion.div>
+          )}
+
+          {/* Discoveries */}
+          <Discoveries limit={3} />
 
           {/* Explore further */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
