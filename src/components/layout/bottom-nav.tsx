@@ -20,6 +20,7 @@ import {
   Clock,
   BarChart3,
   Settings,
+  Fingerprint,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -96,6 +97,7 @@ function MobileMoreButton() {
     { name: "Weekly Review", href: "/review", icon: CalendarCheck },
     { name: "Life Analyst", href: "/analyst", icon: Brain },
     { name: "Timeline", href: "/timeline", icon: Clock },
+    { name: "Life DNA", href: "/dna", icon: Fingerprint },
     { name: "Statistics", href: "/statistics", icon: BarChart3 },
     { name: "Settings", href: "/settings", icon: Settings },
   ];

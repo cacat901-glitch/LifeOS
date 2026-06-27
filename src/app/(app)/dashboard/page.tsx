@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { AIStatusBadge } from "@/components/shared/ai-status";
+import { Discoveries } from "@/components/novus/discoveries";
 import { cn } from "@/lib/utils";
 
 interface DashboardData {
@@ -210,6 +211,9 @@ export default function DashboardPage() {
           <ActionChip label="Analyze my life" onClick={() => router.push("/analyst")} icon={Brain} />
         </div>
       </motion.section>
+
+      {/* ══ DISCOVERIES (proactive AI) ══ */}
+      <Discoveries limit={3} />
 
       {/* ══ VITAL SIGNS ══ */}
       <motion.section

@@ -31,7 +31,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Home", "/journal": "Journal", "/habits": "Habits", "/tasks": "Tasks",
   "/goals": "Goals", "/projects": "Projects", "/finance": "Finance", "/workout": "Workout",
   "/mood": "Mood", "/timeline": "Your Life", "/statistics": "Statistics", "/settings": "Settings",
-  "/review": "Weekly Review", "/analyst": "Life Analyst",
+  "/review": "Weekly Review", "/analyst": "Life Analyst", "/dna": "Life DNA",
 };
 
 const TYPE_ICON: Record<string, LucideIcon> = {

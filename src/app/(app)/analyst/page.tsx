@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { NovusMark } from "@/components/shared/novus-logo";
+import { Discoveries } from "@/components/novus/discoveries";
 import { cn } from "@/lib/utils";
 
 interface LifeAnalysis {
@@ -151,6 +152,9 @@ export default function AnalystPage() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Discoveries — proactive insights */}
+            <Discoveries limit={4} />
 
             {/* 2-col grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

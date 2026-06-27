@@ -5,7 +5,7 @@
   "description": "Novus - Your personal operating system",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && (prisma db push --skip-generate || echo 'WARN: prisma db push skipped (DATABASE_URL not available at build) — run it manually to sync new models') && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",

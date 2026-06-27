@@ -73,6 +73,9 @@ model User {
   financeAccounts  FinanceAccount[]
   transactions     FinanceTransaction[]
   budgets          FinanceBudget[]
+  discoveries      Discovery[]
+  experiments      Experiment[]
+  commitments      Commitment[]
 
   @@index([email])
   @@index([createdAt])
@@ -742,6 +745,7 @@ enum TimelineEventType {
   MOOD_HIGH
   TASK_COMPLETED
   MILESTONE_REACHED
+  EXPERIMENT_COMPLETED
   CUSTOM
 }
 
@@ -784,6 +788,10 @@ enum NotificationType {
   ACHIEVEMENT_UNLOCKED
   STREAK_AT_RISK
   WEEKLY_SUMMARY
+  DAILY_BRIEFING
+  EXPERIMENT_CHECKIN
+  COMMITMENT_CHECKIN
+  DISCOVERY
   SYSTEM
 }
 
@@ -851,6 +859,8 @@ enum AIReportType {
   JOURNAL_ANALYSIS
   PREDICTIVE_INSIGHT
   LIFE_MEMORY
+  LIFE_DNA
+  TIMELINE_NARRATIVE
 }
 
 // ============================================================
@@ -931,7 +941,14 @@ model UserSettings {
   
   // First-time setup
   onboardingCompleted   Boolean @default(false)
-  
+
+  // Onboarding profile — fed into AI context
+  focusAreas            String[] @default([])      // e.g. ["health","focus","money"]
+  primaryGoalText       String?
+  aiTone                String   @default("balanced") // gentle | balanced | direct
+  successDefinition     String?  @db.Text
+  reminderPreference    String   @default("smart")     // off | minimal | smart | all
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1132,4 +1149,104 @@ enum BudgetPeriod {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+
+// ============================================================
+// AI DISCOVERIES  (proactive, unsolicited insights)
+// ============================================================
+
+model Discovery {
+  id          String   @id @default(cuid())
+  userId      String
+
+  title       String
+  explanation String   @db.Text
+  confidence  Int      @default(70)      // 0-100
+  evidence    String[] @default([])      // supporting bullet points
+  modules     String[] @default([])      // related modules, e.g. ["habits","mood"]
+  signature   String                     // stable dedupe key per insight kind
+
+  isDismissed Boolean  @default(false)
+  isSaved     Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, signature])
+  @@index([userId])
+  @@index([userId, isDismissed])
+}
+
+// ============================================================
+// EXPERIMENTS  (Novus-proposed life experiments)
+// ============================================================
+
+model Experiment {
+  id               String   @id @default(cuid())
+  userId           String
+
+  title            String
+  hypothesis       String   @db.Text
+  durationDays     Int      @default(7)
+  actions          String[] @default([])    // habits/tasks involved (text)
+  predictedOutcome String   @db.Text
+  actualOutcome    String?  @db.Text
+  aiSummary        String?  @db.Text
+
+  status           ExperimentStatus @default(ACTIVE)
+  startDate        DateTime @default(now())
+  endDate          DateTime
+  completedAt      DateTime?
+
+  baseline         Json?    // snapshot before, for before/after comparison
+  result           Json?    // snapshot after
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+}
+
+enum ExperimentStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+  ABANDONED
+}
+
+// ============================================================
+// COMMITMENTS  (Promise Memory)
+// ============================================================
+
+model Commitment {
+  id            String   @id @default(cuid())
+  userId        String
+
+  text          String   @db.Text
+  relatedModule String?                  // "habits","goals","workout",...
+  relatedId     String?
+
+  status        CommitmentStatus @default(ACTIVE)
+  checkInDate   DateTime?
+  followUp      String?  @db.Text        // gentle AI follow-up message
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+}
+
+enum CommitmentStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
 }

@@ -22,6 +22,7 @@ import {
   Settings,
   Search,
   Sparkles,
+  Fingerprint,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ const PRIMARY: NavItem[] = [
 ];
 
 const INTELLIGENCE: NavItem[] = [
+  { name: "Life DNA", href: "/dna", icon: Fingerprint },
   { name: "Weekly Review", href: "/review", icon: CalendarCheck },
   { name: "Life Analyst", href: "/analyst", icon: Brain },
   { name: "Timeline", href: "/timeline", icon: Clock },
