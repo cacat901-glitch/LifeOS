@@ -18,6 +18,11 @@ interface AppState {
   setCommandOpen: (open: boolean) => void;
   toggleCommand: () => void;
 
+  // Novus AI panel (⌘J)
+  novusOpen: boolean;
+  setNovusOpen: (open: boolean) => void;
+  toggleNovus: () => void;
+
   // Notifications
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, "id" | "timestamp">) => void;
@@ -50,6 +55,11 @@ export const useAppStore = create<AppState>((set) => ({
   commandOpen: false,
   setCommandOpen: (open) => set({ commandOpen: open }),
   toggleCommand: () => set((state) => ({ commandOpen: !state.commandOpen })),
+
+  // Novus AI panel
+  novusOpen: false,
+  setNovusOpen: (open) => set({ novusOpen: open }),
+  toggleNovus: () => set((state) => ({ novusOpen: !state.novusOpen })),
 
   // Notifications
   notifications: [],

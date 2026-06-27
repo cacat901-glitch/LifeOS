@@ -21,6 +21,7 @@ import {
   BarChart3,
   Settings,
   Search,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,7 @@ const INTELLIGENCE: NavItem[] = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { setCommandOpen } = useAppStore();
+  const { setCommandOpen, setNovusOpen } = useAppStore();
   const [userData, setUserData] = useState<{
     xp: number;
     level: number;
@@ -114,6 +115,23 @@ export function AppSidebar() {
             {isPro ? "Pro" : "Free"}
           </span>
         </Link>
+      </div>
+
+      {/* Novus AI — its own prominent space */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={() => setNovusOpen(true)}
+          className="group flex w-full items-center gap-2.5 rounded-xl border border-primary/30 bg-primary/[0.06] px-3 py-2.5 text-left transition-colors hover:bg-primary/[0.12]"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Sparkles className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-semibold leading-tight text-foreground">Ask Novus</span>
+            <span className="block font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground">Your AI companion</span>
+          </span>
+          <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">⌘J</kbd>
+        </button>
       </div>
 
       {/* Command trigger */}

@@ -27,7 +27,7 @@ import { useAppStore } from "@/hooks/use-store";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { setCommandOpen } = useAppStore();
+  const { setNovusOpen } = useAppStore();
 
   const tab = (href: string, name: string, Icon: LucideIcon) => {
     const isActive = pathname === href || pathname.startsWith(href + "/");
@@ -61,7 +61,7 @@ export function BottomNav() {
 
         {/* Centre — Ask Novus */}
         <button
-          onClick={() => setCommandOpen(true)}
+          onClick={() => setNovusOpen(true)}
           className="relative -mt-6 flex flex-col items-center"
           aria-label="Open Novus AI"
         >

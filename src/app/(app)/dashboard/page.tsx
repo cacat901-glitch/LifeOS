@@ -59,7 +59,7 @@ const INSIGHT_STYLE: Record<PredictiveInsight["type"], { border: string; text: s
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { setCommandOpen } = useAppStore();
+  const { setNovusOpen } = useAppStore();
   const [data, setData] = useState<DashboardData | null>(null);
   const [briefing, setBriefing] = useState("");
   const [briefingLoading, setBriefingLoading] = useState(true);
@@ -205,7 +205,7 @@ export default function DashboardPage() {
         )}
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <ActionChip label="Ask Novus" onClick={() => setCommandOpen(true)} icon={Sparkles} primary />
+          <ActionChip label="Ask Novus" onClick={() => setNovusOpen(true)} icon={Sparkles} primary />
           <ActionChip label="Weekly Review" onClick={() => router.push("/review")} icon={CalendarCheck} />
           <ActionChip label="Analyze my life" onClick={() => router.push("/analyst")} icon={Brain} />
         </div>
@@ -394,7 +394,7 @@ export default function DashboardPage() {
               );
             })}
             <button
-              onClick={() => setCommandOpen(true)}
+              onClick={() => setNovusOpen(true)}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
             >
               <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.75} />

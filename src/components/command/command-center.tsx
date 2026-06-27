@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
-import { NovusMark } from "@/components/shared/novus-logo";
 import { cn } from "@/lib/utils";
 
 // ── Command definitions ────────────────────────────────────
@@ -13,7 +13,7 @@ interface Command {
   label: string;
   hint?: string;
   icon: React.ReactNode;
-  group: "Create" | "Navigate" | "Novus";
+  group: "Create" | "Navigate" | "Intelligence";
   run: (router: ReturnType<typeof useRouter>) => void;
   keywords?: string;
 }
@@ -41,17 +41,15 @@ const COMMANDS: Command[] = [
   { id: "add-tx",     group: "Create", label: "Add Transaction",      hint: "Finance", keywords: "money expense income",
     icon: I("M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"), run: (r) => r.push("/finance") },
 
-  // Novus AI
-  { id: "weekly-review",   group: "Novus", label: "Weekly Review",       hint: "AI",  keywords: "summary week",
+  // Intelligence (navigation to AI surfaces)
+  { id: "weekly-review",   group: "Intelligence", label: "Weekly Review",       hint: "AI",  keywords: "summary week novus",
     icon: I("M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"), run: (r) => r.push("/review") },
-  { id: "analyze-life",    group: "Novus", label: "Analyze My Life",     hint: "AI",  keywords: "life coach analysis patterns",
+  { id: "analyze-life",    group: "Intelligence", label: "Analyze My Life",     hint: "AI",  keywords: "life coach analysis patterns novus",
     icon: I("M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"), run: (r) => r.push("/analyst") },
-  { id: "life-patterns",   group: "Novus", label: "Show Life Patterns",  hint: "AI",  keywords: "patterns insights habits mood",
+  { id: "life-patterns",   group: "Intelligence", label: "Show Life Patterns",  hint: "AI",  keywords: "patterns insights habits mood",
     icon: I("M13 10V3L4 14h7v7l9-11h-7z"), run: (r) => r.push("/analyst?tab=patterns") },
-  { id: "life-memory",     group: "Novus", label: "Life Memory",         hint: "AI",  keywords: "history progress how have i changed",
+  { id: "life-memory",     group: "Intelligence", label: "Life Memory",         hint: "AI",  keywords: "history progress how have i changed",
     icon: I("M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"), run: (r) => r.push("/analyst?tab=memory") },
-  { id: "summarize-month", group: "Novus", label: "Summarize This Month",hint: "AI",  keywords: "monthly insights",
-    icon: I("M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"), run: (r) => r.push("/review?monthly=1") },
 
   // Navigate
   { id: "nav-home",     group: "Navigate", label: "Go to Home",        keywords: "dashboard",
@@ -66,20 +64,12 @@ const COMMANDS: Command[] = [
     icon: I("M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"), run: (r) => r.push("/settings") },
 ];
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
-
 export function CommandCenter() {
   const router = useRouter();
-  const { commandOpen, setCommandOpen, toggleCommand } = useAppStore();
+  const { commandOpen, setCommandOpen, toggleCommand, setNovusOpen } = useAppStore();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
-  const [askMode, setAskMode] = useState(false);
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [thinking, setThinking] = useState(false);
-  const [pending, setPending] = useState<{ actions: any[]; summary: string[] } | null>(null);
-  const [executing, setExecuting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Global ⌘K / Ctrl+K
   useEffect(() => {
@@ -97,94 +87,38 @@ export function CommandCenter() {
   // Reset on open
   useEffect(() => {
     if (commandOpen) {
-      setQuery(""); setActive(0); setAskMode(false); setMessages([]); setPending(null);
+      setQuery("");
+      setActive(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [commandOpen]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, thinking]);
 
   const filtered = COMMANDS.filter((c) => {
     const q = query.toLowerCase();
     return !q || c.label.toLowerCase().includes(q) || c.keywords?.includes(q) || c.group.toLowerCase().includes(q);
   });
 
-  const groups = ["Create", "Novus", "Navigate"] as const;
+  const groups = ["Create", "Intelligence", "Navigate"] as const;
 
-  const runCommand = useCallback((cmd: Command) => {
+  const runCommand = useCallback(
+    (cmd: Command) => {
+      setCommandOpen(false);
+      setTimeout(() => cmd.run(router), 80);
+    },
+    [router, setCommandOpen]
+  );
+
+  const openNovus = useCallback(() => {
     setCommandOpen(false);
-    setTimeout(() => cmd.run(router), 80);
-  }, [router, setCommandOpen]);
-
-  const askNovus = useCallback(async (text: string) => {
-    const next = [...messages, { role: "user" as const, content: text }];
-    setMessages(next);
-    setQuery("");
-    setThinking(true);
-    setPending(null);
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
-      });
-      const data = await res.json();
-      setMessages((m) => [...m, { role: "assistant", content: data.reply || "I couldn't respond just now." }]);
-      if (data.requiresConfirmation && Array.isArray(data.pendingActions)) {
-        setPending({ actions: data.pendingActions, summary: data.confirmationSummary || [] });
-      } else if (data.executed) {
-        // Real changes were made — refresh the underlying pages.
-        router.refresh();
-      }
-    } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "Something went wrong reaching Novus AI." }]);
-    } finally {
-      setThinking(false);
-    }
-  }, [messages, router]);
-
-  const confirmPending = useCallback(async () => {
-    if (!pending) return;
-    setExecuting(true);
-    try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirmActions: pending.actions }),
-      });
-      const data = await res.json();
-      setMessages((m) => [...m, { role: "assistant", content: data.reply || "Done." }]);
-      setPending(null);
-      if (data.accountDeleted) {
-        setMessages((m) => [...m, { role: "assistant", content: "Signing you out…" }]);
-        setTimeout(() => { window.location.href = "/auth/login"; }, 1400);
-      } else {
-        router.refresh();
-      }
-    } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "Something went wrong performing that action." }]);
-    } finally {
-      setExecuting(false);
-    }
-  }, [pending, router]);
-
-  const cancelPending = useCallback(() => {
-    setPending(null);
-    setMessages((m) => [...m, { role: "assistant", content: "Okay — I've cancelled that. Nothing was changed." }]);
-  }, []);
+    setTimeout(() => setNovusOpen(true), 100);
+  }, [setCommandOpen, setNovusOpen]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (askMode) {
-      if (e.key === "Enter" && query.trim() && !thinking && !pending && !executing) { e.preventDefault(); askNovus(query.trim()); }
-      return;
-    }
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, filtered.length)); }
     if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
     if (e.key === "Enter") {
       e.preventDefault();
-      if (active === filtered.length) { setAskMode(true); if (query.trim()) askNovus(query.trim()); }
+      if (active === filtered.length) openNovus();
       else if (filtered[active]) runCommand(filtered[active]);
     }
   };
@@ -193,176 +127,110 @@ export function CommandCenter() {
     <AnimatePresence>
       {commandOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-end sm:items-start justify-center sm:pt-[12vh] px-0 sm:px-4"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-end justify-center px-0 sm:items-start sm:px-4 sm:pt-[12vh]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/50 backdrop-blur-md"
             onClick={() => setCommandOpen(false)}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           />
 
           {/* Palette */}
           <motion.div
-            className="relative w-full max-w-2xl glass-strong sm:rounded-3xl rounded-t-3xl overflow-hidden shadow-2xl ring-1 ring-white/10"
+            className="relative w-full max-w-2xl overflow-hidden rounded-t-3xl shadow-2xl ring-1 ring-white/10 glass-strong sm:rounded-3xl"
             initial={{ opacity: 0, y: 40, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 30 }}
           >
             {/* Input row */}
-            <div className="flex items-center gap-3 px-5 h-16 border-b border-border/60">
-              {askMode
-                ? <NovusMark size="sm" />
-                : <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              }
+            <div className="flex h-16 items-center gap-3 border-b border-border/60 px-5">
+              <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setActive(0); }}
                 onKeyDown={onKeyDown}
-                placeholder={askMode ? "Ask Novus anything…" : "Search or type a command…"}
-                className="flex-1 bg-transparent outline-none text-base placeholder:text-muted-foreground"
+                placeholder="Search or type a command…"
+                className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
               />
-              <kbd className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted-foreground px-2 py-1 rounded-md bg-muted/60 border border-border/60">
+              <kbd className="hidden items-center gap-1 rounded-md border border-border/60 bg-muted/60 px-2 py-1 text-[11px] text-muted-foreground sm:inline-flex">
                 ESC
               </kbd>
             </div>
 
             {/* Body */}
-            <div ref={scrollRef} className="max-h-[60vh] sm:max-h-[52vh] overflow-y-auto p-2">
-              {askMode ? (
-                <div className="p-3 space-y-4">
-                  {messages.length === 0 && !thinking && (
-                    <div className="text-center py-8 text-sm text-muted-foreground">
-                      <NovusMark size="md" className="mx-auto mb-3" />
-                      Ask me about your day, your goals, or what to focus on next.
-                    </div>
-                  )}
-                  {messages.map((m, i) => (
-                    <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-                      <div className={cn(
-                        "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/70 text-foreground"
-                      )}>
-                        {m.content}
-                      </div>
-                    </div>
-                  ))}
-                  {thinking && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted/70 rounded-2xl px-4 py-3 flex gap-1.5">
-                        {[0, 1, 2].map((i) => (
-                          <motion.span key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-                            animate={{ opacity: [0.3, 1, 0.3] }}
-                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {pending && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                      className="rounded-2xl border border-red-500/30 bg-red-500/[0.08] p-4 space-y-3"
-                    >
-                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                        <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
-                        Confirm before I continue
-                      </div>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {pending.summary.map((s, i) => (
-                          <li key={i} className="flex gap-2"><span className="text-red-400">•</span><span>{s}</span></li>
-                        ))}
-                      </ul>
-                      <p className="text-xs text-red-400/90">This permanently changes your data and can&apos;t be undone.</p>
-                      <div className="flex gap-2 pt-1">
+            <div className="max-h-[60vh] overflow-y-auto p-2 sm:max-h-[52vh]">
+              {groups.map((group) => {
+                const items = filtered.filter((c) => c.group === group);
+                if (!items.length) return null;
+                return (
+                  <div key={group} className="mb-1">
+                    <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{group}</div>
+                    {items.map((cmd) => {
+                      const idx = filtered.indexOf(cmd);
+                      return (
                         <button
-                          onClick={confirmPending}
-                          disabled={executing}
-                          className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-sm font-medium py-2 transition-colors"
+                          key={cmd.id}
+                          onMouseEnter={() => setActive(idx)}
+                          onClick={() => runCommand(cmd)}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+                            active === idx ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                          )}
                         >
-                          {executing ? "Working…" : "Yes, do it"}
+                          <span className={cn("shrink-0", active === idx ? "text-primary" : "")}>{cmd.icon}</span>
+                          <span className="flex-1 font-medium text-foreground">{cmd.label}</span>
+                          {cmd.hint && <span className="text-xs text-muted-foreground">{cmd.hint}</span>}
                         </button>
-                        <button
-                          onClick={cancelPending}
-                          disabled={executing}
-                          className="flex-1 rounded-xl bg-muted/70 hover:bg-muted text-foreground text-sm font-medium py-2 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  {groups.map((group) => {
-                    const items = filtered.filter((c) => c.group === group);
-                    if (!items.length) return null;
-                    return (
-                      <div key={group} className="mb-1">
-                        <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{group}</div>
-                        {items.map((cmd) => {
-                          const idx = filtered.indexOf(cmd);
-                          return (
-                            <button
-                              key={cmd.id}
-                              onMouseEnter={() => setActive(idx)}
-                              onClick={() => runCommand(cmd)}
-                              className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left",
-                                active === idx ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:bg-muted/50"
-                              )}
-                            >
-                              <span className={cn("shrink-0", active === idx ? "text-primary" : "")}>{cmd.icon}</span>
-                              <span className="flex-1 font-medium text-foreground">{cmd.label}</span>
-                              {cmd.hint && <span className="text-xs text-muted-foreground">{cmd.hint}</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-
-                  {/* Ask Novus row */}
-                  <div className="mb-1">
-                    <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Novus AI</div>
-                    <button
-                      onMouseEnter={() => setActive(filtered.length)}
-                      onClick={() => setAskMode(true)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left",
-                        active === filtered.length ? "bg-primary/15" : "hover:bg-muted/50"
-                      )}
-                    >
-                      <NovusMark size="sm" />
-                      <span className="flex-1 font-medium text-foreground">
-                        {query ? `Ask Novus: "${query}"` : "Ask Novus"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">AI</span>
-                    </button>
+                      );
+                    })}
                   </div>
+                );
+              })}
 
-                  {filtered.length === 0 && (
-                    <div className="px-3 py-10 text-center text-sm text-muted-foreground">
-                      No commands found. Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">Enter</kbd> to ask Novus.
-                    </div>
+              {/* Ask Novus → opens the dedicated panel */}
+              <div className="mb-1">
+                <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Novus AI</div>
+                <button
+                  onMouseEnter={() => setActive(filtered.length)}
+                  onClick={openNovus}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+                    active === filtered.length ? "bg-primary/15" : "hover:bg-muted/50"
                   )}
-                </>
+                >
+                  <span className="flex h-[18px] w-[18px] items-center justify-center text-primary">
+                    <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.8} />
+                  </span>
+                  <span className="flex-1 font-medium text-foreground">
+                    {query ? `Ask Novus: "${query}"` : "Ask Novus"}
+                  </span>
+                  <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">⌘J</kbd>
+                </button>
+              </div>
+
+              {filtered.length === 0 && (
+                <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                  No commands found. Press <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs">Enter</kbd> to ask Novus.
+                </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-5 h-11 border-t border-border/60 text-[11px] text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <NovusMark size="sm" className="!h-4 !w-4 !text-[9px] !rounded-md" />
-                Novus Command Center
-              </div>
+            <div className="flex h-11 items-center justify-between border-t border-border/60 px-5 text-[11px] text-muted-foreground">
+              <span className="font-mono uppercase tracking-[0.15em]">Command Center</span>
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/60">↑↓</kbd> navigate</span>
-                <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/60">↵</kbd> select</span>
+                <span className="flex items-center gap-1"><kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">↑↓</kbd> navigate</span>
+                <span className="flex items-center gap-1"><kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5">↵</kbd> select</span>
               </div>
             </div>
           </motion.div>

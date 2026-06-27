@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/layout/sidebar";
 import { AppHeader } from "@/components/layout/header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { CommandCenter } from "@/components/command/command-center";
+import { NovusPanel, NovusFab } from "@/components/novus/novus-panel";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,8 +24,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile bottom tab bar — only on < lg screens */}
       <BottomNav />
 
-      {/* Global ⌘K command center */}
+      {/* Global ⌘K command center + Novus AI (⌘J) */}
       <CommandCenter />
+      <NovusPanel />
+      <NovusFab />
     </div>
   );
 }

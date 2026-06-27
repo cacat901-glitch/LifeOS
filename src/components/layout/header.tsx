@@ -48,7 +48,7 @@ const TYPE_ICON: Record<string, LucideIcon> = {
 export function AppHeader() {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Novus";
-  const { setCommandOpen } = useAppStore();
+  const { setNovusOpen } = useAppStore();
 
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -119,13 +119,13 @@ export function AppHeader() {
         <div className="flex items-center gap-2">
           {/* Ask Novus */}
           <button
-            onClick={() => setCommandOpen(true)}
-            className="hidden items-center gap-2 rounded-lg border border-border bg-secondary/40 py-2 pl-2.5 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary sm:flex"
+            onClick={() => setNovusOpen(true)}
+            className="hidden items-center gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] py-2 pl-2.5 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/[0.12] sm:flex"
           >
-            <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.75} />
+            <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.9} />
             Ask Novus
             <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              ⌘K
+              ⌘J
             </kbd>
           </button>
 
