@@ -1,541 +1,235 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  Sparkles,
-  CalendarCheck,
-  Brain,
-  ArrowRight,
-  Check,
-  X,
-  AlertTriangle,
-  Lightbulb,
-  PartyPopper,
-  Flame,
-  BookOpen,
-  Dumbbell,
-  Heart,
-  Target,
-  ListTodo,
-  Smile,
-  type LucideIcon,
+  ArrowRight, Brain, CalendarClock, Check, ChevronRight, Circle, Clock3,
+  Dumbbell, Flame, ListTodo, NotebookPen, RefreshCw, Smile, Sparkles,
+  Target, TrendingUp, X, type LucideIcon,
 } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
-import { AIStatusBadge } from "@/components/shared/ai-status";
-import { Discoveries } from "@/components/novus/discoveries";
-import { ExperimentCard } from "@/components/novus/experiments";
-import { Commitments } from "@/components/novus/commitments";
 import { cn } from "@/lib/utils";
 
+interface HabitItem { id: string; name: string; icon?: string; color?: string; isCompleted: boolean; streak: number }
+interface TaskItem { id: string; title: string; priority: string; status: string; dueDate?: string | null }
+interface GoalItem { id: string; title: string; progress: number; color?: string; targetDate?: string | null }
 interface DashboardData {
-  user: { name: string; xp: number; level: number } | null;
-  habits: { list: any[]; completed: number; total: number; bestStreak: number };
-  tasks: { list: any[]; done: number; total: number };
-  goals: any[];
-  mood: { score: number; emoji: string; label: string } | null;
-  recentWorkout: any | null;
+  user: { name: string | null; xp: number; level: number } | null;
+  habits: { list: HabitItem[]; completed: number; total: number; bestStreak: number };
+  tasks: { list: TaskItem[]; done: number; total: number };
+  goals: GoalItem[];
+  mood: { score: number; emoji?: string | null; label?: string | null } | null;
+  recentWorkout: { name?: string; startTime?: string; isCompleted?: boolean } | null;
+  recentJournal?: { title?: string | null; date?: string } | null;
   lifeScore: { total: number; grade: string; breakdown: Record<string, number> };
   streaks: { habits: number; journal: number; workout: number; mood: number };
 }
 
-interface PredictiveInsight {
-  type: "warning" | "opportunity" | "celebration";
-  title: string;
-  message: string;
-  action: string;
-}
+interface PredictiveInsight { type: "warning" | "opportunity" | "celebration"; title: string; message: string; action?: string }
 
-const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: (i: number = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, ease, delay: i * 0.07 } }),
-};
+const spring = { type: "spring" as const, stiffness: 390, damping: 32 };
+const ease = [0.16, 1, 0.3, 1] as const;
 
-const INSIGHT_STYLE: Record<PredictiveInsight["type"], { border: string; text: string; icon: LucideIcon }> = {
-  warning: { border: "border-amber-500/25", text: "text-amber-400", icon: AlertTriangle },
-  opportunity: { border: "border-sky-500/25", text: "text-sky-400", icon: Lightbulb },
-  celebration: { border: "border-primary/30", text: "text-primary", icon: PartyPopper },
-};
-
-export default function DashboardPage() {
-  const router = useRouter();
+export default function NowPage() {
   const { setNovusOpen } = useAppStore();
+  const reduceMotion = useReducedMotion();
   const [data, setData] = useState<DashboardData | null>(null);
   const [briefing, setBriefing] = useState("");
-  const [briefingLoading, setBriefingLoading] = useState(true);
   const [insights, setInsights] = useState<PredictiveInsight[]>([]);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [dismissedInsights, setDismissedInsights] = useState<Set<string>>(new Set());
+  const [briefingLoading, setBriefingLoading] = useState(true);
 
   const fetchDashboard = useCallback(async () => {
-    try {
-      const r = await fetch("/api/dashboard");
-      if (r.ok) setData(await r.json());
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchBriefing = useCallback(async () => {
-    try {
-      const r = await fetch("/api/ai/briefing");
-      if (r.ok) {
-        const d = await r.json();
-        setBriefing(d.briefing || "");
-      }
-    } finally {
-      setBriefingLoading(false);
-    }
-  }, []);
-
-  const fetchInsights = useCallback(async () => {
-    try {
-      const r = await fetch("/api/ai/insights");
-      if (r.ok) {
-        const d = await r.json();
-        setInsights(d.insights || []);
-      }
-    } catch {
-      /* silent — insights are non-critical */
-    }
+    const response = await fetch("/api/dashboard");
+    if (response.ok) setData(await response.json());
   }, []);
 
   useEffect(() => {
-    fetchDashboard();
-    fetchBriefing();
-    fetchInsights();
-  }, [fetchDashboard, fetchBriefing, fetchInsights]);
-
-  const toggleHabit = async (id: string, done: boolean) => {
-    await fetch("/api/habits", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId: id, completed: !done }),
+    let active = true;
+    Promise.allSettled([
+      fetch("/api/dashboard").then((r) => r.ok ? r.json() : null),
+      fetch("/api/ai/briefing").then((r) => r.ok ? r.json() : null),
+      fetch("/api/ai/insights").then((r) => r.ok ? r.json() : null),
+    ]).then(([dashboardResult, briefingResult, insightsResult]) => {
+      if (!active) return;
+      if (dashboardResult.status === "fulfilled" && dashboardResult.value) setData(dashboardResult.value);
+      if (briefingResult.status === "fulfilled") setBriefing(briefingResult.value?.briefing || "");
+      if (insightsResult.status === "fulfilled") setInsights(insightsResult.value?.insights || []);
+      setLoading(false); setBriefingLoading(false);
     });
-    fetchDashboard();
-  };
-  const toggleTask = async (id: string, status: string) => {
-    await fetch("/api/tasks", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId: id, status: status === "DONE" ? "TODO" : "DONE" }),
-    });
-    fetchDashboard();
+    return () => { active = false; };
+  }, []);
+
+  const toggleHabit = async (habit: HabitItem) => {
+    const nextCompleted = !habit.isCompleted;
+    setData((current) => current ? ({ ...current, habits: { ...current.habits, completed: Math.max(0, current.habits.completed + (nextCompleted ? 1 : -1)), list: current.habits.list.map((item) => item.id === habit.id ? { ...item, isCompleted: nextCompleted } : item) } }) : current);
+    const response = await fetch("/api/habits", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId: habit.id, completed: nextCompleted }) });
+    if (!response.ok) await fetchDashboard();
   };
 
-  if (loading) return <DashboardSkeleton />;
+  const toggleTask = async (task: TaskItem) => {
+    const nextStatus = task.status === "DONE" ? "TODO" : "DONE";
+    setData((current) => current ? ({ ...current, tasks: { ...current.tasks, done: Math.max(0, current.tasks.done + (nextStatus === "DONE" ? 1 : -1)), list: current.tasks.list.map((item) => item.id === task.id ? { ...item, status: nextStatus } : item) } }) : current);
+    const response = await fetch("/api/tasks", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, status: nextStatus }) });
+    if (!response.ok) await fetchDashboard();
+  };
 
-  const d = data!;
-  const lifeScore = d?.lifeScore ?? { total: 0, grade: "—", breakdown: {} };
-  const habits = d?.habits ?? { list: [], completed: 0, total: 0, bestStreak: 0 };
-  const tasks = d?.tasks ?? { list: [], done: 0, total: 0 };
-  const goals = d?.goals ?? [];
-  const streaks = d?.streaks ?? { habits: 0, journal: 0, workout: 0, mood: 0 };
-  const visibleInsights = insights.filter((i) => !dismissedInsights.has(i.title));
-  const firstName = (d?.user?.name || "there").split(" ")[0];
+  if (loading) return <NowSkeleton />;
+  if (!data) return <LoadFailure onRetry={() => { setLoading(true); fetchDashboard().finally(() => setLoading(false)); }} />;
+
+  const firstName = data.user?.name?.trim().split(/\s+/)[0];
+  const visibleInsights = insights.filter((item) => !dismissed.has(item.title));
+  const openTasks = data.tasks.list.filter((item) => item.status !== "DONE");
+  const openHabits = data.habits.list.filter((item) => !item.isCompleted);
+  const focusItems = [
+    ...openTasks.slice(0, 3).map((item) => ({ kind: "task" as const, item })),
+    ...openHabits.slice(0, Math.max(0, 4 - Math.min(openTasks.length, 3))).map((item) => ({ kind: "habit" as const, item })),
+  ].slice(0, 4);
+  const fallbackSummary = buildCurrentSummary(data);
 
   return (
-    <div className="space-y-5 pb-12">
-      {/* ══ PREDICTIVE INSIGHTS ══ */}
-      <AnimatePresence>
-        {visibleInsights.map((insight) => {
-          const s = INSIGHT_STYLE[insight.type];
-          const Icon = s.icon;
-          return (
-            <motion.div
-              key={insight.title}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              transition={{ duration: 0.35, ease }}
-              className={cn("flex items-start gap-3 rounded-xl border bg-card/50 p-4 text-sm", s.border)}
-            >
-              <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", s.text)} strokeWidth={1.75} />
-              <div className="min-w-0 flex-1">
-                <p className={cn("font-semibold", s.text)}>{insight.title}</p>
-                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{insight.message}</p>
-                <p className={cn("mt-1.5 text-xs font-medium", s.text)}>{insight.action}</p>
-              </div>
-              <button
-                onClick={() => setDismissedInsights((p) => new Set(Array.from(p).concat(insight.title)))}
-                className="tap-small mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-
-      {/* ══ AI BRIEFING ══ */}
-      <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        animate="show"
-        className="rounded-2xl border border-border bg-card/60 p-5 sm:p-7 md:p-8"
-      >
-        <div className="mb-4 flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15">
-            <Sparkles className="h-4 w-4 text-primary" strokeWidth={2} />
-          </span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            Novus Briefing
-          </span>
-          <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60 sm:inline">
-            · {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" })}
-          </span>
-          <AIStatusBadge variant="dot" className="ml-auto" />
-        </div>
-
-        {briefingLoading ? (
-          <div className="max-w-2xl space-y-2.5">
-            <div className="h-5 w-3/4 rounded-lg shimmer" />
-            <div className="h-5 w-full rounded-lg shimmer" />
-            <div className="h-5 w-1/2 rounded-lg shimmer" />
+    <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }} className="pb-10">
+      <section className="relative min-h-[420px] overflow-hidden border-b border-white/[0.07] pb-10 pt-6 md:min-h-[510px] md:pb-14 md:pt-10">
+        <div className="life-horizon pointer-events-none absolute inset-x-[-20%] bottom-[-52%] h-[78%] rounded-[50%]" />
+        <div className="relative grid gap-10 lg:grid-cols-[1fr_360px] lg:items-end">
+          <div className="max-w-4xl">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{timeContext()}</p>
+            <h2 className="mt-4 text-balance font-display text-[clamp(3.25rem,9vw,8.25rem)] font-semibold leading-[0.84] tracking-[-0.065em] text-foreground">
+              {greeting()},<br />
+              <span className="text-muted-foreground">{firstName || "welcome back"}.</span>
+            </h2>
+            <div className="mt-8 max-w-2xl md:mt-10">
+              {briefingLoading ? <BriefingSkeleton /> : <p className="text-pretty text-base leading-relaxed text-foreground/78 md:text-xl md:leading-relaxed">{briefing || fallbackSummary}</p>}
+            </div>
           </div>
-        ) : (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl text-balance font-display text-xl font-medium leading-snug text-foreground md:text-2xl lg:text-[1.7rem]"
-          >
-            {briefing || `Good to see you, ${firstName}. Let's make today count.`}
-          </motion.p>
-        )}
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <ActionChip label="Ask Novus" onClick={() => setNovusOpen(true)} icon={Sparkles} primary />
-          <ActionChip label="Weekly Review" onClick={() => router.push("/review")} icon={CalendarCheck} />
-          <ActionChip label="Analyze my life" onClick={() => router.push("/analyst")} icon={Brain} />
+          <button onClick={() => setNovusOpen(true)} className="focus-ring group self-end rounded-[24px] bg-white/[0.035] p-5 text-left transition-colors hover:bg-white/[0.065] md:p-6" aria-label="Ask Novus about your current state">
+            <div className="flex items-center justify-between"><Sparkles className="h-5 w-5 text-primary" /><ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></div>
+            <p className="mt-6 font-display text-xl font-medium tracking-[-0.02em]">Ask about what matters now</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Novus can explain this state or act on it.</p>
+          </button>
         </div>
-      </motion.section>
+      </section>
 
-      {/* ══ DISCOVERIES (proactive AI) ══ */}
-      <Discoveries limit={3} />
+      <CurrentState data={data} reducedMotion={!!reduceMotion} />
 
-      {/* ══ EXPERIMENT + PROMISES ══ */}
-      <ExperimentCard />
-      <Commitments />
-
-      {/* ══ VITAL SIGNS ══ */}
-      <motion.section
-        variants={{ show: { transition: { staggerChildren: 0.06 } } }}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-3 lg:grid-cols-4"
-      >
-        <VitalCard i={0} icon={Target} label="Life Score" value={String(lifeScore.total)} sub={`Grade ${lifeScore.grade}`} accent />
-        <VitalCard i={1} icon={Flame} label="Habits today" value={`${habits.completed}/${habits.total}`} sub={habits.bestStreak > 0 ? `${habits.bestStreak}-day streak` : "Start today"} />
-        <VitalCard i={2} icon={ListTodo} label="Tasks left" value={String(Math.max(tasks.total - tasks.done, 0))} sub={`${tasks.done} done today`} />
-        <VitalCard i={3} icon={Smile} label="Mood" value={d?.mood ? d.mood.emoji : "—"} sub={d?.mood ? d.mood.label : "Not logged"} />
-      </motion.section>
-
-      {/* ══ MAIN GRID ══ */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Today's rhythm */}
-        <Card i={1} className="lg:col-span-2">
-          <CardHead title="Today's rhythm" link={{ href: "/habits", label: "Open habits" }} />
-          {habits.list.length === 0 ? (
-            <EmptyHint icon={Flame} text="No habits yet. Design the rhythm of your days." action="Create a habit" href="/habits" />
-          ) : (
-            <div className="space-y-0.5">
-              {habits.list.map((h, i) => (
-                <motion.button
-                  key={h.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  onClick={() => toggleHabit(h.id, h.isCompleted)}
-                  className="group flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-secondary/50"
-                >
-                  <span
-                    className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all",
-                      h.isCompleted
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border group-hover:border-primary/60"
-                    )}
-                  >
-                    {h.isCompleted && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-                  </span>
-                  <span className="text-base">{h.icon || "•"}</span>
-                  <span className={cn("flex-1 text-sm font-medium", h.isCompleted && "text-muted-foreground line-through")}>
-                    {h.name}
-                  </span>
-                  {h.streak > 0 && (
-                    <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">{h.streak}d</span>
-                  )}
-                </motion.button>
+      <div className="grid border-b border-white/[0.07] lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,.7fr)]">
+        <section className="py-10 lg:border-r lg:border-white/[0.07] lg:py-14 lg:pr-12 xl:pr-16">
+          <SectionHeading label="What matters now" href="/tasks" action="Open tasks" />
+          {focusItems.length ? (
+            <div className="mt-7 divide-y divide-white/[0.07]">
+              {focusItems.map((focus, index) => focus.kind === "task" ? (
+                <FocusRow key={focus.item.id} index={index} title={focus.item.title} meta={taskMeta(focus.item)} checked={focus.item.status === "DONE"} icon={ListTodo} onToggle={() => toggleTask(focus.item)} reducedMotion={!!reduceMotion} />
+              ) : (
+                <FocusRow key={focus.item.id} index={index} title={focus.item.name} meta={focus.item.streak > 0 ? `${focus.item.streak}-day streak · Habit` : "Habit"} checked={focus.item.isCompleted} icon={Flame} onToggle={() => toggleHabit(focus.item)} reducedMotion={!!reduceMotion} />
               ))}
             </div>
-          )}
-        </Card>
+          ) : <EditorialEmpty icon={Check} title="Nothing is asking for your attention." body="You have completed the visible priorities for now." href="/tasks" action="Review all tasks" />}
+        </section>
 
-        {/* Life Score ring */}
-        <Card i={2} className="flex flex-col">
-          <CardHead title="Life Score" link={{ href: "/analyst", label: "Explain" }} />
-          <div className="flex items-center justify-center py-2">
-            <ScoreRing value={lifeScore.total} grade={lifeScore.grade} />
+        <section className="py-10 lg:py-14 lg:pl-12 xl:pl-16">
+          <SectionHeading label="Up next" />
+          <div className="mt-7 space-y-1">
+            <UpNext data={data} />
           </div>
-          <div className="mt-4 space-y-2">
-            {[
-              { label: "Habits", key: "habits" },
-              { label: "Tasks", key: "tasks" },
-              { label: "Goals", key: "goals" },
-              { label: "Mood", key: "mood" },
-              { label: "Workout", key: "workout" },
-            ].map(({ label, key }) => (
-              <div key={label} className="flex items-center gap-3">
-                <span className="w-14 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
-                  <motion.div
-                    className="h-full rounded-full bg-primary"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${lifeScore.breakdown[key] ?? 0}%` }}
-                    transition={{ duration: 0.8, ease, delay: 0.3 }}
-                  />
-                </div>
-                <span className="w-7 text-right text-xs font-medium tabular-nums">{lifeScore.breakdown[key] ?? 0}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        </section>
       </div>
 
-      {/* ══ SECOND GRID ══ */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Tasks */}
-        <Card i={3}>
-          <CardHead title="Focus" link={{ href: "/tasks", label: "All tasks" }} />
-          {tasks.list.length === 0 ? (
-            <EmptyHint icon={ListTodo} text="Nothing on deck." action="Add a task" href="/tasks" small />
-          ) : (
-            <div className="space-y-0.5">
-              {tasks.list.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => toggleTask(t.id, t.status)}
-                  className="flex w-full items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-secondary/50"
-                >
-                  <span
-                    className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border",
-                      t.status === "DONE" ? "border-primary bg-primary text-primary-foreground" : "border-border"
-                    )}
-                  >
-                    {t.status === "DONE" && <Check className="h-3 w-3" strokeWidth={3} />}
-                  </span>
-                  <span className={cn("flex-1 text-sm", t.status === "DONE" && "text-muted-foreground line-through")}>
-                    {t.title}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Goals */}
-        <Card i={4}>
-          <CardHead title="Trajectory" link={{ href: "/goals", label: "All goals" }} />
-          {goals.length === 0 ? (
-            <EmptyHint icon={Target} text="No goals set." action="Set a goal" href="/goals" small />
-          ) : (
-            <div className="space-y-3.5">
-              {goals.slice(0, 4).map((g) => (
-                <div key={g.id} className="space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="truncate pr-2 font-medium">{g.title}</span>
-                    <span className="shrink-0 font-mono text-xs text-muted-foreground">{g.progress}%</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                    <motion.div
-                      className="h-full rounded-full bg-primary"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${g.progress}%` }}
-                      transition={{ duration: 0.8, ease }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Momentum + AI shortcuts */}
-        <Card i={5}>
-          <h3 className="mb-4 font-display text-base font-semibold">Momentum</h3>
-          <div className="mb-5 grid grid-cols-2 gap-2.5">
-            {[
-              { label: "Habits", v: streaks.habits, icon: Flame },
-              { label: "Journal", v: streaks.journal, icon: BookOpen },
-              { label: "Workout", v: streaks.workout, icon: Dumbbell },
-              { label: "Mood", v: streaks.mood, icon: Heart },
-            ].map((s) => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} className="rounded-xl border border-border bg-secondary/30 p-3 text-center">
-                  <Icon className="mx-auto mb-1 h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
-                  <div className="font-display text-xl font-semibold text-primary">{s.v}</div>
-                  <div className="font-mono text-[9px] uppercase tracking-wide text-muted-foreground">{s.label}</div>
-                </div>
-              );
-            })}
+      <section className="border-b border-white/[0.07] py-10 md:py-14">
+        <div className="grid gap-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-16">
+          <div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-[15px] bg-primary text-primary-foreground"><Sparkles className="h-5 w-5" /></div>
+            <h3 className="mt-5 font-display text-3xl font-semibold tracking-[-0.04em]">Novus noticed</h3>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">Signals derived from the life data you have recorded.</p>
           </div>
-          <div className="space-y-0.5 border-t border-border pt-4">
-            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Novus AI</p>
-            {[
-              { label: "Weekly Review", href: "/review", icon: CalendarCheck },
-              { label: "Analyze my life", href: "/analyst", icon: Brain },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                >
-                  <Icon className="h-4 w-4" strokeWidth={1.75} />
-                  {item.label}
-                </Link>
-              );
-            })}
-            <button
-              onClick={() => setNovusOpen(true)}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-            >
-              <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.75} />
-              Ask Novus
-            </button>
+          <div>
+            <AnimatePresence mode="popLayout">
+              {visibleInsights.length ? visibleInsights.slice(0, 3).map((insight) => (
+                <motion.article key={insight.title} layout initial={reduceMotion ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 20 }} className="group relative border-t border-white/[0.07] py-5 pr-10 first:border-t-0 first:pt-0">
+                  <p className="font-display text-xl font-medium tracking-[-0.02em] md:text-2xl">{insight.title}</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">{insight.message}</p>
+                  {insight.action && <p className="mt-3 text-sm font-medium text-primary">{insight.action}</p>}
+                  <button onClick={() => setDismissed((current) => new Set([...current, insight.title]))} className="focus-ring absolute right-0 top-4 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground opacity-70 hover:bg-white/[0.05] hover:text-foreground md:opacity-0 md:group-hover:opacity-100" aria-label={`Dismiss ${insight.title}`}><X className="h-4 w-4" /></button>
+                </motion.article>
+              )) : <motion.div key="empty-insight"><EditorialEmpty icon={Brain} title="No new pattern yet." body="As you record more days, Novus will surface meaningful changes here." href="/journal" action="Add today’s context" compact /></motion.div>}
+            </AnimatePresence>
           </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
+        </div>
+      </section>
 
-// ── Sub-components ─────────────────────────────────────────────
-
-function Card({ children, className, i = 0 }: { children: React.ReactNode; className?: string; i?: number }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      animate="show"
-      custom={i}
-      className={cn("rounded-2xl border border-border bg-card/60 p-5 md:p-6", className)}
-    >
-      {children}
+      <Momentum data={data} />
     </motion.div>
   );
 }
 
-function CardHead({ title, link }: { title: string; link?: { href: string; label: string } }) {
+function CurrentState({ data, reducedMotion }: { data: DashboardData; reducedMotion: boolean }) {
+  const score = data.lifeScore.total;
+  const breakdown = [
+    ["Habits", data.lifeScore.breakdown.habits ?? 0], ["Tasks", data.lifeScore.breakdown.tasks ?? 0],
+    ["Goals", data.lifeScore.breakdown.goals ?? 0], ["Mood", data.lifeScore.breakdown.mood ?? 0],
+    ["Movement", data.lifeScore.breakdown.workout ?? 0],
+  ] as const;
   return (
-    <div className="mb-4 flex items-center justify-between">
-      <h3 className="font-display text-base font-semibold">{title}</h3>
-      {link && (
-        <Link href={link.href} className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-primary">
-          {link.label}
-        </Link>
-      )}
-    </div>
-  );
-}
-
-function ActionChip({ label, onClick, icon: Icon, primary }: { label: string; onClick: () => void; icon: LucideIcon; primary?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium transition-all",
-        primary
-          ? "bg-primary text-primary-foreground hover:opacity-90"
-          : "border border-border bg-secondary/40 text-foreground hover:bg-secondary"
-      )}
-    >
-      <Icon className="h-4 w-4" strokeWidth={1.9} />
-      {label}
-    </button>
-  );
-}
-
-function VitalCard({ i, icon: Icon, label, value, sub, accent }: { i: number; icon: LucideIcon; label: string; value: string; sub: string; accent?: boolean }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      custom={i}
-      className="relative overflow-hidden rounded-xl border border-border bg-card/60 p-4 transition-colors hover:border-border/80"
-    >
-      {accent && <div className="absolute inset-x-0 top-0 h-0.5 bg-primary" />}
-      <div className="mb-2 flex items-center justify-between">
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
-        <Icon className={cn("h-4 w-4", accent ? "text-primary" : "text-muted-foreground/60")} strokeWidth={1.75} />
+    <section className="border-b border-white/[0.07] py-9 md:py-12">
+      <div className="grid gap-9 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-center lg:gap-14">
+        <div className="flex items-end gap-4">
+          <motion.span initial={reducedMotion ? false : { opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={spring} className="font-display text-[clamp(4.5rem,10vw,7rem)] font-semibold leading-[0.75] tracking-[-0.07em] text-primary">{score}</motion.span>
+          <div className="pb-1"><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Life Score</p><p className="mt-1 text-sm text-foreground">Grade {data.lifeScore.grade}</p></div>
+        </div>
+        <div>
+          <div className="grid grid-cols-5 gap-1" aria-hidden="true">
+            {breakdown.map(([label, value], index) => <span key={label} className="h-px overflow-hidden bg-white/[0.1]"><motion.span initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.65, delay: index * 0.05, ease }} style={{ width: `${Math.max(2, value)}%` }} className="block h-full origin-left bg-primary/70" /></span>)}
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-x-4 gap-y-5 sm:grid-cols-5">
+            {breakdown.map(([label, value]) => <div key={label}><div className="font-display text-xl font-semibold tabular-nums md:text-2xl">{value}</div><div className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{label}</div></div>)}
+          </div>
+        </div>
       </div>
-      <p className="truncate font-display text-2xl font-semibold tracking-tight md:text-3xl">{value}</p>
-      <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{sub}</p>
-    </motion.div>
+    </section>
   );
 }
 
-function ScoreRing({ value, grade }: { value: number; grade: string }) {
-  const r = 52;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (value / 100) * circ;
-  return (
-    <div className="relative h-32 w-32">
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
-        <motion.circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke="hsl(var(--primary))"
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-3xl font-semibold tracking-tight">{value}</span>
-        <span className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">Grade {grade}</span>
-      </div>
-    </div>
-  );
+function FocusRow({ title, meta, checked, icon: Icon, onToggle, index, reducedMotion }: { title: string; meta: string; checked: boolean; icon: LucideIcon; onToggle: () => void; index: number; reducedMotion: boolean }) {
+  return <motion.button initial={reducedMotion ? false : { opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.045, duration: 0.35, ease }} onClick={onToggle} aria-pressed={checked} className="focus-ring group flex w-full items-center gap-4 py-4 text-left md:py-5"><span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all", checked ? "border-primary bg-primary text-primary-foreground" : "border-white/[0.13] text-muted-foreground group-hover:border-primary/50 group-hover:text-primary")}>{checked ? <Check className="h-4 w-4" strokeWidth={2.7} /> : <Icon className="h-4 w-4" strokeWidth={1.7} />}</span><span className="min-w-0 flex-1"><span className={cn("block truncate font-display text-lg font-medium tracking-[-0.02em] md:text-xl", checked && "text-muted-foreground line-through")}>{title}</span><span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{meta}</span></span><ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-transform group-hover:translate-x-1 group-hover:text-primary" /></motion.button>;
 }
 
-function EmptyHint({ icon: Icon, text, action, href, small }: { icon: LucideIcon; text: string; action: string; href: string; small?: boolean }) {
-  return (
-    <div className={cn("text-center", small ? "py-5" : "py-8")}>
-      <Icon className="mx-auto mb-2 h-5 w-5 text-muted-foreground/60" strokeWidth={1.5} />
-      <p className="mb-2 text-sm text-muted-foreground">{text}</p>
-      <Link href={href} className="text-sm font-medium text-primary hover:underline">
-        {action} →
-      </Link>
-    </div>
-  );
+function UpNext({ data }: { data: DashboardData }) {
+  const items = useMemo(() => {
+    const taskItems = data.tasks.list.filter((task) => task.status !== "DONE" && task.dueDate).map((task) => ({ id: task.id, title: task.title, date: task.dueDate!, kind: "Task", href: "/tasks", icon: ListTodo }));
+    const goalItems = data.goals.filter((goal) => goal.targetDate).map((goal) => ({ id: goal.id, title: goal.title, date: goal.targetDate!, kind: "Goal", href: "/goals", icon: Target }));
+    return [...taskItems, ...goalItems].sort((a, b) => +new Date(a.date) - +new Date(b.date)).slice(0, 4);
+  }, [data]);
+  if (!items.length) return <EditorialEmpty icon={CalendarClock} title="The horizon is clear." body="Dated tasks and goal deadlines will appear here." href="/goals" action="Set a target date" compact />;
+  return <>{items.map((item) => { const Icon = item.icon; return <Link key={`${item.kind}-${item.id}`} href={item.href} className="focus-ring group flex items-center gap-3 rounded-[16px] px-1 py-3"><span className="flex h-9 w-9 items-center justify-center rounded-[13px] bg-white/[0.04] text-muted-foreground"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{item.title}</span><span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">{item.kind} · {formatDeadline(item.date)}</span></span><ArrowRight className="h-4 w-4 text-muted-foreground/40 transition-transform group-hover:translate-x-1" /></Link>; })}</>;
 }
 
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-5">
-      <div className="h-44 rounded-2xl shimmer" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-24 rounded-xl shimmer" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="h-64 rounded-2xl shimmer lg:col-span-2" />
-        <div className="h-64 rounded-2xl shimmer" />
-      </div>
-    </div>
-  );
+function Momentum({ data }: { data: DashboardData }) {
+  const signals = [
+    { label: "Habit streak", value: data.streaks.habits, suffix: "days", icon: Flame },
+    { label: "Journal rhythm", value: data.streaks.journal, suffix: "days", icon: NotebookPen },
+    { label: "Training", value: data.streaks.workout, suffix: "this week", icon: Dumbbell },
+    { label: "Mood logged", value: data.streaks.mood, suffix: "days", icon: Smile },
+  ];
+  return <section className="py-10 md:py-14"><SectionHeading label="Momentum" href="/statistics" action="See detail" /><div className="mt-8 grid grid-cols-2 gap-y-9 sm:grid-cols-4">{signals.map(({ label, value, suffix, icon: Icon }, index) => <div key={label} className={cn("relative pr-5 sm:px-6", index > 0 && "sm:border-l sm:border-white/[0.07]", index === 0 && "sm:pl-0")}><Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.6} /><div className="mt-5 font-display text-4xl font-semibold tracking-[-0.05em] md:text-5xl">{value}</div><div className="mt-2 text-sm font-medium">{label}</div><div className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">{suffix}</div></div>)}</div></section>;
 }
+
+function SectionHeading({ label, href, action }: { label: string; href?: string; action?: string }) {
+  return <div className="flex items-center justify-between gap-4"><h3 className="font-display text-2xl font-semibold tracking-[-0.035em] md:text-3xl">{label}</h3>{href && <Link href={href} className="focus-ring group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">{action}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>}</div>;
+}
+
+function EditorialEmpty({ icon: Icon, title, body, href, action, compact }: { icon: LucideIcon; title: string; body: string; href: string; action: string; compact?: boolean }) {
+  return <div className={cn("flex items-start gap-4", compact ? "py-5" : "py-10")}><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/[0.04] text-muted-foreground"><Icon className="h-4 w-4" /></span><div><p className="font-display text-lg font-medium">{title}</p><p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">{body}</p><Link href={href} className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary">{action}<ArrowRight className="h-3.5 w-3.5" /></Link></div></div>;
+}
+
+function BriefingSkeleton() { return <div className="space-y-2" aria-label="Loading Novus briefing"><div className="os-skeleton h-5 w-full max-w-xl rounded" /><div className="os-skeleton h-5 w-4/5 max-w-lg rounded" /></div>; }
+function NowSkeleton() { return <div className="pb-10"><div className="min-h-[430px] border-b border-white/[0.07] py-10"><div className="os-skeleton h-3 w-28 rounded" /><div className="mt-6 os-skeleton h-32 w-4/5 max-w-3xl rounded-[20px]" /><div className="mt-9 os-skeleton h-5 w-3/5 max-w-xl rounded" /></div><div className="grid gap-8 border-b border-white/[0.07] py-12 lg:grid-cols-4">{[0,1,2,3].map((i) => <div key={i} className="os-skeleton h-20 rounded-[18px]" />)}</div></div>; }
+function LoadFailure({ onRetry }: { onRetry: () => void }) { return <div className="flex min-h-[60vh] flex-col items-center justify-center text-center"><Circle className="h-7 w-7 text-muted-foreground" /><h2 className="mt-5 font-display text-2xl font-semibold">Now could not be loaded.</h2><p className="mt-2 text-sm text-muted-foreground">Your data was not changed.</p><button onClick={onRetry} className="focus-ring mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"><RefreshCw className="h-4 w-4" />Try again</button></div>; }
+
+function greeting() { const hour = new Date().getHours(); return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"; }
+function timeContext() { return new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }); }
+function buildCurrentSummary(data: DashboardData) { const remainingHabits = Math.max(0, data.habits.total - data.habits.completed); const remainingTasks = Math.max(0, data.tasks.total - data.tasks.done); if (!data.habits.total && !data.tasks.total && !data.goals.length) return "Your operating system is ready. Begin with one habit, task, or goal and this space will form around your life."; const parts = [`${remainingTasks} open ${remainingTasks === 1 ? "task" : "tasks"}`, `${remainingHabits} ${remainingHabits === 1 ? "habit" : "habits"} left today`]; if (data.goals.length) parts.push(`${data.goals.length} active ${data.goals.length === 1 ? "goal" : "goals"}`); return `${parts.join(", ")}. Your Life Score is ${data.lifeScore.total}.`; }
+function taskMeta(task: TaskItem) { const parts = [task.priority ? `${titleCase(task.priority)} priority` : "Task"]; if (task.dueDate) parts.push(formatDeadline(task.dueDate)); return parts.join(" · "); }
+function titleCase(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
+function formatDeadline(value: string) { const date = new Date(value); const today = new Date(); const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1); if (date.toDateString() === today.toDateString()) return "Today"; if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow"; return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }

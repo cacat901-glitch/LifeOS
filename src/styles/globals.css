@@ -329,6 +329,70 @@ html {
    to recolor every accent on the landing page. */
 :root {
   --signal: #c8f94e;
+  --os-canvas: #0a0b0b;
+  --os-surface: #111212;
+  --os-surface-raised: #171818;
+  --os-hairline: rgba(255, 255, 255, 0.075);
+  --os-muted: rgba(255, 255, 255, 0.52);
+  --motion-fast: 160ms;
+  --motion-base: 260ms;
+  --motion-slow: 420ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Novus 2.0 authenticated operating surface */
+.novus-shell {
+  isolation: isolate;
+  background: var(--os-canvas);
+}
+
+.os-atmosphere {
+  background:
+    radial-gradient(ellipse 70% 42% at 50% -8%, rgba(200, 249, 78, 0.035), transparent 70%),
+    linear-gradient(180deg, #0a0b0b 0%, #090a0a 100%);
+}
+
+.life-horizon {
+  border: 1px solid rgba(200, 249, 78, 0.18);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(200, 249, 78, 0.075), transparent 54%),
+    rgba(255, 255, 255, 0.012);
+  box-shadow:
+    0 -1px 0 rgba(200, 249, 78, 0.04),
+    0 -42px 120px rgba(200, 249, 78, 0.025);
+}
+
+.os-skeleton {
+  background: linear-gradient(100deg, rgba(255,255,255,0.035) 20%, rgba(255,255,255,0.075) 45%, rgba(255,255,255,0.035) 70%);
+  background-size: 220% 100%;
+  animation: os-skeleton 1.5s var(--motion-ease) infinite;
+}
+
+@keyframes os-skeleton {
+  to { background-position: -220% 0; }
+}
+
+.novus-shell button,
+.novus-shell a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.novus-shell button:active,
+.novus-shell a:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .novus-shell button:active,
+  .novus-shell a:active {
+    transform: none;
+  }
 }
 
 /* Hairline grid backdrop */

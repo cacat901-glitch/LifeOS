@@ -12,6 +12,7 @@ import {
   Dumbbell,
   Trophy,
   BarChart3,
+  Command,
   type LucideIcon,
 } from "lucide-react";
 import { formatRelative, cn } from "@/lib/utils";
@@ -28,7 +29,7 @@ interface Notification {
 }
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Home", "/journal": "Journal", "/habits": "Habits", "/tasks": "Tasks",
+  "/dashboard": "Now", "/journal": "Journal", "/habits": "Habits", "/tasks": "Tasks",
   "/goals": "Goals", "/projects": "Projects", "/finance": "Finance", "/workout": "Workout",
   "/mood": "Mood", "/timeline": "Your Life", "/statistics": "Statistics", "/settings": "Settings",
   "/review": "Weekly Review", "/analyst": "Life Analyst", "/dna": "Life DNA",
@@ -48,7 +49,7 @@ const TYPE_ICON: Record<string, LucideIcon> = {
 export function AppHeader() {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Novus";
-  const { setNovusOpen } = useAppStore();
+  const { setNovusOpen, setCommandOpen } = useAppStore();
 
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -107,20 +108,30 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 md:px-6 lg:px-10">
-        <div className="flex items-baseline gap-3">
-          <h1 className="font-display text-base font-semibold tracking-tight md:text-lg">{title}</h1>
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:inline">
+    <header className="sticky top-0 z-30 bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-[1380px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-[3px] bg-primary lg:hidden" />
+          <h1 className="font-display text-base font-semibold tracking-[-0.02em] md:text-lg">{title}</h1>
+          <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">
             {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCommandOpen(true)}
+            className="focus-ring flex h-9 items-center gap-2 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground"
+            aria-label="Open command center"
+          >
+            <Command className="h-4 w-4" strokeWidth={1.8} />
+            <span className="hidden md:inline">Command</span>
+            <kbd className="hidden font-mono text-[9px] text-muted-foreground/70 lg:inline">⌘K</kbd>
+          </button>
           {/* Ask Novus */}
           <button
             onClick={() => setNovusOpen(true)}
-            className="hidden items-center gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] py-2 pl-2.5 pr-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/[0.12] sm:flex"
+            className="focus-ring hidden h-9 items-center gap-2 rounded-full bg-primary/[0.09] px-3 text-sm font-medium text-foreground transition-colors hover:bg-primary/[0.14] sm:flex"
           >
             <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.9} />
             Ask Novus
@@ -132,7 +143,7 @@ export function AppHeader() {
           {/* Notifications */}
           <div className="relative" ref={panelRef}>
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="focus-ring relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground"
               onClick={() => {
                 setOpen((o) => !o);
                 if (!open) loadNotifications();
@@ -152,7 +163,7 @@ export function AppHeader() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  className="absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-border bg-popover shadow-2xl"
+                  className="absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-1.5rem))] overflow-hidden rounded-[22px] border border-white/[0.09] bg-[#111213]/95 shadow-2xl backdrop-blur-2xl"
                 >
                   <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">

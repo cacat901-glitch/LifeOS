@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ArrowUp, AlertTriangle, Sparkles } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   "What should I focus on today?",
   "How was my week?",
   "Create a habit to read 20 min nightly",
@@ -19,6 +20,7 @@ const SUGGESTIONS = [
 
 export function NovusPanel() {
   const router = useRouter();
+  const pathname = usePathname();
   const { novusOpen, setNovusOpen, toggleNovus } = useAppStore();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
@@ -27,6 +29,13 @@ export function NovusPanel() {
   const [executing, setExecuting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const suggestions = pathname === "/dashboard"
+    ? ["What should I focus on today?", "Explain my current Life Score", "What pattern should I pay attention to?", "Create a task for my top priority"]
+    : pathname === "/habits"
+      ? ["Which habit needs attention?", "Create a habit to read 20 min nightly", "What is affecting my consistency?", "Help me rebuild a streak"]
+      : pathname === "/goals"
+        ? ["Which goal needs attention?", "Break a goal into milestones", "How are my goals progressing?", "Help me choose my next priority"]
+        : DEFAULT_SUGGESTIONS;
 
   // ⌘J / Ctrl+J toggles Novus; Esc closes
   useEffect(() => {
@@ -123,24 +132,27 @@ export function NovusPanel() {
           />
 
           <motion.aside
-            className="absolute right-0 top-0 flex h-full w-full flex-col border-l border-border bg-popover shadow-2xl sm:w-[440px]"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 36 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ask Novus"
+            className="absolute inset-x-0 bottom-0 flex h-[min(86dvh,760px)] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.09] bg-[#0d0e0f]/98 shadow-2xl backdrop-blur-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[min(78vh,720px)] sm:w-[min(720px,calc(100vw-110px))] sm:rounded-[28px] sm:border"
+            initial={{ y: 36, opacity: 0, scale: 0.985 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 24, opacity: 0, scale: 0.985 }}
+            transition={{ type: "spring", stiffness: 380, damping: 34 }}
           >
             {/* Header */}
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-5">
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] px-5 sm:px-6">
               <NovusMark size="sm" />
               <div className="flex-1">
                 <div className="font-display text-base font-semibold leading-none">Novus</div>
                 <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Your operating system
+                  Present across Novus
                 </div>
               </div>
               <button
                 onClick={() => setNovusOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="focus-ring flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
                 aria-label="Close Novus"
               >
                 <X className="h-4 w-4" />
@@ -148,20 +160,20 @@ export function NovusPanel() {
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+            <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
               {messages.length === 0 && !thinking ? (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <NovusMark size="lg" className="mb-4" />
-                  <p className="font-display text-lg font-semibold text-foreground">How can I help?</p>
-                  <p className="mt-1 max-w-[18rem] text-sm text-muted-foreground">
+                <div className="flex h-full flex-col justify-end pb-2 text-left sm:justify-center">
+                  <NovusMark size="lg" className="mb-5" />
+                  <p className="font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">What do you need?</p>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
                     Ask about your day, or tell me to create a habit, set a goal, log your mood — I&apos;ll actually do it.
                   </p>
-                  <div className="mt-6 grid w-full gap-2">
-                    {SUGGESTIONS.map((s) => (
+                  <div className="mt-7 grid w-full gap-2 sm:grid-cols-2">
+                    {suggestions.map((s) => (
                       <button
                         key={s}
                         onClick={() => send(s)}
-                        className="rounded-xl border border-border bg-secondary/30 px-3.5 py-2.5 text-left text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
+                        className="focus-ring rounded-[16px] bg-white/[0.04] px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-white/[0.08]"
                       >
                         {s}
                       </button>
@@ -173,8 +185,8 @@ export function NovusPanel() {
                   <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
                     <div
                       className={cn(
-                        "max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/70 text-foreground"
+                        "max-w-[88%] whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed",
+                        m.role === "user" ? "rounded-[20px_20px_5px_20px] bg-primary text-primary-foreground" : "rounded-[20px_20px_20px_5px] bg-white/[0.055] text-foreground"
                       )}
                     >
                       {m.content}
@@ -238,13 +250,13 @@ export function NovusPanel() {
             </div>
 
             {/* Input */}
-            <div className="shrink-0 border-t border-border p-3">
+            <div className="shrink-0 border-t border-white/[0.07] p-3 sm:p-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!pending && !executing) send(query);
                 }}
-                className="flex items-center gap-2 rounded-xl border border-border bg-secondary/30 px-3 py-1.5 focus-within:border-primary/50"
+                className="flex items-center gap-2 rounded-[18px] bg-white/[0.055] px-3 py-2 ring-1 ring-white/[0.07] transition-shadow focus-within:ring-primary/35"
               >
                 <input
                   ref={inputRef}

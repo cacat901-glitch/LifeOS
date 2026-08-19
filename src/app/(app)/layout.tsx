@@ -1,33 +1,21 @@
-import { AppSidebar } from "@/components/layout/sidebar";
 import { AppHeader } from "@/components/layout/header";
-import { BottomNav } from "@/components/layout/bottom-nav";
+import { OperatingDock } from "@/components/layout/operating-dock";
 import { CommandCenter } from "@/components/command/command-center";
-import { NovusPanel, NovusFab } from "@/components/novus/novus-panel";
+import { NovusPanel } from "@/components/novus/novus-panel";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen bg-background">
-      {/* Subtle editorial grid backdrop */}
-      <div className="grid-bg pointer-events-none fixed inset-0 -z-10 opacity-[0.4]" />
-
-      {/* Desktop sidebar — hidden on mobile (bottom nav used instead) */}
-      <AppSidebar />
-
-      {/* Main content area */}
-      <div className="flex min-h-screen flex-1 flex-col lg:ml-[248px]">
+    <div className="novus-shell relative min-h-screen bg-background">
+      <div className="os-atmosphere pointer-events-none fixed inset-0 -z-10" />
+      <OperatingDock />
+      <div className="flex min-h-screen flex-col lg:pl-[76px]">
         <AppHeader />
-        <main className="flex-1 overflow-x-hidden px-4 py-5 pb-28 md:px-6 md:py-6 lg:px-10 lg:py-8 lg:pb-10">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <main className="flex-1 overflow-x-hidden px-4 pb-28 pt-3 sm:px-6 md:pt-5 lg:px-10 lg:pb-12 xl:px-14">
+          <div className="mx-auto w-full max-w-[1380px]">{children}</div>
         </main>
       </div>
-
-      {/* Mobile bottom tab bar — only on < lg screens */}
-      <BottomNav />
-
-      {/* Global ⌘K command center + Novus AI (⌘J) */}
       <CommandCenter />
       <NovusPanel />
-      <NovusFab />
     </div>
   );
 }
