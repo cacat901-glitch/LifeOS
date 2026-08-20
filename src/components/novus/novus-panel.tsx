@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, ArrowUp, AlertTriangle } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { NovusMark } from "@/components/shared/novus-logo";
+import { NovusCore } from "@/components/novus/novus-core";
 import { cn } from "@/lib/utils";
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
@@ -142,8 +143,9 @@ export function NovusPanel() {
             exit={reduceMotion ? { opacity: 0 } : { x: 22, opacity: 0 }}
             transition={reduceMotion ? { duration: 0.01 } : { type: "spring", stiffness: 380, damping: 36 }}
           >
+            <NovusCore state={thinking ? "thinking" : "invoked"} variant="panel" className="pointer-events-none absolute -right-28 top-12 h-[430px] w-[520px] opacity-30" />
             {/* Header */}
-            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] px-5 sm:px-6">
+            <div className="relative z-10 flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] px-5 sm:px-6">
               <NovusMark size="sm" />
               <div className="flex-1">
                 <div className="font-display text-base font-semibold leading-none">Novus</div>
@@ -161,7 +163,7 @@ export function NovusPanel() {
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
+            <div ref={scrollRef} className="relative z-10 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
               {messages.length === 0 && !thinking ? (
                 <div className="flex h-full flex-col justify-center py-4 text-left sm:py-8">
                   <div className="mb-6 flex items-center gap-3">
@@ -256,7 +258,7 @@ export function NovusPanel() {
             </div>
 
             {/* Input */}
-            <div className="shrink-0 border-t border-white/[0.07] px-4 py-3 sm:px-7 sm:py-4">
+            <div className="relative z-10 shrink-0 border-t border-white/[0.07] bg-[#080a0d]/80 px-4 py-3 backdrop-blur-xl sm:px-7 sm:py-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();

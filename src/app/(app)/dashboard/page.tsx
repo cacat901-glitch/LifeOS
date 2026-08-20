@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
+import { NovusCore } from "@/components/novus/novus-core";
 
 interface HabitItem { id: string; name: string; icon?: string; color?: string; isCompleted: boolean; streak: number }
 interface TaskItem { id: string; title: string; priority: string; status: string; dueDate?: string | null }
@@ -94,89 +95,67 @@ export default function NowPage() {
     ...openTasks.slice(0, 3).map((task) => ({ id: `task-${task.id}`, title: task.title, meta: taskMeta(task), checked: task.status === "DONE", onToggle: () => toggleTask(task) })),
     ...openHabits.slice(0, Math.max(0, 5 - Math.min(openTasks.length, 3))).map((habit) => ({ id: `habit-${habit.id}`, title: habit.name, meta: habit.streak > 0 ? `${habit.streak}-day habit rhythm` : "Habit for today", checked: habit.isCompleted, onToggle: () => toggleHabit(habit) })),
   ].slice(0, 5);
+  const habitProgress = data.habits.total ? Math.round((data.habits.completed / data.habits.total) * 100) : 0;
+  const taskProgress = data.tasks.total ? Math.round((data.tasks.done / data.tasks.total) * 100) : 0;
+  const coreState = focusItems.length ? "attention" : (data.habits.completed || data.tasks.done) ? "positive" : "idle";
 
   return (
     <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }} className={cn("now-field pb-8", focusItems.length ? "now-field--active" : "now-field--calm")}>
-      <header className="relative grid border-b border-white/[0.08] pb-8 pt-7 md:pb-10 md:pt-10 lg:grid-cols-12 lg:gap-x-8">
-        <div className="mb-8 flex items-start justify-between lg:col-span-2 lg:mb-0 lg:block">
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-primary">Now</p>
-            <p className="mt-2 font-mono text-[10px] uppercase leading-relaxed tracking-[0.16em] text-muted-foreground">{timeContext(clock)}</p>
-          </div>
-          <p className="font-mono text-[10px] tabular-nums tracking-[0.14em] text-muted-foreground lg:mt-8">{clock ? formatTime(clock) : "—"}</p>
+      <header className="now-hero relative border-b border-white/[0.08] pb-8 pt-5 md:pb-10 lg:min-h-[530px]">
+        <div className="flex items-center justify-between border-b border-white/[0.07] pb-4">
+          <div className="flex items-center gap-4"><FieldLabel>Now</FieldLabel><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">{timeContext(clock)}</p></div>
+          <p className="font-mono text-[9px] tabular-nums tracking-[0.14em] text-muted-foreground">{clock ? formatTime(clock) : "—"}</p>
         </div>
 
-        <div className="lg:col-span-7">
-          <h2 className="text-balance font-display text-[clamp(2.6rem,4.8vw,4.9rem)] font-semibold leading-[0.92] tracking-[-0.058em]">
-            {greeting(clock)}, <span className="text-foreground/42">{firstName || "welcome back"}.</span>
-          </h2>
-          <div className="mt-6 max-w-3xl md:mt-7">
-            {briefingLoading ? <BriefingSkeleton /> : <p className="text-pretty text-base leading-relaxed text-foreground/76 md:text-lg">{briefing || buildCurrentSummary(data)}</p>}
+        <div className="relative grid gap-7 pt-8 lg:grid-cols-12 lg:gap-6 lg:pt-10">
+          <div className="relative z-10 lg:col-span-5 lg:flex lg:min-h-[410px] lg:flex-col lg:justify-center">
+            <h2 className="text-balance font-display text-[clamp(2.85rem,5.4vw,5.6rem)] font-semibold leading-[0.88] tracking-[-0.065em]">{greeting(clock)},<br /><span className="text-foreground/48">{firstName || "welcome back"}.</span></h2>
+            <div className="mt-6 max-w-xl md:mt-7">{briefingLoading ? <BriefingSkeleton /> : <p className="text-pretty text-sm leading-relaxed text-foreground/72 md:text-base">{briefing || buildCurrentSummary(data)}</p>}</div>
+            <button onClick={() => setNovusOpen(true)} className="focus-ring group mt-7 inline-flex w-fit items-center gap-4 border border-primary/35 bg-black/20 px-4 py-3 text-left backdrop-blur-md" aria-label="Ask Novus about your current state">
+              <span><span className="block font-mono text-[8px] uppercase tracking-[0.18em] text-primary">Ask Novus</span><span className="mt-1 block text-sm text-foreground/86">Make sense of now</span></span><ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+            </button>
           </div>
-        </div>
 
-        <div className="mt-8 flex items-end lg:col-span-3 lg:mt-0 lg:justify-end">
-          <button onClick={() => setNovusOpen(true)} className="focus-ring group w-full border-l border-primary/40 py-1 pl-4 text-left lg:max-w-[240px]" aria-label="Ask Novus about your current state">
-            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-primary">Ask Novus</span>
-            <span className="mt-2 flex items-center justify-between gap-4 font-display text-lg font-medium tracking-[-0.02em] text-foreground/85"><span>Make sense of now</span><ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-1" /></span>
-          </button>
+          <div className="relative -mx-5 h-[245px] overflow-hidden sm:mx-0 md:h-[320px] lg:col-span-4 lg:h-auto lg:min-h-[410px]">
+            <NovusCore state={coreState} className="absolute inset-[-8%] md:inset-[-12%] lg:inset-[-18%]" />
+          </div>
+
+          <aside className="instrument-panel instrument-panel--glance relative z-10 lg:col-span-3 lg:self-center" aria-label="Today at a glance">
+            <div className="flex items-center justify-between"><FieldLabel>At a glance</FieldLabel><span className="font-mono text-[8px] uppercase tracking-[0.16em] text-primary">Live</span></div>
+            <div className="mt-5 grid grid-cols-2 gap-px border border-white/[0.08] bg-white/[0.08]">
+              <MetricCell label="Life score" value={data.lifeScore.total} suffix={data.lifeScore.grade} />
+              <MetricCell label="Open tasks" value={openTasks.length} suffix={`${taskProgress}% done`} />
+              <MetricCell label="Habits" value={data.habits.completed} suffix={`of ${data.habits.total}`} />
+              <MetricCell label="Best streak" value={data.habits.bestStreak} suffix="days" />
+            </div>
+            <div className="mt-5"><LifeProfile data={data} reducedMotion={!!reduceMotion} compact /></div>
+          </aside>
         </div>
       </header>
 
-      <div className="grid border-b border-white/[0.08] lg:grid-cols-12">
-        <section className="relative py-10 lg:col-span-8 lg:min-h-[520px] lg:border-r lg:border-white/[0.08] lg:py-14 lg:pr-14 xl:pr-20" aria-labelledby="attention-title">
+      <div className="instrument-grid grid gap-3 border-b border-white/[0.08] py-3 lg:grid-cols-12">
+        <section className="instrument-panel instrument-panel--attention relative lg:col-span-7" aria-labelledby="attention-title">
           <FieldLabel>Attention</FieldLabel>
           {focusItems.length ? (
-            <div className="mt-6 md:mt-9">
-              <h3 id="attention-title" className="max-w-4xl text-balance font-display text-[clamp(2.6rem,5.6vw,5.8rem)] font-semibold leading-[0.92] tracking-[-0.058em]">{focusItems[0].title}</h3>
-              <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">{focusItems[0].meta}</p>
-              <div className="mt-9 max-w-3xl border-t border-white/[0.08] md:mt-12">
-                {focusItems.map((item, index) => <AttentionRow key={item.id} item={item} index={index} reducedMotion={!!reduceMotion} primary={index === 0} />)}
-              </div>
-            </div>
+            <div className="mt-6 md:mt-8"><h3 id="attention-title" className="max-w-3xl text-balance font-display text-[clamp(2.4rem,4.4vw,4.8rem)] font-semibold leading-[0.92] tracking-[-0.058em]">{focusItems[0].title}</h3><p className="mt-4 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">{focusItems[0].meta}</p><div className="mt-8 max-w-3xl border-t border-white/[0.08]">{focusItems.map((item, index) => <AttentionRow key={item.id} item={item} index={index} reducedMotion={!!reduceMotion} primary={index === 0} />)}</div></div>
           ) : (
-            <div className="mt-7 max-w-3xl md:mt-10">
-              <h3 id="attention-title" className="text-balance font-display text-[clamp(2.8rem,6vw,6.5rem)] font-semibold leading-[0.9] tracking-[-0.06em] text-foreground/88">Nothing is asking for your attention.</h3>
-              <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">Your visible priorities are clear. Add something only when it matters.</p>
-              <Link href="/tasks" className="focus-ring group mt-7 inline-flex items-center gap-3 text-sm font-medium text-primary">Review tasks <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-            </div>
+            <div className="mt-7 max-w-3xl md:mt-9"><h3 id="attention-title" className="text-balance font-display text-[clamp(2.65rem,4.8vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.06em] text-foreground/88">Nothing is asking for your attention.</h3><p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">Your visible priorities are clear. Add something only when it matters.</p><Link href="/tasks" className="focus-ring group mt-7 inline-flex items-center gap-3 text-sm font-medium text-primary">Review tasks <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link></div>
           )}
         </section>
-
-        <aside className="py-10 lg:col-span-4 lg:py-14 lg:pl-12 xl:pl-16" aria-label="Current Life Score">
-          <LifeState data={data} reducedMotion={!!reduceMotion} />
-        </aside>
+        <section className="instrument-panel lg:col-span-5" aria-labelledby="flow-title"><TodayFlow data={data} habitProgress={habitProgress} taskProgress={taskProgress} /></section>
       </div>
 
-      <div className="grid border-b border-white/[0.08] lg:grid-cols-12">
-        <section className="py-10 lg:col-span-8 lg:min-h-[390px] lg:border-r lg:border-white/[0.08] lg:py-14 lg:pr-14 xl:pr-20" aria-labelledby="observed-title">
-          <div className="grid gap-7 md:grid-cols-[170px_minmax(0,1fr)] md:gap-10">
-            <div><FieldLabel>Novus / observed</FieldLabel><p className="mt-3 max-w-[150px] text-xs leading-relaxed text-muted-foreground">Patterns from the life data you have recorded.</p></div>
-            <div>
-              <AnimatePresence mode="popLayout">
-                {visibleInsights.length ? visibleInsights.slice(0, 3).map((insight, index) => (
-                  <motion.article key={insight.title} layout initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18 }} transition={{ duration: 0.32, ease }} className="group relative border-t border-white/[0.08] py-5 pr-10 first:border-t-0 first:pt-0">
-                    <h3 id={index === 0 ? "observed-title" : undefined} className={cn("font-display font-medium tracking-[-0.035em]", index === 0 ? "text-3xl leading-tight md:text-4xl" : "text-xl")}>{insight.title}</h3>
-                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">{insight.message}</p>
-                    {insight.action && <p className="mt-4 text-sm font-medium text-primary">{insight.action}</p>}
-                    <button onClick={() => setDismissed((current) => new Set([...current, insight.title]))} className="focus-ring absolute right-0 top-3 flex h-9 w-9 items-center justify-center text-muted-foreground opacity-70 transition-opacity hover:text-foreground md:opacity-0 md:group-hover:opacity-100" aria-label={`Dismiss ${insight.title}`}><X className="h-4 w-4" /></button>
-                  </motion.article>
-                )) : (
-                  <motion.div key="empty-observation" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h3 id="observed-title" className="font-display text-3xl font-medium leading-tight tracking-[-0.04em] text-foreground/82 md:text-4xl">No pattern yet.</h3>
-                    <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">As you record more days, changes worth noticing will appear here.</p>
-                    <Link href="/journal" className="focus-ring group mt-6 inline-flex items-center gap-3 text-sm font-medium text-primary">Add today’s context <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+      <div className="instrument-grid grid gap-3 border-b border-white/[0.08] py-3 lg:grid-cols-12">
+        <section className="instrument-panel lg:col-span-4" aria-label="Current Life Score"><LifeState data={data} reducedMotion={!!reduceMotion} /></section>
+        <section className="instrument-panel lg:col-span-5" aria-labelledby="observed-title">
+          <FieldLabel>Observed</FieldLabel>
+          <div className="mt-6"><AnimatePresence mode="popLayout">{visibleInsights.length ? visibleInsights.slice(0, 3).map((insight, index) => (
+            <motion.article key={insight.title} layout initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 18 }} transition={{ duration: 0.32, ease }} className="group relative border-t border-white/[0.08] py-5 pr-10 first:border-t-0 first:pt-0">
+              <h3 id={index === 0 ? "observed-title" : undefined} className={cn("font-display font-medium tracking-[-0.035em]", index === 0 ? "text-3xl leading-tight md:text-4xl" : "text-xl")}>{insight.title}</h3><p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">{insight.message}</p>{insight.action && <p className="mt-4 text-sm font-medium text-primary">{insight.action}</p>}<button onClick={() => setDismissed((current) => new Set([...current, insight.title]))} className="focus-ring absolute right-0 top-3 flex h-9 w-9 items-center justify-center text-muted-foreground opacity-70 transition-opacity hover:text-foreground md:opacity-0 md:group-hover:opacity-100" aria-label={`Dismiss ${insight.title}`}><X className="h-4 w-4" /></button>
+            </motion.article>
+          )) : <motion.div key="empty-observation" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }}><h3 id="observed-title" className="font-display text-3xl font-medium leading-tight tracking-[-0.04em] text-foreground/82 md:text-4xl">No pattern yet.</h3><p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">As you record more days, changes worth noticing will appear here.</p><Link href="/journal" className="focus-ring group mt-6 inline-flex items-center gap-3 text-sm font-medium text-primary">Add today’s context <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link></motion.div>}</AnimatePresence></div>
         </section>
-
-        <section className="py-10 lg:col-span-4 lg:py-14 lg:pl-12 xl:pl-16" aria-labelledby="next-title">
-          <FieldLabel>Next</FieldLabel>
-          <Upcoming data={data} />
-        </section>
+        <section className="instrument-panel lg:col-span-3" aria-labelledby="next-title"><FieldLabel>Next</FieldLabel><Upcoming data={data} /></section>
       </div>
 
       <Trajectory data={data} />
@@ -198,7 +177,11 @@ function AttentionRow({ item, index, reducedMotion, primary }: { item: FocusItem
   );
 }
 
-function LifeState({ data, reducedMotion }: { data: DashboardData; reducedMotion: boolean }) {
+function MetricCell({ label, value, suffix }: { label: string; value: number; suffix: string }) {
+  return <div className="bg-[#080a0d]/90 p-3.5"><span className="block font-mono text-[7px] uppercase tracking-[0.16em] text-muted-foreground">{label}</span><span className="mt-2 flex items-baseline gap-2"><strong className="font-display text-2xl font-medium tabular-nums tracking-[-0.04em]">{value}</strong><span className="font-mono text-[8px] uppercase tracking-[0.12em] text-muted-foreground">{suffix}</span></span></div>;
+}
+
+function LifeProfile({ data, reducedMotion, compact = false }: { data: DashboardData; reducedMotion: boolean; compact?: boolean }) {
   const dimensions = [
     ["Habits", data.lifeScore.breakdown.habits ?? 0],
     ["Tasks", data.lifeScore.breakdown.tasks ?? 0],
@@ -206,21 +189,26 @@ function LifeState({ data, reducedMotion }: { data: DashboardData; reducedMotion
     ["Mood", data.lifeScore.breakdown.mood ?? 0],
     ["Movement", data.lifeScore.breakdown.workout ?? 0],
   ] as const;
+  return <div className={cn("space-y-3", compact && "space-y-2.5")}>{dimensions.map(([label, value], index) => <div key={label} className="grid grid-cols-[66px_1fr_24px] items-center gap-2"><span className="font-mono text-[7px] uppercase tracking-[0.13em] text-muted-foreground">{label}</span><span className="h-px overflow-hidden bg-white/[0.1]"><motion.span initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.55, delay: index * 0.045, ease }} style={{ width: `${Math.max(1, value)}%` }} className="block h-full origin-left bg-primary" /></span><span className="text-right font-mono text-[8px] tabular-nums text-foreground/70">{value}</span></div>)}</div>;
+}
+
+function TodayFlow({ data, habitProgress, taskProgress }: { data: DashboardData; habitProgress: number; taskProgress: number }) {
+  const rows = [
+    { label: "Tasks", value: data.tasks.total ? `${data.tasks.done} of ${data.tasks.total} complete` : "No tasks recorded", progress: taskProgress },
+    { label: "Habits", value: data.habits.total ? `${data.habits.completed} of ${data.habits.total} complete` : "No habits recorded", progress: habitProgress },
+    { label: "Goals", value: data.goals.length ? `${data.goals.length} active` : "No active goals", progress: data.goals.length ? Math.round(data.goals.reduce((sum, goal) => sum + goal.progress, 0) / data.goals.length) : 0 },
+  ];
+  return <div><FieldLabel>Today’s flow</FieldLabel><h3 id="flow-title" className="mt-5 font-display text-3xl font-medium tracking-[-0.04em]">Your day in motion.</h3><div className="mt-7 space-y-5">{rows.map((row) => <div key={row.label}><div className="flex items-end justify-between gap-4"><span className="text-sm text-foreground/82">{row.label}</span><span className="font-mono text-[8px] uppercase tracking-[0.12em] text-muted-foreground">{row.value}</span></div><div className="mt-2 h-px bg-white/[0.1]"><div className="ice-filament h-px" style={{ width: `${Math.max(row.progress, row.progress ? 3 : 0)}%` }} /></div></div>)}</div><div className="mt-8 grid grid-cols-2 gap-px border border-white/[0.08] bg-white/[0.08]"><div className="bg-[#080a0d] p-4"><span className="font-mono text-[7px] uppercase tracking-[0.14em] text-muted-foreground">Mood</span><p className="mt-2 text-sm text-foreground/82">{data.mood ? `${data.mood.score}/10${data.mood.label ? ` · ${data.mood.label}` : ""}` : "Not logged today"}</p></div><div className="bg-[#080a0d] p-4"><span className="font-mono text-[7px] uppercase tracking-[0.14em] text-muted-foreground">Movement</span><p className="mt-2 text-sm text-foreground/82">{data.recentWorkout?.name || "No recent workout"}</p></div></div></div>;
+}
+
+function LifeState({ data, reducedMotion }: { data: DashboardData; reducedMotion: boolean }) {
   return (
     <div>
       <div className="flex items-start justify-between gap-5">
         <div><FieldLabel>Life Score</FieldLabel><motion.p initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="ice-emphasis mt-3 font-display text-[clamp(5.8rem,11vw,9rem)] font-semibold leading-[0.72] tracking-[-0.075em] text-primary">{data.lifeScore.total}</motion.p></div>
         <p className="pt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">Grade <span className="text-foreground">{data.lifeScore.grade}</span></p>
       </div>
-      <div className="mt-10 space-y-4">
-        {dimensions.map(([label, value], index) => (
-          <div key={label} className="grid grid-cols-[74px_1fr_28px] items-center gap-3">
-            <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
-            <span className="h-px overflow-hidden bg-white/[0.1]"><motion.span initial={reducedMotion ? false : { scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.55, delay: index * 0.045, ease }} style={{ width: `${Math.max(1, value)}%` }} className="block h-full origin-left bg-primary" /></span>
-            <span className="text-right font-mono text-[9px] tabular-nums text-foreground/75">{value}</span>
-          </div>
-        ))}
-      </div>
+      <div className="mt-10"><LifeProfile data={data} reducedMotion={reducedMotion} /></div>
       <p className="mt-9 border-l border-white/[0.12] pl-4 text-sm leading-relaxed text-muted-foreground">{stateDirection(data)}</p>
     </div>
   );
