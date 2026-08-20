@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MOOD_EMOJIS, EMOTIONS, MOOD_FACTORS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface MoodLog { id: string; score: number; emoji: string; label: string; emotions: string[]; notes?: string; factors: string[]; date: string }
 interface Stats { average: number; total: number; highest: number; lowest: number }
@@ -76,13 +77,7 @@ export default function MoodPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Mood</h2>
-          <p className="text-sm text-muted-foreground">Track how you&apos;re feeling</p>
-        </div>
-        {todayLog && <div className="flex items-center gap-2 text-sm text-muted-foreground"><span>{todayLog.emoji}</span><span>Logged today</span></div>}
-      </div>
+      <SpaceHeading eyebrow="Emotional field" title="Mood" description="A calm view of state, factors, and rhythm." intensity="calm" action={todayLog && <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-primary">Logged today</div>} />
 
       {/* Log Today */}
       <Card className="border-primary/20">

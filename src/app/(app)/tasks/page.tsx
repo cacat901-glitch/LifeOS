@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface Task { id: string; title: string; description?: string; priority: string; status: string; dueDate?: string; category?: { name: string } }
 
@@ -86,16 +87,12 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Tasks</h2>
-          <p className="text-sm text-muted-foreground">Get things done</p>
-        </div>
+      <SpaceHeading eyebrow="Execution field" title="Tasks" description="Priority, flow, and visible workload." action={
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           New Task
         </Button>
-      </div>
+      } />
 
       {/* Quick Add */}
       <Card>
@@ -137,7 +134,7 @@ export default function TasksPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((task) => (
-            <Card key={task.id} className="group hover:shadow-sm transition-shadow">
+            <Card key={task.id} className={`group transition-all ${task.status === "DONE" ? "novus-complete" : ""}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <button

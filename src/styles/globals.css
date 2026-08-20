@@ -649,3 +649,329 @@ html {
 /* Blinking caret for "system" feel */
 @keyframes caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 .caret-blink { animation: caret-blink 1.1s steps(1) infinite; }
+
+/* ════════════════════════════════════════════════════════
+   NOVUS 2.0 — CONNECTED LIQUID INSTRUMENT SYSTEM
+   The canvas field is the ambient layer; surfaces transmit it.
+   ════════════════════════════════════════════════════════ */
+.ambient-field__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.94;
+}
+
+.os-atmosphere {
+  background:
+    radial-gradient(ellipse 78% 48% at 52% -14%, rgba(151, 229, 255, 0.065), transparent 68%),
+    radial-gradient(ellipse 70% 58% at 100% 82%, rgba(36, 79, 161, 0.055), transparent 70%),
+    linear-gradient(180deg, #030507 0%, #05080c 50%, #030507 100%);
+}
+
+.os-light-field { opacity: 0.12; }
+.os-atmosphere--now .os-light-field--primary,
+.os-atmosphere--novus .os-light-field--primary { opacity: 0.18; }
+
+.novus-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: -9;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(205, 246, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(205, 246, 255, 0.016) 1px, transparent 1px);
+  background-size: 92px 92px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.5), transparent 68%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.5), transparent 68%);
+}
+
+/* Standard content surface: readable, but never visually disconnected. */
+.novus-instrument,
+.instrument-panel,
+.novus-shell .glass-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(202, 246, 255, 0.115);
+  background:
+    linear-gradient(145deg, rgba(207, 248, 255, 0.035) 0%, transparent 26%),
+    linear-gradient(112deg, rgba(5, 10, 16, 0.69), rgba(4, 8, 13, 0.48) 55%, rgba(9, 17, 26, 0.58));
+  box-shadow:
+    inset 0 1px 0 rgba(224, 252, 255, 0.075),
+    inset 1px 0 0 rgba(129, 214, 255, 0.025),
+    0 22px 70px rgba(0, 0, 0, 0.2),
+    0 0 42px rgba(64, 159, 255, 0.018);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.novus-instrument::before,
+.instrument-panel::before,
+.novus-shell .glass-panel::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(ellipse 54% 12% at 25% 0%, rgba(218, 250, 255, 0.11), transparent 76%),
+    linear-gradient(90deg, transparent, rgba(139, 224, 255, 0.025), transparent);
+  opacity: 0.72;
+  transform: translate3d(-7%, 0, 0) scaleX(1.08);
+  animation: instrument-specular 16s cubic-bezier(.45,0,.55,1) infinite alternate;
+}
+
+@keyframes instrument-specular {
+  from { opacity: .52; transform: translate3d(-8%, 0, 0) scaleX(1.08); }
+  to { opacity: .86; transform: translate3d(8%, 1%, 0) scaleX(1.02); }
+}
+
+.novus-instrument:nth-child(2n)::before { animation-delay: -5s; animation-duration: 19s; }
+.novus-instrument:nth-child(3n)::before { animation-delay: -9s; animation-duration: 22s; }
+
+.novus-instrument::after,
+.instrument-panel::after,
+.novus-shell .glass-panel::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  border-radius: inherit;
+  box-shadow: inset 0 0 44px rgba(82, 174, 255, 0.018);
+}
+
+.novus-instrument:hover {
+  border-color: rgba(204, 248, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(230, 253, 255, 0.1),
+    0 24px 80px rgba(0, 0, 0, 0.23),
+    0 0 36px rgba(77, 184, 255, 0.04);
+}
+
+.instrument-panel--attention {
+  background:
+    radial-gradient(ellipse 62% 48% at 80% 32%, rgba(55, 132, 226, 0.035), transparent 72%),
+    linear-gradient(118deg, rgba(4, 8, 13, 0.58), rgba(4, 8, 13, 0.37));
+}
+
+.instrument-panel--glance {
+  background:
+    linear-gradient(145deg, rgba(207, 248, 255, 0.045), transparent 24%),
+    rgba(4, 9, 15, 0.54);
+}
+
+.material-bar {
+  background:
+    linear-gradient(180deg, rgba(212, 249, 255, 0.018), transparent 75%),
+    rgba(3, 6, 10, 0.68);
+  border-color: rgba(202, 246, 255, 0.085);
+  box-shadow: inset 0 -1px 0 rgba(134, 218, 255, 0.025), 0 16px 50px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.material-sheet,
+.material-overlay,
+.novus-layer {
+  background:
+    radial-gradient(ellipse 72% 36% at 82% 0%, rgba(92, 190, 255, 0.09), transparent 70%),
+    linear-gradient(145deg, rgba(212, 250, 255, 0.035), transparent 28%),
+    rgba(4, 8, 13, 0.86);
+  border-color: rgba(202, 246, 255, 0.15);
+  box-shadow:
+    -24px 0 94px rgba(0, 0, 0, 0.62),
+    inset 1px 0 0 rgba(220, 251, 255, 0.06),
+    0 0 70px rgba(64, 166, 255, 0.035);
+  backdrop-filter: blur(28px) saturate(1.22);
+  -webkit-backdrop-filter: blur(28px) saturate(1.22);
+}
+
+.novus-control {
+  box-shadow: inset 0 1px 0 rgba(231, 253, 255, 0.06);
+}
+
+.novus-input {
+  background:
+    linear-gradient(180deg, rgba(211, 249, 255, 0.025), transparent),
+    rgba(2, 6, 10, 0.42);
+  border-color: rgba(195, 242, 255, 0.12);
+  box-shadow: inset 0 1px 12px rgba(0,0,0,.22), 0 0 0 rgba(91, 205, 255, 0);
+}
+
+.novus-input:focus {
+  border-color: rgba(174, 237, 255, 0.32);
+  box-shadow: inset 0 1px 12px rgba(0,0,0,.18), 0 0 22px rgba(91, 205, 255, 0.055);
+}
+
+.novus-progress {
+  background: rgba(205, 246, 255, 0.07);
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.34);
+}
+
+.novus-progress__indicator {
+  background: linear-gradient(90deg, rgba(64, 133, 255, .5), #d8fbff 72%, #76e2ff);
+  box-shadow: 0 0 14px rgba(113, 221, 255, .48);
+}
+
+@keyframes novus-completion-signal {
+  0% { box-shadow: inset 0 1px 0 rgba(230,253,255,.08), 0 0 0 rgba(118,226,255,0); }
+  35% { box-shadow: inset 0 1px 0 rgba(230,253,255,.16), 0 0 32px rgba(118,226,255,.12); }
+  100% { box-shadow: inset 0 1px 0 rgba(230,253,255,.07), 0 0 0 rgba(118,226,255,0); }
+}
+.novus-complete { border-color: rgba(190, 246, 255, .2); animation: novus-completion-signal .72s var(--motion-ease) both; }
+
+/* Procedural Core. The generated image below is reduced-motion fallback only. */
+.novus-core {
+  contain: layout paint;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+.novus-core__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: saturate(1.08) contrast(1.06) brightness(1.42);
+}
+
+.novus-core__fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 50%, #000 40%, transparent 76%);
+  mask-image: radial-gradient(ellipse 62% 60% at 50% 50%, #000 40%, transparent 76%);
+}
+
+.novus-core__fallback img { object-fit: contain; mix-blend-mode: screen; }
+.novus-core--thinking .novus-core__canvas { filter: saturate(1.18) brightness(1.1); }
+.novus-core--positive .novus-core__canvas { filter: saturate(.86) brightness(1.05); }
+.novus-core--panel .novus-core__canvas { opacity: .88; }
+.novus-layer .novus-core__canvas { filter: saturate(1.12) contrast(1.05) brightness(1.62); }
+
+.signal-trace { display: block; width: 100%; height: 72px; overflow: visible; }
+.signal-trace--empty {
+  height: 72px;
+  background: linear-gradient(to right, transparent, rgba(207, 249, 255, .055), transparent) center / 100% 1px no-repeat;
+}
+
+.radial-instrument { position: relative; aspect-ratio: 1; min-width: 96px; }
+.radial-instrument circle { fill: none; stroke-width: 3.25; }
+.radial-instrument__track { stroke: rgba(207, 249, 255, .075); }
+.radial-instrument__value {
+  stroke: #bff7ff;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(104, 218, 255, .58));
+}
+.radial-instrument__readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.radial-instrument__readout strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -.05em;
+}
+.radial-instrument__readout span {
+  margin-top: .35rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono), monospace;
+  font-size: .42rem;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.space-heading {
+  position: relative;
+  display: flex;
+  min-height: 148px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  overflow: hidden;
+  margin: 0 -1rem;
+  padding: 2.2rem 1rem 1.45rem;
+  border-bottom: 1px solid rgba(202, 246, 255, 0.085);
+}
+.space-heading::before {
+  position: absolute;
+  right: 3%;
+  bottom: -80%;
+  width: min(48vw, 620px);
+  aspect-ratio: 2;
+  content: "";
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(90, 191, 255, .075), transparent 68%);
+  filter: blur(18px);
+}
+.space-heading--calm::before { opacity: .48; }
+.space-heading--data::before { opacity: 1.2; }
+.space-heading--intelligence::before { background: radial-gradient(ellipse, rgba(125, 218, 255, .11), rgba(53, 97, 227, .04), transparent 70%); }
+.space-heading__copy,
+.space-heading__action { position: relative; z-index: 1; }
+.space-heading__eyebrow {
+  color: hsl(var(--primary));
+  font-family: var(--font-mono), monospace;
+  font-size: .52rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .21em;
+}
+.space-heading__title {
+  margin-top: .65rem;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  font-weight: 550;
+  line-height: .94;
+  letter-spacing: -.055em;
+}
+.space-heading__description {
+  margin-top: .65rem;
+  color: hsl(var(--muted-foreground));
+  font-size: .8rem;
+}
+.space-heading__signal {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  width: 42%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(216, 250, 255, .92), rgba(78, 186, 255, .22), transparent);
+  background-size: 170% 100%;
+  box-shadow: 0 0 14px rgba(111, 217, 255, .5);
+  animation: ice-filament-shift 7s var(--motion-ease) infinite alternate;
+}
+
+@media (max-width: 640px) {
+  .space-heading { min-height: 132px; align-items: flex-end; padding-top: 1.5rem; }
+  .space-heading__action { align-self: flex-end; }
+  .space-heading__description { max-width: 18rem; }
+}
+
+/* Existing pages inherit Novus material even when their local composition differs. */
+.novus-shell [class*="bg-card"] { background-color: rgba(4, 9, 14, 0.54); }
+.novus-shell [class*="bg-secondary"] { border-color: rgba(201, 246, 255, 0.07); }
+.novus-shell .recharts-cartesian-grid line { stroke: rgba(204, 248, 255, .075); }
+.novus-shell .recharts-text { fill: hsl(var(--muted-foreground)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-field__canvas { display: none; }
+  .novus-core__canvas { display: none; }
+  .novus-core__fallback { display: block; }
+}
+
+@media (max-width: 767px) {
+  .ambient-field__canvas { opacity: .7; }
+  .novus-instrument,
+  .instrument-panel { backdrop-filter: blur(13px) saturate(1.12); -webkit-backdrop-filter: blur(13px) saturate(1.12); }
+  .novus-shell::before { background-size: 68px 68px; opacity: .55; }
+}

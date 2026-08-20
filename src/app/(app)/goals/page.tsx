@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { formatDate } from "@/lib/utils";
 import { NovusMark } from "@/components/shared/novus-logo";
 import { motion } from "framer-motion";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface Milestone { id: string; title: string; isCompleted: boolean; order: number }
 interface Goal {
@@ -125,16 +126,12 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Goals</h2>
-          <p className="text-sm text-muted-foreground">Track your long-term ambitions</p>
-        </div>
+      <SpaceHeading eyebrow="Directional field" title="Goals" description="Trajectories, milestones, and target horizons." action={
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           New Goal
         </Button>
-      </div>
+      } />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

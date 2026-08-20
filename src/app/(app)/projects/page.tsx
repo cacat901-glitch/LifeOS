@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 // ── Types ──────────────────────────────────────────────────
 interface ProjectTask {
@@ -210,13 +211,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Projects</h2>
-          <p className="text-sm text-muted-foreground">Track progress across all your projects</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <SpaceHeading eyebrow="Project flow" title="Projects" description="Momentum, state progression, and activity." action={<div className="flex items-center gap-2">
           <button
             onClick={() => setView(view === "board" ? "list" : "board")}
             className="p-2 rounded-lg border hover:bg-muted transition-colors"
@@ -233,8 +228,7 @@ export default function ProjectsPage() {
             </svg>
             New Project
           </Button>
-        </div>
-      </div>
+        </div>} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

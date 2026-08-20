@@ -4,6 +4,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { RadialInstrument, SignalTrace } from "@/components/visual-system/instruments";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface Stats {
   habits: { rate: number; total: number; streak: number; chartData: number[] };
@@ -73,14 +75,8 @@ export default function StatisticsPage() {
     });
 
     setStats({
-      habits: { rate: habitRate, total: Array.isArray(habits) ? habits.length : 0, streak: dash?.streaks?.habits || 0, chartData: Array.from({length:7},(_,i)=>{
-        const d=new Date(); d.setDate(d.getDate()-(6-i)); d.setHours(0,0,0,0);
-        const dayHabits=Array.isArray(habits)?habits:[];
-        if(dayHabits.length===0) return 0;
-        // approximate from logs
-        return 0;
-      }) },
-      tasks: { completed: doneTasks, total: Array.isArray(tasks) ? tasks.length : 0, rate: taskRate, chartData: Array.from({length:7},()=>0) },
+      habits: { rate: habitRate, total: Array.isArray(habits) ? habits.length : 0, streak: dash?.streaks?.habits || 0, chartData: [] },
+      tasks: { completed: doneTasks, total: Array.isArray(tasks) ? tasks.length : 0, rate: taskRate, chartData: [] },
       goals: { active: activeGoals.length, avgProgress: avgGoalProgress, completed: Array.isArray(goals) ? goals.filter((g: any) => g.status === "COMPLETED").length : 0 },
       mood: { average: moodData.stats?.average || 0, total: moodEntries.length, chartData: moodChart },
       workout: { sessions: workoutArray.length, thisWeek: thisWeekW, totalVolume: workoutArray.reduce((s: number, w: any) => s + w.totalVolume, 0), chartData: wChart },
@@ -97,29 +93,24 @@ export default function StatisticsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Statistics</h2>
-          <p className="text-sm text-muted-foreground">Your comprehensive analytics</p>
-        </div>
+      <SpaceHeading eyebrow="Cross-domain telemetry" title="Statistics" description="Measured trajectories across your operating system." intensity="data" action={
         <div className="flex gap-2">
           {(["week","month","year"] as const).map((p) => (
             <Button key={p} variant={period === p ? "default" : "outline"} size="sm" onClick={() => setPeriod(p)} className="capitalize">{p}</Button>
           ))}
         </div>
-      </div>
+      } />
 
       {/* Life Score Hero */}
       <Card className="border-primary/20 bg-primary/[0.04]">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Life Score</h3>
-            <div className="text-right">
-              <span className="text-3xl font-bold gradient-text">{stats.lifeScore.current}</span>
-              <span className="text-lg text-muted-foreground ml-1">· {stats.lifeScore.grade}</span>
-            </div>
+        <CardContent className="grid items-center gap-7 p-6 sm:grid-cols-[1fr_150px]">
+          <div>
+            <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-primary">Composite state</p>
+            <h3 className="mt-2 font-display text-3xl font-medium tracking-[-0.045em]">Life Score</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Grade {stats.lifeScore.grade} · live from your recorded state</p>
+            <Progress value={stats.lifeScore.current} className="mt-6 h-2" />
           </div>
-          <Progress value={stats.lifeScore.current} className="h-3" />
+          <RadialInstrument value={stats.lifeScore.current} label={`Grade ${stats.lifeScore.grade}`} className="mx-auto w-[150px]" />
         </CardContent>
       </Card>
 
@@ -161,7 +152,7 @@ export default function StatisticsPage() {
   );
 }
 
-function StatCard({ title, color, stats: statItems, chartData, chartMax }: { title: string; color: string; stats: {label: string; value: string}[]; chartData: number[]; chartMax: number }) {
+function StatCard({ title, stats: statItems, chartData }: { title: string; color: string; stats: {label: string; value: string}[]; chartData: number[]; chartMax: number }) {
   return (
     <Card>
       <CardHeader className="pb-2"><CardTitle className="text-base">{title}</CardTitle></CardHeader>
@@ -174,13 +165,7 @@ function StatCard({ title, color, stats: statItems, chartData, chartMax }: { tit
             </div>
           ))}
         </div>
-        {chartData.length > 0 && (
-          <div className="flex items-end gap-0.5 h-16">
-            {chartData.map((v, i) => (
-              <div key={i} className={`flex-1 ${color}/60 rounded-t-sm transition-all`} style={{ height: chartMax > 0 ? `${(v / chartMax) * 100}%` : "0%", minHeight: v > 0 ? "4px" : "0" }} />
-            ))}
-          </div>
-        )}
+        {chartData.length > 0 ? <SignalTrace values={chartData} label={`${title} seven day trace`} /> : <div className="signal-trace signal-trace--empty flex items-center justify-center"><span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted-foreground">No temporal history available</span></div>}
       </CardContent>
     </Card>
   );

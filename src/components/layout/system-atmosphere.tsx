@@ -3,8 +3,20 @@
 import { usePathname } from "next/navigation";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
+import { AmbientField, type AmbientMode } from "@/components/visual-system/ambient-field";
 
 const INTELLIGENCE_PATHS = ["/analyst", "/dna", "/review"];
+
+function modeForPath(pathname: string): AmbientMode {
+  if (pathname === "/dashboard") return "now";
+  if (pathname.startsWith("/tasks") || pathname.startsWith("/projects")) return "execution";
+  if (pathname.startsWith("/habits") || pathname.startsWith("/workout")) return "rhythm";
+  if (pathname.startsWith("/goals") || pathname.startsWith("/timeline")) return "direction";
+  if (pathname.startsWith("/journal") || pathname.startsWith("/mood")) return "calm";
+  if (pathname.startsWith("/finance") || pathname.startsWith("/statistics")) return "data";
+  if (INTELLIGENCE_PATHS.some((path) => pathname.startsWith(path))) return "intelligence";
+  return "settings";
+}
 
 export function SystemAtmosphere() {
   const pathname = usePathname();
@@ -20,7 +32,9 @@ export function SystemAtmosphere() {
         intelligenceContext && "os-atmosphere--intelligence",
         novusOpen && "os-atmosphere--novus"
       )}
+      data-ambient-mode={modeForPath(pathname)}
     >
+      <AmbientField mode={modeForPath(pathname)} active={novusOpen} />
       <span className="os-light-field os-light-field--primary" />
       <span className="os-light-field os-light-field--depth" />
     </div>

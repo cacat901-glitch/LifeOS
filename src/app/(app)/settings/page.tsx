@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { AIStatusBadge } from "@/components/shared/ai-status";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface UserData {
   id: string; name: string; email: string; bio?: string; location?: string; timezone?: string;
@@ -37,7 +38,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div><h2 className="text-2xl font-bold">Settings</h2><p className="text-sm text-muted-foreground">Manage your account and preferences</p></div>
+      <SpaceHeading eyebrow="System configuration" title="Settings" description="Account, confidence, and preferences." intensity="calm" />
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-52 shrink-0">
           <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">

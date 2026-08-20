@@ -29,7 +29,7 @@ function DialogContent({ className, children, ...props }: React.HTMLAttributes<H
   return (
     <div
       className={cn(
-        "relative z-50 w-full max-w-lg rounded-2xl border bg-card p-6 shadow-xl animate-fade-in",
+        "material-overlay relative z-50 w-full max-w-lg rounded-[18px] border p-6 shadow-xl backdrop-blur-2xl animate-fade-in",
         className
       )}
       {...props}

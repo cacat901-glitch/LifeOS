@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 // ── Types ──────────────────────────────────────────────────
 interface Account {
@@ -167,13 +168,7 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Finance</h2>
-          <p className="text-sm text-muted-foreground">Track your income, expenses, and net worth</p>
-        </div>
-        <div className="flex gap-2">
+      <SpaceHeading eyebrow="Financial telemetry" title="Finance" description="Net worth, spending flow, and account state." intensity="data" action={<div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowAddAccount(true)}>Add Account</Button>
           <Button size="sm" onClick={() => { setShowAddTx(true); }}>
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,8 +176,7 @@ export default function FinancePage() {
             </svg>
             Add Transaction
           </Button>
-        </div>
-      </div>
+        </div>} />
 
       {/* No accounts state */}
       {noAccounts && (

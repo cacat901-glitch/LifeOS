@@ -10,6 +10,7 @@ import { MOOD_EMOJIS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { NovusMark } from "@/components/shared/novus-logo";
 import { motion } from "framer-motion";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface JournalEntry {
   id: string; title?: string; content: string; mood?: number; moodEmoji?: string;
@@ -115,19 +116,15 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Journal</h2>
-          <p className="text-sm text-muted-foreground">Your thoughts and reflections</p>
-        </div>
+      <SpaceHeading eyebrow="Reflection field" title="Journal" description="A quieter surface for writing and perspective." intensity="calm" action={<div className="flex gap-2">
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           New Entry
         </Button>
         <Button size="sm" variant="outline" onClick={analyzeJournal}>
-          🧠 AI Insights
+          AI Insights
         </Button>
-      </div>
+      </div>} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{total}</div><div className="text-xs text-muted-foreground">Total Entries</div></CardContent></Card>

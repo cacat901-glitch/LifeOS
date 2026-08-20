@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
+import { RadialInstrument } from "@/components/visual-system/instruments";
 
 interface Habit {
   id: string;
@@ -123,18 +125,14 @@ export default function HabitsPage() {
     <div className="space-y-6 animate-fade-in">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Habits</h2>
-          <p className="text-sm text-muted-foreground">Build powerful routines that stick</p>
-        </div>
+      <SpaceHeading eyebrow="Rhythm instrumentation" title="Habits" description="Consistency, streaks, and today’s rhythm." action={
         <Button size="sm" onClick={handleNewHabit}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           {atFreeLimit ? "Upgrade for More" : "New Habit"}
         </Button>
-      </div>
+      } />
 
       {/* Free plan limit banner */}
       {atFreeLimit && (
@@ -155,17 +153,16 @@ export default function HabitsPage() {
       {/* Today's Progress */}
       {total > 0 && (
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
+          <CardContent className="grid items-center gap-5 p-6 sm:grid-cols-[1fr_126px]">
+            <div>
               <div>
-                <h3 className="font-semibold">Today&apos;s Progress</h3>
+                <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-primary">Live completion</p>
+                <h3 className="mt-2 font-display text-2xl font-medium tracking-[-0.04em]">Today&apos;s Progress</h3>
                 <p className="text-sm text-muted-foreground">{completed} of {total} completed</p>
               </div>
-              <div className="font-display text-3xl font-bold text-primary">
-                {Math.round((completed / total) * 100)}%
-              </div>
+              <Progress value={(completed / total) * 100} className="mt-5" />
             </div>
-            <Progress value={(completed / total) * 100} indicatorClassName="bg-primary" />
+            <RadialInstrument value={Math.round((completed / total) * 100)} label="Today" className="mx-auto w-[126px]" />
           </CardContent>
         </Card>
       )}
@@ -193,7 +190,7 @@ export default function HabitsPage() {
           {habits.map((habit) => {
             const done = habit.logs?.some((l) => l.completed);
             return (
-              <Card key={habit.id} className="card-hover group">
+              <Card key={habit.id} className={`card-hover group ${done ? "novus-complete" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <button

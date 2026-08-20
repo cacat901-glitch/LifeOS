@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate, formatRelative } from "@/lib/utils";
+import { SpaceHeading } from "@/components/visual-system/space-heading";
 
 interface Exercise { id: string; name: string; category: string; muscleGroups: string[]; equipment: string[] }
 interface WorkoutSession {
@@ -151,12 +152,7 @@ export default function WorkoutPage() {
   return (
     <div className="space-y-6 animate-fade-in">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Workout</h2>
-          <p className="text-sm text-muted-foreground">Track your training and hit new PRs</p>
-        </div>
+      <SpaceHeading eyebrow="Performance rhythm" title="Workout" description="Sessions, volume, and progression." action={
         <Button variant="glow" size="sm" onClick={() => setShowStart(true)}>
           <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -164,7 +160,7 @@ export default function WorkoutPage() {
           </svg>
           Start Workout
         </Button>
-      </div>
+      } />
 
       {/* Active session banner */}
       {activeSession && (
