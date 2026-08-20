@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { X, ArrowUp, AlertTriangle, Sparkles } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { X, ArrowUp, AlertTriangle } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { NovusMark } from "@/components/shared/novus-logo";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const DEFAULT_SUGGESTIONS = [
 ];
 
 export function NovusPanel() {
+  const reduceMotion = useReducedMotion();
   const router = useRouter();
   const pathname = usePathname();
   const { novusOpen, setNovusOpen, toggleNovus } = useAppStore();
@@ -135,11 +136,11 @@ export function NovusPanel() {
             role="dialog"
             aria-modal="true"
             aria-label="Ask Novus"
-            className="absolute inset-x-0 bottom-0 flex h-[min(86dvh,760px)] w-full flex-col overflow-hidden rounded-t-[30px] border-t border-white/[0.09] bg-[#0d0e0f]/98 shadow-2xl backdrop-blur-2xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[min(78vh,720px)] sm:w-[min(720px,calc(100vw-110px))] sm:rounded-[28px] sm:border"
-            initial={{ y: 36, opacity: 0, scale: 0.985 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 24, opacity: 0, scale: 0.985 }}
-            transition={{ type: "spring", stiffness: 380, damping: 34 }}
+            className="absolute inset-y-0 right-0 flex w-full flex-col overflow-hidden border-l border-white/[0.09] bg-[#0d0e0f]/[0.98] shadow-2xl backdrop-blur-2xl sm:w-[min(680px,calc(100vw-72px))]"
+            initial={reduceMotion ? false : { x: 28, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { x: 22, opacity: 0 }}
+            transition={reduceMotion ? { duration: 0.01 } : { type: "spring", stiffness: 380, damping: 36 }}
           >
             {/* Header */}
             <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.07] px-5 sm:px-6">
@@ -152,7 +153,7 @@ export function NovusPanel() {
               </div>
               <button
                 onClick={() => setNovusOpen(false)}
-                className="focus-ring flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                className="focus-ring flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                 aria-label="Close Novus"
               >
                 <X className="h-4 w-4" />
@@ -163,30 +164,35 @@ export function NovusPanel() {
             <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
               {messages.length === 0 && !thinking ? (
                 <div className="flex h-full flex-col justify-end pb-2 text-left sm:justify-center">
-                  <NovusMark size="lg" className="mb-5" />
-                  <p className="font-display text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">What do you need?</p>
+                  <div className="mb-6 flex items-center gap-3">
+                    <span className="h-px w-8 bg-primary" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Intelligence, in context</span>
+                  </div>
+                  <p className="max-w-lg font-display text-4xl font-semibold tracking-[-0.055em] text-foreground sm:text-5xl">Make sense of now.</p>
                   <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
                     Ask about your day, or tell me to create a habit, set a goal, log your mood — I&apos;ll actually do it.
                   </p>
-                  <div className="mt-7 grid w-full gap-2 sm:grid-cols-2">
-                    {suggestions.map((s) => (
+                  <div className="mt-8 w-full border-t border-white/[0.08]">
+                    {suggestions.map((s, index) => (
                       <button
                         key={s}
                         onClick={() => send(s)}
-                        className="focus-ring rounded-[16px] bg-white/[0.04] px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-white/[0.08]"
+                        className="focus-ring group flex w-full items-center gap-4 border-b border-white/[0.08] py-3.5 text-left text-sm text-foreground transition-colors hover:border-primary/30 hover:text-primary sm:py-4"
                       >
-                        {s}
+                        <span className="font-mono text-[9px] text-muted-foreground">0{index + 1}</span>
+                        <span className="flex-1">{s}</span>
+                        <span aria-hidden="true" className="text-muted-foreground transition-transform group-hover:translate-x-1">→</span>
                       </button>
                     ))}
                   </div>
                 </div>
               ) : (
                 messages.map((m, i) => (
-                  <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                  <div key={i} className={cn("flex border-l py-1 pl-4", m.role === "user" ? "border-primary justify-end" : "border-white/[0.14] justify-start")}>
                     <div
                       className={cn(
-                        "max-w-[88%] whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed",
-                        m.role === "user" ? "rounded-[20px_20px_5px_20px] bg-primary text-primary-foreground" : "rounded-[20px_20px_20px_5px] bg-white/[0.055] text-foreground"
+                        "max-w-[92%] whitespace-pre-wrap py-2 text-sm leading-relaxed",
+                        m.role === "user" ? "text-foreground" : "text-foreground"
                       )}
                     >
                       {m.content}
@@ -197,7 +203,7 @@ export function NovusPanel() {
 
               {thinking && (
                 <div className="flex justify-start">
-                  <div className="flex gap-1.5 rounded-2xl bg-secondary/70 px-4 py-3">
+                  <div className="flex gap-1.5 border-l border-primary px-4 py-3">
                     {[0, 1, 2].map((i) => (
                       <motion.span
                         key={i}
@@ -214,7 +220,7 @@ export function NovusPanel() {
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-3 rounded-2xl border border-destructive/30 bg-destructive/[0.08] p-4"
+                  className="space-y-3 border-l-2 border-destructive bg-destructive/[0.05] p-4"
                 >
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <AlertTriangle className="h-4 w-4 text-destructive" strokeWidth={1.8} />
@@ -233,14 +239,14 @@ export function NovusPanel() {
                     <button
                       onClick={confirmPending}
                       disabled={executing}
-                      className="flex-1 rounded-xl bg-destructive py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                      className="flex-1 bg-destructive py-2 text-sm font-medium text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                     >
                       {executing ? "Working…" : "Yes, do it"}
                     </button>
                     <button
                       onClick={cancelPending}
                       disabled={executing}
-                      className="flex-1 rounded-xl bg-secondary py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/70"
+                      className="flex-1 border border-white/[0.1] py-2 text-sm font-medium text-foreground transition-colors hover:border-white/[0.2]"
                     >
                       Cancel
                     </button>
@@ -250,13 +256,13 @@ export function NovusPanel() {
             </div>
 
             {/* Input */}
-            <div className="shrink-0 border-t border-white/[0.07] p-3 sm:p-4">
+            <div className="shrink-0 border-t border-white/[0.07] px-4 py-3 sm:px-7 sm:py-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!pending && !executing) send(query);
                 }}
-                className="flex items-center gap-2 rounded-[18px] bg-white/[0.055] px-3 py-2 ring-1 ring-white/[0.07] transition-shadow focus-within:ring-primary/35"
+                className="flex items-center gap-2 border-b border-white/[0.16] py-2 transition-colors focus-within:border-primary"
               >
                 <input
                   ref={inputRef}
@@ -268,7 +274,7 @@ export function NovusPanel() {
                 <button
                   type="submit"
                   disabled={!query.trim() || thinking || !!pending}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform hover:scale-105 disabled:opacity-40"
+                  className="flex h-8 w-8 items-center justify-center bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
                   aria-label="Send"
                 >
                   <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
@@ -280,28 +286,6 @@ export function NovusPanel() {
             </div>
           </motion.aside>
         </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-// ── Persistent floating Novus button (desktop) ─────────────
-export function NovusFab() {
-  const { novusOpen, setNovusOpen } = useAppStore();
-  return (
-    <AnimatePresence>
-      {!novusOpen && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ type: "spring", stiffness: 400, damping: 28 }}
-          onClick={() => setNovusOpen(true)}
-          className="fixed bottom-6 right-6 z-40 hidden items-center gap-2 rounded-full bg-primary py-3 pl-4 pr-5 text-sm font-semibold text-primary-foreground shadow-xl shadow-primary/20 transition-transform hover:scale-[1.04] lg:flex"
-        >
-          <Sparkles className="h-4 w-4" strokeWidth={2.2} />
-          Ask Novus
-        </motion.button>
       )}
     </AnimatePresence>
   );

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
-  Sparkles,
   Flame,
   Target,
   ListTodo,
@@ -108,8 +107,8 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-[1380px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
+    <header className="sticky top-0 z-30 border-b border-white/[0.035] bg-background/[0.82] backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
         <div className="flex items-center gap-3">
           <span className="h-2.5 w-2.5 rounded-[3px] bg-primary lg:hidden" />
           <h1 className="font-display text-base font-semibold tracking-[-0.02em] md:text-lg">{title}</h1>
@@ -121,21 +120,21 @@ export function AppHeader() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCommandOpen(true)}
-            className="focus-ring flex h-9 items-center gap-2 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground"
+            className="focus-ring flex h-9 items-center gap-2 px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Open command center"
           >
             <Command className="h-4 w-4" strokeWidth={1.8} />
             <span className="hidden md:inline">Command</span>
-            <kbd className="hidden font-mono text-[9px] text-muted-foreground/70 lg:inline">⌘K</kbd>
+            <kbd className="hidden font-mono text-[9px] text-muted-foreground lg:inline">⌘K</kbd>
           </button>
           {/* Ask Novus */}
           <button
             onClick={() => setNovusOpen(true)}
-            className="focus-ring hidden h-9 items-center gap-2 rounded-full bg-primary/[0.09] px-3 text-sm font-medium text-foreground transition-colors hover:bg-primary/[0.14] sm:flex"
+            className="focus-ring hidden h-9 items-center gap-2 border-l border-primary/40 pl-3 text-sm font-medium text-foreground transition-colors hover:text-primary sm:flex"
+            aria-label="Ask Novus"
           >
-            <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.9} />
-            Ask Novus
-            <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+            <span className="font-display">Novus</span>
+            <kbd className="font-mono text-[9px] text-muted-foreground">
               ⌘J
             </kbd>
           </button>

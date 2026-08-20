@@ -352,14 +352,18 @@ html {
     linear-gradient(180deg, #0a0b0b 0%, #090a0a 100%);
 }
 
-.life-horizon {
-  border: 1px solid rgba(200, 249, 78, 0.18);
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(200, 249, 78, 0.075), transparent 54%),
-    rgba(255, 255, 255, 0.012);
-  box-shadow:
-    0 -1px 0 rgba(200, 249, 78, 0.04),
-    0 -42px 120px rgba(200, 249, 78, 0.025);
+.now-field {
+  position: relative;
+}
+
+.now-field::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0, transparent 68%, rgba(200, 249, 78, 0.018) 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
 }
 
 .os-skeleton {

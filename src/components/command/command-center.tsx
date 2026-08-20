@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
 
@@ -210,9 +209,7 @@ export function CommandCenter() {
                     active === filtered.length ? "bg-primary/15" : "hover:bg-muted/50"
                   )}
                 >
-                  <span className="flex h-[18px] w-[18px] items-center justify-center text-primary">
-                    <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.8} />
-                  </span>
+                  <span className="flex h-[18px] w-[18px] items-center justify-center border-l border-primary pl-2 font-mono text-[10px] font-semibold text-primary">N</span>
                   <span className="flex-1 font-medium text-foreground">
                     {query ? `Ask Novus: "${query}"` : "Ask Novus"}
                   </span>
