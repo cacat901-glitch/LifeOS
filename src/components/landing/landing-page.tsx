@@ -204,7 +204,7 @@ function Hero() {
       {/* faint accent glow for depth */}
       <div
         className="pointer-events-none absolute left-1/2 top-24 h-[460px] w-[min(900px,90vw)] -translate-x-1/2 rounded-full blur-[130px]"
-        style={{ background: "radial-gradient(circle, rgba(200,249,78,0.06), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(86,207,255,0.06), transparent 70%)" }}
       />
       {/* system metadata row */}
       <motion.div
@@ -227,7 +227,7 @@ function Hero() {
           </Reveal>
           <Reveal delay={0.14}>
             <span className="block text-[length:clamp(2.6rem,11vw,9.5rem)] text-neutral-500">
-              one&nbsp;<span className="italic text-[var(--signal)]">operating system.</span>
+              one&nbsp;<span className="italic text-[var(--signal-bright)]">operating system.</span>
             </span>
           </Reveal>
         </h1>
@@ -426,7 +426,7 @@ function Panel({ children, className }: { children: React.ReactNode; className?:
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(480px circle at var(--mx) var(--my), rgba(200,249,78,0.07), transparent 42%)",
+            "radial-gradient(480px circle at var(--mx) var(--my), rgba(86,207,255,0.065), transparent 42%)",
         }}
       />
       <div className="relative">{children}</div>
@@ -528,7 +528,7 @@ function Marquee() {
             className="flex items-center gap-12 font-display text-3xl font-medium tracking-tight text-neutral-700"
           >
             {it}
-            <span className="text-[#c8f94e66]">✦</span>
+            <span className="text-[#8debff66]">✦</span>
           </span>
         ))}
       </motion.div>
@@ -792,7 +792,7 @@ function PriceCard({
       viewport={{ once: true }}
       className={cn(
         "flex flex-col rounded-2xl border p-8 md:p-10",
-        featured ? "border-[#c8f94e66] bg-[#c8f94e0a]" : "border-white/[0.08] bg-white/[0.015]"
+        featured ? "border-[#8debff66] bg-[#8debff0a]" : "border-white/[0.08] bg-white/[0.015]"
       )}
     >
       <div className="flex items-center justify-between">

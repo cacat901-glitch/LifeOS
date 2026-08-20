@@ -136,7 +136,7 @@ export function NovusPanel() {
             role="dialog"
             aria-modal="true"
             aria-label="Ask Novus"
-            className="absolute inset-y-0 right-0 flex w-full flex-col overflow-hidden border-l border-white/[0.09] bg-[#0d0e0f]/[0.98] shadow-2xl backdrop-blur-2xl sm:w-[min(680px,calc(100vw-72px))]"
+            className="novus-layer absolute inset-y-0 right-0 flex w-full flex-col overflow-hidden border-l backdrop-blur-2xl sm:w-[min(680px,calc(100vw-72px))]"
             initial={reduceMotion ? false : { x: 28, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { x: 22, opacity: 0 }}
@@ -163,7 +163,7 @@ export function NovusPanel() {
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
               {messages.length === 0 && !thinking ? (
-                <div className="flex h-full flex-col justify-end pb-2 text-left sm:justify-center">
+                <div className="flex h-full flex-col justify-center py-4 text-left sm:py-8">
                   <div className="mb-6 flex items-center gap-3">
                     <span className="h-px w-8 bg-primary" />
                     <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">Intelligence, in context</span>

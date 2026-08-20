@@ -96,7 +96,7 @@ export default function NowPage() {
   ].slice(0, 5);
 
   return (
-    <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }} className="now-field pb-8">
+    <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.28 }} className={cn("now-field pb-8", focusItems.length ? "now-field--active" : "now-field--calm")}>
       <header className="relative grid border-b border-white/[0.08] pb-8 pt-7 md:pb-10 md:pt-10 lg:grid-cols-12 lg:gap-x-8">
         <div className="mb-8 flex items-start justify-between lg:col-span-2 lg:mb-0 lg:block">
           <div>
@@ -209,7 +209,7 @@ function LifeState({ data, reducedMotion }: { data: DashboardData; reducedMotion
   return (
     <div>
       <div className="flex items-start justify-between gap-5">
-        <div><FieldLabel>Life Score</FieldLabel><motion.p initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="mt-3 font-display text-[clamp(5.8rem,11vw,9rem)] font-semibold leading-[0.72] tracking-[-0.075em] text-primary">{data.lifeScore.total}</motion.p></div>
+        <div><FieldLabel>Life Score</FieldLabel><motion.p initial={reducedMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="ice-emphasis mt-3 font-display text-[clamp(5.8rem,11vw,9rem)] font-semibold leading-[0.72] tracking-[-0.075em] text-primary">{data.lifeScore.total}</motion.p></div>
         <p className="pt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">Grade <span className="text-foreground">{data.lifeScore.grade}</span></p>
       </div>
       <div className="mt-10 space-y-4">

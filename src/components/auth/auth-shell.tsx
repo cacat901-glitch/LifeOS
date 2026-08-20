@@ -89,7 +89,7 @@ export function AuthShell({
       <div className="grid-bg pointer-events-none fixed inset-0 opacity-50" />
       <div
         className="pointer-events-none fixed -top-40 left-1/4 h-[480px] w-[720px] -translate-x-1/2 rounded-full blur-[140px]"
-        style={{ background: "radial-gradient(circle, rgba(200,249,78,0.05), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(86,207,255,0.055), transparent 70%)" }}
       />
 
       <div className="relative grid min-h-screen lg:grid-cols-2">

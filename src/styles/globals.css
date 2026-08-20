@@ -11,8 +11,8 @@
     --card-foreground: 240 30% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 30% 8%;
-    --primary: 74 80% 50%;
-    --primary-foreground: 240 10% 8%;
+    --primary: 194 82% 42%;
+    --primary-foreground: 220 23% 3%;
     --secondary: 240 20% 96%;
     --secondary-foreground: 240 30% 12%;
     --muted: 240 20% 95%;
@@ -23,31 +23,36 @@
     --destructive-foreground: 0 0% 100%;
     --border: 240 20% 90%;
     --input: 240 20% 90%;
-    --ring: 74 80% 50%;
+    --ring: 194 82% 42%;
     --radius: 1rem;
   }
 
   .dark {
-    /* Editorial near-black — neutral, not navy. The default Novus look. */
-    --background: 240 6% 4%;
-    --foreground: 0 0% 95%;
-    --card: 240 5% 7%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 6% 6%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 74 92% 64%;
-    --primary-foreground: 240 10% 6%;
-    --secondary: 240 5% 12%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 240 5% 11%;
-    --muted-foreground: 240 5% 56%;
-    --accent: 240 5% 14%;
-    --accent-foreground: 0 0% 96%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 5% 14%;
-    --input: 240 5% 16%;
-    --ring: 74 92% 64%;
+    /* Obsidian + Ice — cool stepped darks with restrained internal light. */
+    --background: 220 23% 3%;
+    --foreground: 216 33% 97%;
+    --card: 220 21% 6%;
+    --card-foreground: 216 33% 97%;
+    --popover: 220 21% 6%;
+    --popover-foreground: 216 33% 97%;
+    --primary: 191 100% 78%;
+    --primary-foreground: 220 23% 3%;
+    --secondary: 220 21% 8%;
+    --secondary-foreground: 216 25% 94%;
+    --muted: 220 20% 10%;
+    --muted-foreground: 219 11% 63%;
+    --accent: 220 21% 10%;
+    --accent-foreground: 189 100% 88%;
+    --destructive: 352 100% 70%;
+    --destructive-foreground: 220 23% 3%;
+    --border: 218 18% 16%;
+    --input: 218 18% 18%;
+    --ring: 191 100% 78%;
+    --novus-highlight: 189 100% 88%;
+    --novus-cobalt: 231 100% 74%;
+    --novus-glow: 197 100% 67%;
+    --novus-success: 155 62% 62%;
+    --novus-warning: 38 100% 71%;
   }
 }
 
@@ -103,13 +108,13 @@
 .aurora::before {
   width: 60vw; height: 60vw;
   top: -20vw; left: -10vw;
-  background: radial-gradient(circle at center, rgba(99,102,241,0.55), transparent 65%);
+  background: radial-gradient(circle at center, rgba(86,207,255,0.32), transparent 65%);
   animation: aurora-drift-1 22s ease-in-out infinite alternate;
 }
 .aurora::after {
   width: 55vw; height: 55vw;
   bottom: -20vw; right: -10vw;
-  background: radial-gradient(circle at center, rgba(168,85,247,0.5), transparent 65%);
+  background: radial-gradient(circle at center, rgba(123,143,255,0.26), transparent 65%);
   animation: aurora-drift-2 26s ease-in-out infinite alternate;
 }
 .aurora-blob {
@@ -119,7 +124,7 @@
   border-radius: 50%;
   filter: blur(90px);
   opacity: 0.35;
-  background: radial-gradient(circle at center, rgba(56,189,248,0.45), transparent 65%);
+  background: radial-gradient(circle at center, rgba(141,235,255,0.26), transparent 65%);
   animation: aurora-drift-3 30s ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -181,7 +186,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(99,102,241,0.6), rgba(168,85,247,0.3), transparent);
+  background: linear-gradient(135deg, rgba(141,235,255,0.5), rgba(123,143,255,0.24), transparent);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -207,10 +212,10 @@
 /* ── Mesh gradient (auth / accents) ────────────────────── */
 .mesh-gradient {
   background:
-    radial-gradient(at 20% 20%, hsla(245,80%,60%,0.18) 0px, transparent 50%),
-    radial-gradient(at 80% 10%, hsla(270,80%,60%,0.14) 0px, transparent 50%),
-    radial-gradient(at 10% 80%, hsla(200,90%,55%,0.12) 0px, transparent 50%),
-    radial-gradient(at 85% 75%, hsla(330,80%,60%,0.08) 0px, transparent 50%);
+    radial-gradient(at 20% 20%, hsla(191,100%,78%,0.14) 0px, transparent 50%),
+    radial-gradient(at 80% 10%, hsla(231,100%,74%,0.09) 0px, transparent 50%),
+    radial-gradient(at 10% 80%, hsla(197,100%,67%,0.08) 0px, transparent 50%),
+    radial-gradient(at 85% 75%, hsla(216,33%,97%,0.035) 0px, transparent 50%);
 }
 
 /* ── Soft glow ─────────────────────────────────────────── */
@@ -328,12 +333,14 @@ html {
 /* Single swappable accent for the marketing site. Change this one line
    to recolor every accent on the landing page. */
 :root {
-  --signal: #c8f94e;
-  --os-canvas: #0a0b0b;
-  --os-surface: #111212;
-  --os-surface-raised: #171818;
-  --os-hairline: rgba(255, 255, 255, 0.075);
-  --os-muted: rgba(255, 255, 255, 0.52);
+  --signal: #8debff;
+  --signal-bright: #c3f6ff;
+  --signal-depth: #7b8fff;
+  --os-canvas: #050608;
+  --os-surface: #0b0d11;
+  --os-surface-raised: #11141a;
+  --os-hairline: rgba(195, 246, 255, 0.085);
+  --os-muted: #969daa;
   --motion-fast: 160ms;
   --motion-base: 260ms;
   --motion-slow: 420ms;
@@ -347,9 +354,53 @@ html {
 }
 
 .os-atmosphere {
+  overflow: hidden;
   background:
-    radial-gradient(ellipse 70% 42% at 50% -8%, rgba(200, 249, 78, 0.035), transparent 70%),
-    linear-gradient(180deg, #0a0b0b 0%, #090a0a 100%);
+    radial-gradient(ellipse 62% 38% at 50% -10%, rgba(195, 246, 255, 0.045), transparent 72%),
+    linear-gradient(180deg, #07090c 0%, #050608 46%, #06070a 100%);
+}
+
+.os-light-field {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  opacity: 0.28;
+  will-change: transform, opacity;
+  contain: strict;
+}
+
+.os-light-field--primary {
+  width: min(62vw, 980px);
+  aspect-ratio: 1.45;
+  left: 46%;
+  top: -24%;
+  background: radial-gradient(ellipse at center, rgba(86, 207, 255, 0.105) 0%, rgba(141, 235, 255, 0.035) 36%, transparent 72%);
+  animation: os-field-drift-primary 24s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.os-light-field--depth {
+  width: min(48vw, 760px);
+  aspect-ratio: 1.1;
+  right: -16%;
+  bottom: -24%;
+  background: radial-gradient(ellipse at center, rgba(123, 143, 255, 0.075), transparent 70%);
+  opacity: 0.16;
+  animation: os-field-drift-depth 31s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.os-atmosphere--now .os-light-field--primary { opacity: 0.34; }
+.os-atmosphere--intelligence .os-light-field--depth { opacity: 0.28; }
+.os-atmosphere--novus .os-light-field--primary { opacity: 0.44; }
+.os-atmosphere--novus .os-light-field--depth { opacity: 0.34; }
+
+@keyframes os-field-drift-primary {
+  from { transform: translate3d(-8%, -2%, 0) scale(0.96); }
+  to { transform: translate3d(7%, 9%, 0) scale(1.06); }
+}
+
+@keyframes os-field-drift-depth {
+  from { transform: translate3d(4%, 3%, 0) scale(1); }
+  to { transform: translate3d(-11%, -7%, 0) scale(1.08); }
 }
 
 .now-field {
@@ -362,8 +413,73 @@ html {
   z-index: -1;
   content: "";
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0, transparent 68%, rgba(200, 249, 78, 0.018) 68%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0, transparent 68%, rgba(141, 235, 255, 0.022) 68%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
+}
+
+.now-field::after {
+  position: absolute;
+  top: 13%;
+  left: 68%;
+  z-index: -1;
+  width: 1px;
+  height: 180px;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, rgba(195, 246, 255, 0.72), transparent);
+  opacity: 0.34;
+  transform: translate3d(0, 0, 0);
+  animation: os-filament-travel 15s var(--motion-ease) infinite alternate;
+  box-shadow: 0 0 14px rgba(86, 207, 255, 0.2);
+}
+
+.now-field--active::after { opacity: 0.58; animation-duration: 9s; }
+
+@keyframes os-filament-travel {
+  from { transform: translate3d(0, 12vh, 0); }
+  to { transform: translate3d(0, 58vh, 0); }
+}
+
+.ice-emphasis {
+  text-shadow: 0 0 22px rgba(86, 207, 255, 0.12);
+}
+
+.ice-filament {
+  background: linear-gradient(90deg, transparent, var(--signal-bright), var(--signal), transparent);
+  background-size: 180% 100%;
+  box-shadow: 0 0 12px rgba(86, 207, 255, 0.2);
+  animation: ice-filament-shift 5s var(--motion-ease) infinite alternate;
+}
+
+@keyframes ice-filament-shift {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+.material-bar {
+  background: rgba(7, 9, 12, 0.84);
+  border-color: rgba(195, 246, 255, 0.055);
+  box-shadow: inset 0 -1px 0 rgba(195, 246, 255, 0.015);
+}
+
+.material-sheet {
+  background: rgba(11, 13, 17, 0.985);
+  border-color: rgba(195, 246, 255, 0.11);
+  box-shadow: -18px 0 72px rgba(0, 0, 0, 0.52), inset 1px 0 0 rgba(195, 246, 255, 0.025);
+}
+
+.material-overlay {
+  background: rgba(11, 13, 17, 0.965);
+  border-color: rgba(195, 246, 255, 0.1);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(195, 246, 255, 0.035);
+}
+
+.novus-layer {
+  background:
+    radial-gradient(ellipse 72% 42% at 82% 3%, rgba(86, 207, 255, 0.075), transparent 72%),
+    rgba(8, 10, 14, 0.985);
+  border-color: rgba(195, 246, 255, 0.14);
+  box-shadow: -28px 0 100px rgba(0, 0, 0, 0.64), -1px 0 24px rgba(86, 207, 255, 0.035);
 }
 
 .os-skeleton {
@@ -397,6 +513,23 @@ html {
   .novus-shell a:active {
     transform: none;
   }
+  .os-light-field,
+  .now-field::after,
+  .ice-filament {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .os-light-field--primary {
+    width: 150vw;
+    left: 8%;
+    top: -10%;
+    opacity: 0.2;
+  }
+  .os-light-field--depth { display: none; }
+  .now-field::after { display: none; }
+  .ice-emphasis { text-shadow: 0 0 16px rgba(86, 207, 255, 0.1); }
 }
 
 /* Hairline grid backdrop */

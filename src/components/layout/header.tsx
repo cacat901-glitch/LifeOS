@@ -107,7 +107,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/[0.035] bg-background/[0.82] backdrop-blur-xl">
+    <header className="material-bar sticky top-0 z-30 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
         <div className="flex items-center gap-3">
           <span className="h-2.5 w-2.5 rounded-[3px] bg-primary lg:hidden" />
@@ -162,7 +162,7 @@ export function AppHeader() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  className="absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-1.5rem))] overflow-hidden rounded-[22px] border border-white/[0.09] bg-[#111213]/95 shadow-2xl backdrop-blur-2xl"
+                  className="material-overlay absolute right-0 top-12 z-50 w-[min(360px,calc(100vw-1.5rem))] overflow-hidden rounded-[22px] border backdrop-blur-2xl"
                 >
                   <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">

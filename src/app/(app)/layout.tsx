@@ -2,11 +2,12 @@ import { AppHeader } from "@/components/layout/header";
 import { OperatingDock } from "@/components/layout/operating-dock";
 import { CommandCenter } from "@/components/command/command-center";
 import { NovusPanel } from "@/components/novus/novus-panel";
+import { SystemAtmosphere } from "@/components/layout/system-atmosphere";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="novus-shell relative min-h-screen bg-background">
-      <div className="os-atmosphere pointer-events-none fixed inset-0 -z-10" />
+      <SystemAtmosphere />
       <OperatingDock />
       <div className="flex min-h-screen flex-col">
         <AppHeader />

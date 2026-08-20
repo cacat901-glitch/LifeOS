@@ -144,7 +144,7 @@ export function CommandCenter() {
 
           {/* Palette */}
           <motion.div
-            className="relative w-full max-w-2xl overflow-hidden rounded-t-3xl shadow-2xl ring-1 ring-white/10 glass-strong sm:rounded-3xl"
+            className="material-overlay relative w-full max-w-2xl overflow-hidden rounded-t-3xl border backdrop-blur-2xl sm:rounded-3xl"
             initial={{ opacity: 0, y: 40, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}

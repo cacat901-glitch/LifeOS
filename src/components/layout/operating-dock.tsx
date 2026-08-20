@@ -47,6 +47,20 @@ export function OperatingDock() {
 
   React.useEffect(() => setSpacesOpen(false), [pathname]);
 
+  React.useEffect(() => {
+    if (!spacesOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSpacesOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [spacesOpen]);
+
   return (
     <>
       <nav className="fixed left-1/2 top-0 z-50 hidden h-16 -translate-x-1/2 items-center gap-4 lg:flex xl:gap-7" aria-label="Primary navigation">
@@ -56,12 +70,12 @@ export function OperatingDock() {
         </button>
       </nav>
 
-      <nav className="bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-white/[0.08] bg-[#0b0c0c]/[0.94] px-2 backdrop-blur-xl lg:hidden" aria-label="Mobile navigation">
+      <nav className="material-bar bottom-nav fixed inset-x-0 bottom-0 z-50 border-t px-2 backdrop-blur-xl lg:hidden" aria-label="Mobile navigation">
         <div className="mx-auto grid h-[68px] max-w-md grid-cols-5 items-stretch">
           <MobileLink item={PRIMARY[0]} active={isCurrent(pathname, PRIMARY[0].href)} />
           <MobileLink item={PRIMARY[3]} active={isCurrent(pathname, PRIMARY[3].href)} />
           <button onClick={() => setNovusOpen(true)} className="focus-ring group relative flex flex-col items-center justify-center gap-1 text-primary" aria-label="Ask Novus">
-            <span className="absolute inset-x-3 top-0 h-px bg-primary" />
+            <span className="ice-filament absolute inset-x-3 top-0 h-px" />
             <span className="font-display text-[13px] font-semibold tracking-[-0.02em]">Novus</span>
             <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-primary/70">Ask</span>
           </button>
@@ -76,7 +90,7 @@ export function OperatingDock() {
         {spacesOpen && (
           <motion.div className="fixed inset-0 z-[80]" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <button className="absolute inset-0 h-full w-full bg-black/60 backdrop-blur-[3px]" onClick={() => setSpacesOpen(false)} aria-label="Close spaces" />
-            <motion.section role="dialog" aria-modal="true" aria-label="All Novus spaces" className="absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-hidden border-t border-white/[0.1] bg-[#0b0c0c]/[0.98] px-5 pb-[max(1.5rem,var(--safe-bottom))] pt-5 shadow-[0_-24px_80px_rgba(0,0,0,.55)] md:inset-y-0 md:left-auto md:w-[520px] md:border-l md:border-t-0 md:px-8 md:py-8" initial={reduceMotion ? false : { x: 36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={spring}>
+            <motion.section role="dialog" aria-modal="true" aria-label="All Novus spaces" className="material-sheet absolute inset-x-0 bottom-0 max-h-[90dvh] overflow-hidden border-t px-5 pb-[max(1.5rem,var(--safe-bottom))] pt-5 md:inset-y-0 md:left-auto md:w-[520px] md:border-l md:border-t-0 md:px-8 md:py-8" initial={reduceMotion ? false : { x: 36, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 24, opacity: 0 }} transition={spring}>
               <div className="flex items-start justify-between border-b border-white/[0.08] pb-5">
                 <div><p className="font-mono text-[9px] uppercase tracking-[0.2em] text-primary">Navigation</p><h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.045em]">Your spaces</h2></div>
                 <button onClick={() => setSpacesOpen(false)} className="focus-ring flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground" aria-label="Close"><X className="h-5 w-5" /></button>
@@ -96,10 +110,10 @@ export function OperatingDock() {
 }
 
 function DesktopLink({ item, active }: { item: Destination; active: boolean }) {
-  return <Link href={item.href} className={cn("focus-ring group relative flex h-11 items-center text-[13px] font-medium transition-colors", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")} aria-label={item.name}>{item.name}{active && <motion.span layoutId="desktop-space-active" className="absolute inset-x-0 bottom-0 h-px bg-primary" transition={spring} />}</Link>;
+  return <Link href={item.href} className={cn("focus-ring group relative flex h-11 items-center text-[13px] font-medium transition-colors", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")} aria-label={item.name}>{item.name}{active && <motion.span layoutId="desktop-space-active" className="ice-filament absolute inset-x-0 bottom-0 h-px" transition={spring} />}</Link>;
 }
 
 function MobileLink({ item, active }: { item: Destination; active: boolean }) {
   const Icon = item.icon;
-  return <Link href={item.href} className={cn("focus-ring relative flex flex-col items-center justify-center gap-1", active ? "text-primary" : "text-muted-foreground")} aria-label={item.name}>{active && <motion.span layoutId="mobile-space-active" className="absolute inset-x-3 top-0 h-px bg-primary" transition={spring} />}<Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.6} /><span className="text-[9px] font-medium">{item.name}</span></Link>;
+  return <Link href={item.href} className={cn("focus-ring relative flex flex-col items-center justify-center gap-1", active ? "text-primary" : "text-muted-foreground")} aria-label={item.name}>{active && <motion.span layoutId="mobile-space-active" className="ice-filament absolute inset-x-3 top-0 h-px" transition={spring} />}<Icon className="h-[18px] w-[18px]" strokeWidth={active ? 2 : 1.6} /><span className="text-[9px] font-medium">{item.name}</span></Link>;
 }

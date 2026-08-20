@@ -136,8 +136,8 @@ const config: Config = {
           "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       },
       boxShadow: {
-        glow: "0 0 20px rgba(99, 102, 241, 0.3)",
-        "glow-lg": "0 0 40px rgba(99, 102, 241, 0.4)",
+        glow: "0 0 20px rgba(86, 207, 255, 0.18)",
+        "glow-lg": "0 0 40px rgba(86, 207, 255, 0.22)",
         glass: "0 8px 32px rgba(0, 0, 0, 0.12)",
         "card-hover":
           "0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)",
