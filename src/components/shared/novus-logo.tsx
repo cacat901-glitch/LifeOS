@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface NovusLogoProps {
@@ -7,14 +8,13 @@ interface NovusLogoProps {
 }
 
 const sizeMap = {
-  sm: { px: 32, text: "text-lg",  rounded: "rounded-xl",  fontSize: "14px" },
-  md: { px: 40, text: "text-xl",  rounded: "rounded-2xl", fontSize: "18px" },
-  lg: { px: 56, text: "text-3xl", rounded: "rounded-2xl", fontSize: "24px" },
+  sm: { px: 28, text: "text-lg" },
+  md: { px: 38, text: "text-xl" },
+  lg: { px: 54, text: "text-3xl" },
 };
 
 /**
- * NovusMark — editorial lime mark (a rounded square with a display "N").
- * Uses the theme accent so it stays cohesive everywhere it appears.
+ * NovusMark — the liquid woven mark from the canonical Novus reference.
  */
 export function NovusMark({
   size = "md",
@@ -27,14 +27,17 @@ export function NovusMark({
 
   return (
     <div
-      className={cn(
-        "relative flex shrink-0 items-center justify-center bg-primary font-display font-bold leading-none text-primary-foreground",
-        s.rounded,
-        className
-      )}
-      style={{ width: s.px, height: s.px, minWidth: s.px, fontSize: s.fontSize }}
+      className={cn("relative shrink-0 overflow-hidden", className)}
+      style={{ width: s.px, height: s.px, minWidth: s.px }}
     >
-      <span className="select-none tracking-tight">N</span>
+      <Image
+        src="/media/novus-liquid-mark.png"
+        alt=""
+        fill
+        priority
+        sizes={`${s.px}px`}
+        className="scale-[2.05] object-contain mix-blend-screen"
+      />
     </div>
   );
 }

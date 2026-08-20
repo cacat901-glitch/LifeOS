@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatRelative, cn } from "@/lib/utils";
 import { useAppStore } from "@/hooks/use-store";
+import { NovusMark } from "@/components/shared/novus-logo";
 
 interface Notification {
   id: string;
@@ -110,7 +111,7 @@ export function AppHeader() {
     <header className="material-bar sticky top-0 z-30 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
         <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-[3px] bg-primary lg:hidden" />
+          <NovusMark size="sm" className="lg:hidden" />
           <h1 className="font-display text-base font-semibold tracking-[-0.02em] md:text-lg">{title}</h1>
           <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">
             {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })}

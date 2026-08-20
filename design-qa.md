@@ -1,68 +1,80 @@
-# Novus 2.0 corrective visual-convergence QA
+# Novus golden-reference implementation QA
 
-- Source visual truth: `C:\Users\Ducky\AppData\Local\Temp\codex-clipboard-4b675b62-cfb8-462f-b3cc-bd1e681778dc.png`
-- Source pixels: 1672 × 941
-- Primary implementation: `G:\Novus\.novus2-final-now-b.png`
-- Implementation pixels / CSS viewport: 1680 × 945 at device scale factor 1
-- Normalization: source scaled to 1680 × 945 for the combined comparison; no browser chrome included
-- Combined full-view evidence: `G:\Novus\.novus2-reference-comparison.png`
-- Focused implementation evidence: `G:\Novus\.novus2-novus-panel.png`, `G:\Novus\.novus2-command.png`, `G:\Novus\.novus2-habits.png`, `G:\Novus\.novus2-statistics.png`
-- Mobile evidence: `G:\Novus\.novus2-now-mobile.png`, `G:\Novus\.novus2-habits-mobile.png` at 393 × 852 CSS px / DPR 1
-- State: authenticated dark theme with deterministic QA responses matching the existing Novus data schema; no test values were added to product code
+- Source visual truth: `C:\Users\Ducky\AppData\Local\Temp\codex-clipboard-e1d11835-a22e-41bb-b6c7-723e1bed495d.png`
+- Source pixels: 1680 × 945
+- Desktop implementation: `G:\Novus\.golden-now-desktop-final.png`
+- Desktop pixels / CSS viewport: 1680 × 945 at device scale factor 1
+- Desktop combined evidence: `G:\Novus\.golden-reference-desktop-final-comparison.png`
+- Mobile implementation: `G:\Novus\.golden-now-mobile-final.png`
+- Mobile pixels / CSS viewport: 393 × 852 at device scale factor 1
+- Mobile normalized evidence: `G:\Novus\.golden-reference-mobile-final-comparison.png`
+- Novus intelligence evidence: `G:\Novus\.golden-novus-desktop-final.png` and `G:\Novus\.golden-novus-mobile-02.png`
+- State: authenticated dark theme with deterministic browser-routed QA responses matching the existing dashboard and intelligence API schemas. QA values were not added to product code.
+- Intentional constraints: the target’s permanent left sidebar is translated into the existing top navigation and Spaces architecture; poster-only marketing copy, surrounding device renders, and device bezels are not authenticated app content.
 
 ## Findings
 
-No actionable P0, P1, or P2 findings remain after the comparison iterations below.
+No actionable P0, P1, or P2 findings remain.
 
-- [P3] The reference’s concept frame remains denser than a low-data real account.
-  - Location: Now / secondary data Spaces.
-  - Evidence: the source concept fills every instrument with mature data, while the implementation preserves real empty and low-data states.
-  - Classification: acceptable product constraint. The implementation does not fabricate values to fill visual space.
-- [P3] The procedural Core is deliberately less photographic than the concept render.
-  - Location: `NovusCore` on Now and the Novus panel.
-  - Evidence: the source is a pre-rendered liquid illustration; the implementation is a real-time Canvas system with evolving geometry, refractive bands, light propagation, and live filaments.
-  - Classification: acceptable technical translation required by the brief. The static generated asset is used only for reduced-motion fallback.
+- [P3] Live liquid material is slightly more legible and less optically chaotic than the still render.
+  - Location: desktop Now hero and Novus intelligence background.
+  - Evidence: the target uses a single photographic-quality still; the implementation uses broad procedural sheets, sculptural bezier folds, traveling highlights, filaments, particles, and evolving refraction.
+  - Classification: acceptable live-software translation. The composition, direction, volume, glow, and relationship to the radial instrument match the target; motion remains readable over real content.
+- [P3] Real activity and attention content changes exact line wrapping.
+  - Location: Today, Up Next, Recent Activity, and mobile Attention.
+  - Evidence: the target contains concept values and an empty-account state; the implementation renders truthful account state.
+  - Classification: required product constraint. No data was fabricated for visual filling.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: display/body/mono hierarchy is consistent with the reference family; strong numerical typography and micro-label tracking are present. No clipping or unintended wrapping was observed at 1680, 1440, or 393 px.
-- Spacing and layout rhythm: the current Novus top/bottom navigation model is preserved intentionally. Hero, instrument, Space header, and mobile spacing remain stable. No persistent controls are obscured.
-- Colors and visual tokens: obsidian, ice white, cyan, and restrained cobalt are consistent across base field, instruments, active controls, intelligence overlays, and data traces. No magenta drift was introduced.
-- Image quality and asset fidelity: the default Core is procedural Canvas, not raster animation. The existing transparent Core image is hidden during capable-device operation and displayed only for reduced motion. Lucide remains the control icon family.
-- Copy and content: authenticated Space copy is concise and purpose-specific. Data instruments use only API state or honest empty states.
+- Fonts and typography: the greeting, intelligence headline, numerical instruments, supporting copy, and technical labels now follow the target scale and hierarchy. Mobile greeting scale was corrected in the final comparison. No clipping or unintended desktop wrapping remains.
+- Spacing and layout rhythm: desktop uses the target’s compact hero, five-instrument row, and three-module lower region rather than the previous editorial scroll. Mobile uses a dedicated target-shaped stack instead of shrinking desktop. Panel heights, gaps, and above-the-fold density align closely with the reference.
+- Colors and visual tokens: obsidian, ice white, pale cyan, restrained cobalt, smoked glass, soft bloom, and variable edge luminance match the source. Panels transmit the moving field rather than reading as opaque black cards.
+- Image quality and asset fidelity: the generated liquid image is reduced-motion fallback only. Capable devices render the primary hero, embedded panel flow, and ambient field procedurally. The supplied mockup’s woven liquid mark was recreated as a real image asset rather than a text-glyph substitute.
+- Copy and content: all metrics, completion values, streaks, task/habit rows, activity, and Novus actions are real API-backed values or honest empty states. Poster marketing copy was not introduced into the authenticated product.
+- Icons: existing functional control icons remain from the product icon library; the custom Novus brand mark is a dedicated asset.
+- Responsive behavior: 1680 × 945 desktop and 393 × 852 mobile render without overflow or hidden persistent navigation. Mobile score, Ask Novus, Attention, and bottom navigation follow the target phone hierarchy.
 
 ## Motion and behavior evidence
 
-- Core remained visibly active over a 10-second idle observation.
-- Sampled Core canvas checksum changed from `243281` to `241859` without interaction, confirming evolving rendered pixels rather than a translated static image.
-- Ambient field, Core, and instrument specular loops use separate slow choreography layers.
-- Canvas resolution is DPR-capped, complexity is reduced on coarse/mobile devices, animation pauses for hidden tabs and off-screen Core instances, and resources are cleaned up on unmount.
-- Reduced-motion mode disables real-time canvases and uses the static Core fallback.
-- Primary controls tested: desktop navigation, mobile navigation, Spaces surfaces, Novus open/close, Command open, and interactive Space controls.
-- Framework overlay check: `OK`. Meaningful interactive accessibility snapshots were present.
+- The visible mobile Core canvas checksum changed from `427948` to `425112` over ten seconds without interaction.
+- Core motion uses deforming sheets, changing folds, traveling highlights, internal filaments, and particles rather than rotating or translating a static raster.
+- Ambient material continues beneath lower instruments and through the bottom field.
+- Canvas DPR is capped; coarse devices use reduced layers and frame rate; page visibility and intersection observers pause work; observers and animation frames are cleaned up on unmount.
+- Reduced-motion browser verification returned `{"core":"none","fallback":"block","ambient":"none"}`.
+- Primary interactions tested: mobile and desktop navigation, Novus open/close, suggestion submission, real conversation transition, input state, and notification/command controls.
+- Browser framework overlay check returned `OK`.
+- Browser console contained no runtime exceptions. Development-only messages were React DevTools/Fast Refresh notices.
+- Axe WCAG 2 A/AA scan: 0 violations; one contrast check remained incomplete because animated gradients prevent automated background calculation.
 
 ## Comparison history
 
 ### Iteration 1 — blocked
 
-- P1: Core did not render in the browser because a shared `.novus-core { position: relative }` rule overrode the absolute hero placement and collapsed its canvas to one pixel.
-- Fix: removed the conflicting position rule and verified a 649 × 558 rendered Core canvas.
-- Post-fix evidence: `G:\Novus\.novus2-corrective-now-v2.png`.
+- P1: the original implementation was an oversized scrolling dashboard with a wireframe oval and did not reproduce the target composition.
+- Fix: replaced it with a bounded hero, compact five-instrument band, three lower instruments, and dedicated mobile composition.
+- Evidence: `G:\Novus\.golden-now-desktop-01.png` and `G:\Novus\.golden-now-mobile-01.png`.
 
 ### Iteration 2 — blocked
 
-- P2: Core read as thin wire contours and the continuous environmental field was too restrained relative to the reference.
-- Fix: added broad evolving refractive bands, stronger internal aura, brighter segmented highlights, richer route-aware ambient filaments, and moving instrument specular light.
-- Post-fix evidence: `G:\Novus\.novus2-final-now-b.png` and `G:\Novus\.novus2-reference-comparison.png`.
+- P1: the procedural hero still read as a thin, symmetrical line wave; panels did not visibly share one environment.
+- Fix: added broad translucent sheets, stronger diffusion, an environment renderer behind lower surfaces, and radial instrument integration.
+- Evidence: `G:\Novus\.golden-now-desktop-03.png`.
 
-### Iteration 3 — passed
+### Iteration 3 — blocked
 
-- Verified final Now, Tasks, Habits, Goals, Journal, Finance, Statistics, Novus, Command, mobile Now, and mobile Habits.
-- No actionable P0/P1/P2 visual, responsive, or interaction findings remained.
+- P2: mobile showed a hard canvas boundary, the score surface lacked liquid continuity, and active bottom navigation did not match the target phone treatment.
+- Fix: masked the mobile flow, embedded a live liquid layer in the score instrument, and added the target-like active glass navigation state.
+- Evidence: `G:\Novus\.golden-reference-mobile-final-comparison.png`.
+
+### Iteration 4 — passed
+
+- Added sculptural multi-bezier folds, brighter internal cores, concentric dial depth, and stronger lower flow.
+- Compared the final desktop and mobile captures directly against the target at normalized sizes.
+- No actionable P0/P1/P2 visual, responsive, interaction, or accessibility findings remain.
 
 ## Follow-up polish
 
-- When accounts contain longer temporal history, Statistics and Finance will naturally demonstrate more signal traces without changing the visual system.
-- Future stages can increase Core material complexity with WebGL shaders if the product later standardizes a GPU capability budget; this pass intentionally avoids a new rendering dependency.
+- P3 only: if a future stage standardizes a WebGL capability budget, the same composition could gain additional physical refraction without changing layout or art direction.
 
 final result: passed
