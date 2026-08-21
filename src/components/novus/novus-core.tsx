@@ -67,9 +67,14 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
     const energy = ENERGY[state];
     const heroTexture = new window.Image();
     let heroTextureReady = false;
+    const bottomTexture = new window.Image();
+    let bottomTextureReady = false;
     heroTexture.decoding = "async";
     heroTexture.src = "/media/novus-hero-liquid.png";
     heroTexture.onload = () => { heroTextureReady = true; };
+    bottomTexture.decoding = "async";
+    bottomTexture.src = "/media/novus-bottom-flow.png";
+    bottomTexture.onload = () => { bottomTextureReady = true; };
 
     const resize = () => {
       const bounds = root.getBoundingClientRect();
@@ -127,6 +132,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
 
       if (variant === "console-field" && heroTextureReady) {
         const drawConsoleMaterial = (
+          texture: HTMLImageElement,
           x: number,
           y: number,
           drawWidth: number,
@@ -144,7 +150,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
           context.translate(x + drawWidth / 2 + driftX, y + drawHeight / 2 + driftY);
           context.scale(flip ? -1 : 1, 1 + Math.sin(elapsed * .14 + phase) * .045);
           context.transform(1, Math.sin(elapsed * .09 + phase) * .012, Math.sin(elapsed * .12 + phase) * .026, 1, 0, 0);
-          context.drawImage(heroTexture, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+          context.drawImage(texture, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
           context.restore();
         };
 
@@ -155,18 +161,13 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
         context.fillStyle = upperGlow;
         context.fillRect(0, 0, width, height);
 
-        drawConsoleMaterial(-width * .17, -height * .28, width * .84, height * .71, .26, 0, true);
-        drawConsoleMaterial(width * .42, height * .08, width * .77, height * .62, .19, 1.8);
-        drawConsoleMaterial(-width * .08, height * .52, width * 1.16, height * .58, .34, 3.1, true);
+        drawConsoleMaterial(heroTexture, -width * .18, -height * .3, width * .88, height * .67, .23, 0, true);
+        drawConsoleMaterial(heroTexture, width * .48, height * .01, width * .64, height * .47, .13, 1.8);
 
-        const bottomBloom = context.createLinearGradient(0, height * .72, width, height * .98);
-        bottomBloom.addColorStop(0, "rgba(128,210,237,0)");
-        bottomBloom.addColorStop(.42, `rgba(210, 247, 255, ${.07 * energy})`);
-        bottomBloom.addColorStop(.58, `rgba(244, 253, 255, ${.15 * energy})`);
-        bottomBloom.addColorStop(.76, `rgba(93, 176, 208, ${.05 * energy})`);
-        bottomBloom.addColorStop(1, "rgba(58,120,161,0)");
-        context.fillStyle = bottomBloom;
-        context.fillRect(0, height * .58, width, height * .42);
+        if (bottomTextureReady) {
+          drawConsoleMaterial(bottomTexture, -width * .045, height * .38, width * 1.09, height * .56, .82, 2.4);
+          drawConsoleMaterial(bottomTexture, width * .06, height * .46, width * .94, height * .45, .19, 4.2, true);
+        }
 
         const travel = ((elapsed * .038) % 1.5) - .25;
         const travelingLight = context.createLinearGradient(width * (travel - .15), 0, width * (travel + .18), height);
@@ -189,7 +190,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
         const drawMaterial = (phase: number, opacity: number, scaleY: number) => {
           context.save();
           context.globalCompositeOperation = "lighter";
-          context.globalAlpha = opacity * energy;
+        context.globalAlpha = opacity * energy;
           context.filter = `blur(${phase ? 0.45 : 0}px) brightness(${phase ? 1.18 : 1.08}) saturate(.72)`;
           const breatheX = 1 + Math.sin(elapsed * .13 + phase) * .012;
           const breatheY = 1 + Math.sin(elapsed * .19 + phase * .7) * .034;
@@ -397,7 +398,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
     >
       <canvas ref={canvasRef} className="novus-core__canvas" />
       <div className="novus-core__fallback">
-        <Image src={variant === "desktop-hero" || variant === "console-field" ? "/media/novus-hero-liquid.png" : "/media/novus-liquid-fallback.png"} alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero" || variant === "desktop-hero"} />
+        <Image src={variant === "console-field" ? "/media/novus-bottom-flow.png" : variant === "desktop-hero" ? "/media/novus-hero-liquid.png" : "/media/novus-liquid-fallback.png"} alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero" || variant === "desktop-hero"} />
       </div>
     </div>
   );

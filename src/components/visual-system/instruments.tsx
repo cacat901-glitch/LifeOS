@@ -8,6 +8,14 @@ function normalize(values: number[], width: number, height: number) {
   if (!values.length) return "";
   const minimum = Math.min(...values);
   const maximum = Math.max(...values);
+  if (maximum === minimum) {
+    const dormantShape = [0, -.12, .06, -.04, .1, -.07, 0];
+    return dormantShape.map((offset, index) => {
+      const x = (index / (dormantShape.length - 1)) * width;
+      const y = height * (.66 + offset);
+      return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(" ");
+  }
   const range = Math.max(1, maximum - minimum);
   return values.map((value, index) => {
     const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width;
@@ -20,6 +28,7 @@ export function SignalTrace({ values, className, label = "Trend" }: { values: nu
   const id = useId().replace(/:/g, "");
   const reduceMotion = useReducedMotion();
   const usableValues = values.filter(Number.isFinite);
+  const dormant = usableValues.length > 0 && Math.max(...usableValues) === Math.min(...usableValues);
 
   if (!usableValues.length) {
     return <div className={cn("signal-trace signal-trace--empty", className)} aria-label={`${label}: no recorded data`} />;
@@ -28,7 +37,7 @@ export function SignalTrace({ values, className, label = "Trend" }: { values: nu
   const path = normalize(usableValues, 240, 72);
   const area = `${path} L240,72 L0,72 Z`;
   return (
-    <svg viewBox="0 0 240 72" preserveAspectRatio="none" className={cn("signal-trace", className)} role="img" aria-label={`${label}: ${usableValues.join(", ")}`}>
+    <svg viewBox="0 0 240 72" preserveAspectRatio="none" className={cn("signal-trace", dormant && "signal-trace--dormant", className)} role="img" aria-label={`${label}: ${usableValues.join(", ")}`}>
       <defs>
         <linearGradient id={`${id}-line`} x1="0" x2="1">
           <stop offset="0" stopColor="#4b8cff" stopOpacity=".25" />
