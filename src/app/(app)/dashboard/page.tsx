@@ -133,7 +133,7 @@ export default function NowPage() {
             <h2>{greeting(clock)},<br />{firstName}.</h2>
             <p>{summary}</p>
           </div>
-          <NovusCore state={coreState} className="now-desktop__liquid" />
+          <NovusCore state={coreState} variant="desktop-hero" className="now-desktop__liquid" />
           <div className="now-desktop__dial">
             <RadialInstrument value={data.lifeScore.total} label="Life score" />
             <span>Grade {data.lifeScore.grade}</span>

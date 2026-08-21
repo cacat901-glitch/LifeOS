@@ -8,7 +8,7 @@ type NovusCoreState = "idle" | "attention" | "positive" | "invoked" | "thinking"
 
 interface NovusCoreProps {
   state?: NovusCoreState;
-  variant?: "hero" | "panel" | "mark";
+  variant?: "hero" | "desktop-hero" | "panel" | "mark";
   className?: string;
 }
 
@@ -65,6 +65,11 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     const energy = ENERGY[state];
+    const heroTexture = new window.Image();
+    let heroTextureReady = false;
+    heroTexture.decoding = "async";
+    heroTexture.src = "/media/novus-hero-liquid.png";
+    heroTexture.onload = () => { heroTextureReady = true; };
 
     const resize = () => {
       const bounds = root.getBoundingClientRect();
@@ -119,6 +124,61 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
       context.save();
       context.translate(pointerRef.current.x * width * 0.012, pointerRef.current.y * height * 0.014);
       context.globalCompositeOperation = "lighter";
+
+      if (variant === "desktop-hero" && heroTextureReady) {
+        const textureWidth = width * 1.13;
+        const textureHeight = height * 1.38;
+        const textureLeft = -width * 0.055;
+        const textureTop = -height * 0.13;
+
+        const drawMaterial = (phase: number, opacity: number, scaleY: number) => {
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.globalAlpha = opacity * energy;
+          context.filter = `blur(${phase ? 0.45 : 0}px) brightness(${phase ? 1.18 : 1.08}) saturate(.72)`;
+          const breatheX = 1 + Math.sin(elapsed * .13 + phase) * .012;
+          const breatheY = 1 + Math.sin(elapsed * .19 + phase * .7) * .034;
+          const driftX = Math.sin(elapsed * .17 + phase) * width * .009;
+          const driftY = Math.sin(elapsed * .27 + phase * .8) * height * .018;
+          context.translate(width * .5 + driftX, height * .5 + driftY);
+          context.transform(breatheX, Math.sin(elapsed * .11 + phase) * .009, Math.sin(elapsed * .15 + phase) * .018, breatheY, 0, 0);
+          context.drawImage(
+            heroTexture,
+            textureLeft - width * .5,
+            textureTop - height * .5 - (breatheY - 1) * textureHeight * .5,
+            textureWidth * breatheX,
+            textureHeight * scaleY,
+          );
+          context.restore();
+        };
+
+        const aura = context.createRadialGradient(width * .61, height * .43, 0, width * .61, height * .43, width * .43);
+        aura.addColorStop(0, `rgba(245, 253, 255, ${.145 * energy})`);
+        aura.addColorStop(.22, `rgba(197, 231, 242, ${.085 * energy})`);
+        aura.addColorStop(.52, `rgba(74, 139, 174, ${.045 * energy})`);
+        aura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        context.fillStyle = aura;
+        context.fillRect(0, 0, width, height);
+
+        drawMaterial(0, .74, 1.04);
+        drawMaterial(1.7, .18, .97);
+
+        context.save();
+        context.globalCompositeOperation = "source-atop";
+        const travel = ((elapsed * .055) % 1.5) - .25;
+        const travelingLight = context.createLinearGradient(width * (travel - .18), 0, width * (travel + .22), height);
+        travelingLight.addColorStop(0, "rgba(255,255,255,0)");
+        travelingLight.addColorStop(.44, `rgba(250, 255, 255, ${.12 * energy})`);
+        travelingLight.addColorStop(.52, `rgba(255, 255, 255, ${.31 * energy})`);
+        travelingLight.addColorStop(.62, `rgba(212, 240, 247, ${.09 * energy})`);
+        travelingLight.addColorStop(1, "rgba(255,255,255,0)");
+        context.fillStyle = travelingLight;
+        context.fillRect(0, 0, width, height);
+        context.restore();
+
+        context.restore();
+        return;
+      }
 
       const wash = context.createRadialGradient(width * 0.58, height * 0.48, 0, width * 0.58, height * 0.48, Math.max(width, height) * 0.62);
       wash.addColorStop(0, `rgba(164, 232, 255, ${0.115 * energy})`);
@@ -282,7 +342,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
     >
       <canvas ref={canvasRef} className="novus-core__canvas" />
       <div className="novus-core__fallback">
-        <Image src="/media/novus-liquid-fallback.png" alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero"} />
+        <Image src={variant === "desktop-hero" ? "/media/novus-hero-liquid.png" : "/media/novus-liquid-fallback.png"} alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero" || variant === "desktop-hero"} />
       </div>
     </div>
   );
