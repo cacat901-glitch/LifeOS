@@ -123,7 +123,7 @@ export default function NowPage() {
   return (
     <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32 }} className="now-canonical">
       <section className="now-desktop" aria-label="Now overview">
-        <NovusCore state={coreState} variant="mark" className="now-desktop__environment" />
+        <NovusCore state={coreState} variant="console-field" className="now-desktop__environment" />
         <div className="now-desktop__hero">
           <div className="now-desktop__context">
             <MetaLabel>{timeContext(clock)}</MetaLabel>
@@ -205,12 +205,13 @@ function InstrumentSection({ label, children, className }: { label: string; chil
 }
 
 function MetricInstrument({ label, value, detail, values, progress, bars, activeBars }: { label: string; value: number | string; detail: string; values?: number[]; progress?: number; bars?: number; activeBars?: number }) {
+  const dormant = values ? values.every((entry) => entry === 0) : bars === 0 || progress === 0;
   return (
-    <article className="target-instrument metric-instrument">
+    <article className={cn("target-instrument metric-instrument", dormant && "is-dormant")}>
       <div className="metric-instrument__head"><span>{label}</span><ArrowRight /></div>
       <strong>{value}</strong>
       <small>{detail}</small>
-      {values ? <SignalTrace values={values} label={label} /> : bars ? <div className="metric-bars">{Array.from({ length: bars }, (_, index) => <i key={index} className={index < (activeBars || 0) ? "is-active" : ""} style={{ height: `${32 + ((index * 17) % 58)}%` }} />)}</div> : <div className="metric-progress"><i style={{ width: `${progress || 0}%` }} /></div>}
+      {values ? <SignalTrace values={values} label={label} /> : bars !== undefined ? <div className="metric-bars">{Array.from({ length: Math.max(7, bars) }, (_, index) => <i key={index} className={index < (activeBars || 0) ? "is-active" : ""} style={{ height: `${32 + ((index * 17) % 58)}%` }} />)}</div> : <div className="metric-progress"><i style={{ width: `${progress || 0}%` }} /><b style={{ left: `${progress || 0}%` }} /></div>}
     </article>
   );
 }
@@ -233,7 +234,9 @@ function ActivityList({ data }: { data: DashboardData }) {
   return <div className="activity-list">{items.map((item) => <div key={item.id}><span className="activity-dot" /><span><strong>{item.title}</strong><small>{item.meta}</small></span></div>)}</div>;
 }
 
-function EmptyInstrument({ children }: { children: React.ReactNode }) { return <p className="instrument-empty">{children}</p>; }
+function EmptyInstrument({ children }: { children: React.ReactNode }) {
+  return <div className="instrument-empty"><p>{children}</p><div className="instrument-dormant" aria-hidden="true"><i /><i /><i /><i /><i /><b /></div><span>Awaiting signal</span></div>;
+}
 function MetaLabel({ children }: { children: React.ReactNode }) { return <span className="target-meta">{children}</span>; }
 
 function NowSkeleton() { return <div className="now-canonical"><div className="now-skeleton os-skeleton" /><div className="now-skeleton-row">{Array.from({ length: 5 }, (_, index) => <div key={index} className="os-skeleton" />)}</div></div>; }

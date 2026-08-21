@@ -8,7 +8,7 @@ type NovusCoreState = "idle" | "attention" | "positive" | "invoked" | "thinking"
 
 interface NovusCoreProps {
   state?: NovusCoreState;
-  variant?: "hero" | "desktop-hero" | "panel" | "mark";
+  variant?: "hero" | "desktop-hero" | "console-field" | "panel" | "mark";
   className?: string;
 }
 
@@ -124,6 +124,61 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
       context.save();
       context.translate(pointerRef.current.x * width * 0.012, pointerRef.current.y * height * 0.014);
       context.globalCompositeOperation = "lighter";
+
+      if (variant === "console-field" && heroTextureReady) {
+        const drawConsoleMaterial = (
+          x: number,
+          y: number,
+          drawWidth: number,
+          drawHeight: number,
+          opacity: number,
+          phase: number,
+          flip = false,
+        ) => {
+          context.save();
+          context.globalCompositeOperation = "lighter";
+          context.globalAlpha = opacity * energy;
+          context.filter = `blur(${phase ? 1.1 : .35}px) brightness(${phase ? 1.12 : 1.2}) saturate(.62)`;
+          const driftX = Math.sin(elapsed * .13 + phase) * width * .018;
+          const driftY = Math.cos(elapsed * .17 + phase) * height * .026;
+          context.translate(x + drawWidth / 2 + driftX, y + drawHeight / 2 + driftY);
+          context.scale(flip ? -1 : 1, 1 + Math.sin(elapsed * .14 + phase) * .045);
+          context.transform(1, Math.sin(elapsed * .09 + phase) * .012, Math.sin(elapsed * .12 + phase) * .026, 1, 0, 0);
+          context.drawImage(heroTexture, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+          context.restore();
+        };
+
+        const upperGlow = context.createRadialGradient(width * .31, height * .1, 0, width * .31, height * .1, width * .5);
+        upperGlow.addColorStop(0, `rgba(218, 249, 255, ${.095 * energy})`);
+        upperGlow.addColorStop(.42, `rgba(81, 159, 188, ${.035 * energy})`);
+        upperGlow.addColorStop(1, "rgba(0,0,0,0)");
+        context.fillStyle = upperGlow;
+        context.fillRect(0, 0, width, height);
+
+        drawConsoleMaterial(-width * .17, -height * .28, width * .84, height * .71, .26, 0, true);
+        drawConsoleMaterial(width * .42, height * .08, width * .77, height * .62, .19, 1.8);
+        drawConsoleMaterial(-width * .08, height * .52, width * 1.16, height * .58, .34, 3.1, true);
+
+        const bottomBloom = context.createLinearGradient(0, height * .72, width, height * .98);
+        bottomBloom.addColorStop(0, "rgba(128,210,237,0)");
+        bottomBloom.addColorStop(.42, `rgba(210, 247, 255, ${.07 * energy})`);
+        bottomBloom.addColorStop(.58, `rgba(244, 253, 255, ${.15 * energy})`);
+        bottomBloom.addColorStop(.76, `rgba(93, 176, 208, ${.05 * energy})`);
+        bottomBloom.addColorStop(1, "rgba(58,120,161,0)");
+        context.fillStyle = bottomBloom;
+        context.fillRect(0, height * .58, width, height * .42);
+
+        const travel = ((elapsed * .038) % 1.5) - .25;
+        const travelingLight = context.createLinearGradient(width * (travel - .15), 0, width * (travel + .18), height);
+        travelingLight.addColorStop(0, "rgba(255,255,255,0)");
+        travelingLight.addColorStop(.48, `rgba(239, 253, 255, ${.025 * energy})`);
+        travelingLight.addColorStop(.53, `rgba(255, 255, 255, ${.1 * energy})`);
+        travelingLight.addColorStop(.61, "rgba(255,255,255,0)");
+        context.fillStyle = travelingLight;
+        context.fillRect(0, 0, width, height);
+        context.restore();
+        return;
+      }
 
       if (variant === "desktop-hero" && heroTextureReady) {
         const textureWidth = width * 1.13;
@@ -342,7 +397,7 @@ export function NovusCore({ state = "idle", variant = "hero", className }: Novus
     >
       <canvas ref={canvasRef} className="novus-core__canvas" />
       <div className="novus-core__fallback">
-        <Image src={variant === "desktop-hero" ? "/media/novus-hero-liquid.png" : "/media/novus-liquid-fallback.png"} alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero" || variant === "desktop-hero"} />
+        <Image src={variant === "desktop-hero" || variant === "console-field" ? "/media/novus-hero-liquid.png" : "/media/novus-liquid-fallback.png"} alt="" fill sizes={variant === "panel" ? "720px" : "(max-width: 767px) 100vw, 1100px"} priority={variant === "hero" || variant === "desktop-hero"} />
       </div>
     </div>
   );
