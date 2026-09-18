@@ -5,7 +5,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Circle, RefreshCw, ListChecks, Flame, Target, NotebookPen } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
-import { NovusCore } from "@/components/novus/novus-core";
 import { NowLiquidField } from "@/components/novus/now-liquid-field";
 import { RadialInstrument } from "@/components/visual-system/instruments";
 import { MetricInstrument } from "@/components/visual-system/metric-instrument";
@@ -113,7 +112,6 @@ export default function NowPage() {
     data.habits.total ? habitProgress : null,
     data.goals.length ? goalProgress : null,
   ]);
-  const coreState = focusItems.length ? "attention" : (data.habits.completed || data.tasks.done) ? "positive" : "idle";
   const summary = briefing || buildCurrentSummary(data);
   const upNextItems = insights.length
     ? insights.slice(0, 4).map((insight, index) => ({ id: `${insight.title}-${index}`, title: insight.title, meta: insight.action || insight.message, onClick: () => openNovusWithPrompt(insight.action || insight.title) }))
@@ -180,26 +178,38 @@ export default function NowPage() {
       </section>
 
       <section className="now-mobile" aria-label="Now mobile overview">
+        <div className="now-mobile__presence">
+        <NowLiquidField mobile pixelRatioCap={1.15} />
         <div className="now-mobile__date"><MetaLabel>{timeContext(clock)}</MetaLabel><span className="now-live">Live</span></div>
         <div className="now-mobile__hero">
           <h2>{greeting(clock)},<br />{firstName}.</h2>
-          <p>{summary}</p>
-          <NovusCore state={coreState} className="now-mobile__liquid" />
+          <p>{mobileSummary(data)}</p>
         </div>
-        <button className="mobile-score-card" onClick={() => setNovusOpen(true)} aria-label="Ask Novus about your Life Score">
-          <NovusCore state={coreState} variant="mark" className="mobile-score-card__liquid" />
-          <RadialInstrument value={data.lifeScore.total} label="Life score" />
-          <span><MetaLabel>Life score</MetaLabel><strong>{data.lifeScore.total}</strong><small>Grade {data.lifeScore.grade}</small></span>
-          <ArrowRight />
-        </button>
-        <button onClick={() => setNovusOpen(true)} className="mobile-ask-card"><span><MetaLabel>Ask Novus</MetaLabel><strong>Make sense of now</strong></span><ArrowRight /></button>
-        <InstrumentSection label="Attention" className="mobile-attention">
-          {focusItems.length ? <><h3>{focusItems[0].title}</h3><p>{focusItems[0].meta}</p><FocusList items={focusItems.slice(0, 3)} /></> : <><h3>Nothing is asking for your attention.</h3><p>Your visible priorities are clear.</p></>}
+        <OpticalSurface light="upper" className="mobile-score-surface">
+          <button className="mobile-score-card" onClick={() => openNovusWithPrompt("Help me understand my Life Score and what I can do next.")} aria-label={`Life Score ${data.lifeScore.total}. Ask Novus about your Life Score`}>
+            <RadialInstrument value={data.lifeScore.total} label="" />
+            <span><MetaLabel>Life score</MetaLabel><strong>{momentumLabel(data.lifeScore.total)}</strong><small>Grade {data.lifeScore.grade} · Your current state</small></span>
+            <ArrowRight aria-hidden="true" />
+          </button>
+        </OpticalSurface>
+        <OpticalSurface light="stream" className="mobile-ask-surface">
+          <button onClick={() => openNovusWithPrompt("Help me make sense of my day and choose what matters next.")} className="mobile-ask-card"><span><MetaLabel>Ask Novus</MetaLabel><strong>Make sense of now.</strong></span><ArrowRight aria-hidden="true" /></button>
+        </OpticalSurface>
+        </div>
+        <InstrumentSection light="quiet" label="Attention" className="mobile-attention">
+          {focusItems.length ? <><h3>{focusItems[0].title}</h3><p>{focusItems[0].meta}</p><button className="mobile-focus-action" onClick={focusItems[0].onToggle}><Check aria-hidden="true" />Mark complete<ArrowRight aria-hidden="true" /></button></> : <><h3>Nothing is asking<br />for your attention.</h3><p>Your visible priorities are clear.<br />Add something only when it matters.</p></>}
         </InstrumentSection>
-        <div className="mobile-mini-grid">
-          <MetricInstrument label="Tasks" value={openTasks.length} detail={`${taskProgress}% done`} progress={taskProgress} />
-          <MetricInstrument label="Habits" value={data.habits.total} detail={`${habitProgress}% today`} progress={habitProgress} />
-        </div>
+        <section className="mobile-glance" aria-label="At a glance">
+          <MetaLabel>At a glance</MetaLabel>
+          <div className="mobile-mini-grid">
+            <MetricInstrument optical kind="tasks" label="Open tasks" value={openTasks.length} detail={`${data.tasks.done} of ${data.tasks.total} completed`} progress={taskProgress} />
+            <MetricInstrument optical kind="habits" label="Habits" value={`${data.habits.completed}/${data.habits.total}`} detail="Completed today" progress={habitProgress} />
+          </div>
+        </section>
+        <InstrumentSection light="cadence" label="Today" className="mobile-today">
+          {focusItems.length ? <FocusList items={focusItems} /> : <StarterActions onAsk={() => openNovusWithPrompt("Help me choose today's first priority.")} />}
+        </InstrumentSection>
+        <a className="mobile-deeper-link" href="/goals">Your goals<ArrowRight aria-hidden="true" /></a>
       </section>
     </motion.div>
   );
@@ -249,6 +259,13 @@ function NowSkeleton() { return <div className="now-canonical"><div className="n
 function LoadFailure({ onRetry }: { onRetry: () => void }) { return <div className="flex min-h-[60vh] flex-col items-center justify-center text-center"><Circle className="h-7 w-7 text-muted-foreground" /><h2 className="mt-5 font-display text-2xl font-semibold">Now could not be loaded.</h2><p className="mt-2 text-sm text-muted-foreground">Your data was not changed.</p><button onClick={onRetry} className="mt-6 inline-flex items-center gap-2 border border-primary/30 px-5 py-2.5 text-sm"><RefreshCw className="h-4 w-4" />Try again</button></div>; }
 
 function percent(value: number, total: number) { return total ? Math.round((value / total) * 100) : 0; }
+function mobileSummary(data: DashboardData) {
+  if (!data.tasks.total && !data.habits.total && !data.goals.length) return "A clear place to begin. Choose one thing that would make today a win.";
+  if (!data.tasks.total && !data.habits.total) return `${data.goals.length} active ${data.goals.length === 1 ? "goal" : "goals"}. Choose one small step forward today.`;
+  const tasks = Math.max(0, data.tasks.total - data.tasks.done);
+  const habits = Math.max(0, data.habits.total - data.habits.completed);
+  return tasks || habits ? `${tasks} open ${tasks === 1 ? "task" : "tasks"}. ${habits} ${habits === 1 ? "habit" : "habits"} left today. Make room for what matters.` : "Today's tasks and habits are complete. Take a moment to reflect.";
+}
 function averagePresent(values: Array<number | null>) { const present = values.filter((value): value is number => value !== null); return present.length ? Math.round(present.reduce((sum, value) => sum + value, 0) / present.length) : 0; }
 function momentumLabel(score: number) { return score >= 75 ? "Strong" : score >= 50 ? "Building" : score > 0 ? "Starting" : "Quiet"; }
 function greeting(clock: Date | null) { const hour = clock?.getHours() ?? new Date().getHours(); return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"; }

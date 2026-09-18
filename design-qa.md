@@ -231,3 +231,82 @@ global reskin. No additional animation loops or graphics contexts were added.
 
 Evidence: `stage1k-02-compare.png`, `stage1k-02-compare-canonical.png`, and
 `stage1k-final*` under `artifacts/visual-qa`. Generated captures stay local.
+
+## Stage 1L — canonical mobile Now, 2026-09-19
+
+Scope: mobile Now and its required shell treatment only. Desktop Stage 1K is
+locked. No secondary Space or full Novus AI redesign. The user explicitly
+requires shared real-time liquid and data graphics, so the existing procedural
+material and instrument primitives are reused instead of new static art assets.
+
+### Sources and normalization
+
+- Material source: Stage 1K, `artifacts/visual-qa/stage1k-final.png`.
+- Mobile composition source: first phone in
+  `.golden-reference-desktop-final-comparison.png`, original left 1680 x 945
+  reference. App content crop (1148,209)-(1375,760), 227 x 551, normalized to
+  390px width with its aspect ratio preserved. Device/status chrome excluded.
+- Implementation: `artifacts/visual-qa/stage1l-final-390.png`, 390 x 844 CSS
+  pixels, DPR 1. The mockup has a taller content ratio and different dynamic
+  greeting; these are documented differences, not claimed pixel equivalence.
+- Combined comparison: `stage1l-final-390-compare.png`. Score, greeting and
+  navigation are readable at this scale; `stage1l-final-glance.png` and
+  `stage1l-final-glance-completed.png` inspect the lower instruments separately.
+
+### Iteration history
+
+1. Existing mobile had older cyan graphics, independent wave renderers, a
+   duplicated numerical score outside an empty ring, and noncanonical panels.
+   Replaced these with mobile composition of the same liquid shader, one active
+   field, OpticalSurface material, and an integrated radial readout. Retained
+   bottom-navigation destinations and contextual Novus entry.
+2. `stage1l-02-390-compare.png`: score lacked visual prominence and the crest
+   competed with the greeting. Increased the dial/card, added quiet calibration
+   detail, moved the crest upward, and recomposed the score's material cradle.
+3. `stage1l-03-390-compare.png`: composition and hierarchy accepted. Lower-region
+   inspection found inherited top/bottom positioning stretching the habit grid,
+   and mobile lacked explicit percentage-fill styling. Restricted its bounds
+   and applied the real completion percentage to each cell. Verified after fix.
+
+### Required fidelity surfaces
+
+- Typography: canonical Bricolage display/Inter UI family; mobile-specific
+  greeting size and natural long-name wrapping. Long action titles expand rather
+  than clip. Micro-labels stay subordinate to readable values/actions.
+- Spacing: primary score and Attention replace five equally prominent cards.
+  Two compact metrics and Today follow below. 44px+ navigation targets and
+  55px action rows; bottom padding accounts for dock and safe area.
+- Tokens: obsidian/silver/ice, shared smoked glass with localized pickup,
+  restrained nav line/icon illumination. No cyan pill active state on Now.
+- Material: the exact canonical optical shader functions and density sources
+  are reused, recomposed for phone. Mobile omits desktop silk/particle loops and
+  extra local layers, caps DPR at 1.15, and has no pointer tracking. Reduced
+  motion retains static source material and full instrument quality.
+- Content: real score, open tasks, completed habits, real action handlers and
+  concise summaries derived from existing data. No fake activity/history.
+  Contextual Ask differs from persistent navigation: it starts a specific prompt.
+
+### Validation
+
+- 360x800, 375x812, 390x844, 393x852, 430x932, plus short 360x640: no horizontal
+  overflow, score intact, bottom navigation reachable. Taller content scrolls.
+- Long name/title tests at 360, 375, 390, 393 and 430 widths; score 0 and 100.
+- Morning, afternoon and evening greetings with short, long and accented names.
+- Ten-second mobile shader clock advanced about 10.09 seconds; screenshots
+  recorded real evolving material. Reduced-motion fallback passed.
+- Score prompt and bottom Novus access, Spaces sheet, task/habit PATCH contracts,
+  completed habit state, Tasks navigation and renderer unmount passed.
+- Simulated 34px bottom safe area: final action remains above navigation.
+- Desktop `stage1l-desktop.png` compared with Stage 1K. Exact console bounds and
+  all measured region geometry match; only live date/greeting differ. Desktop
+  shader branch, materials and layout unchanged. Existing desktop QA passed.
+- TypeScript and production build pass. Existing dynamic-route build diagnostics
+  remain outside scope. Browser page errors: none.
+- Tests are local intercepted fixtures, not writes to production data or proof
+  of live AI behavior. Physical iOS/Safari hardware was not tested.
+
+No actionable P0/P1/P2 findings remain after the follow-up grid correction.
+Remaining target differences are intentional: canonical liquid, truthful state,
+shorter contextual copy, current navigation order, and real phone-height limits.
+
+final result: passed

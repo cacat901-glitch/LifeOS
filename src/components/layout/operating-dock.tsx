@@ -70,7 +70,7 @@ export function OperatingDock() {
         </button>
       </nav>
 
-      <nav className="material-bar bottom-nav fixed inset-x-0 bottom-0 z-50 border-t px-2 backdrop-blur-xl lg:hidden" aria-label="Mobile navigation">
+      <nav className={cn("material-bar bottom-nav fixed inset-x-0 bottom-0 z-50 border-t px-2 backdrop-blur-xl lg:hidden", pathname === "/dashboard" && "bottom-nav--now")} aria-label="Mobile navigation">
         <div className="mx-auto grid h-[68px] max-w-md grid-cols-5 items-stretch">
           <MobileLink item={PRIMARY[0]} active={isCurrent(pathname, PRIMARY[0].href)} />
           <MobileLink item={PRIMARY[3]} active={isCurrent(pathname, PRIMARY[3].href)} />

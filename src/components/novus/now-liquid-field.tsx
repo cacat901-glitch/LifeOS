@@ -17,6 +17,7 @@ uniform vec2 consoleSize;
 uniform vec2 pointer;
 uniform float time;
 uniform float heroHeight;
+uniform float mobileLayout;
 uniform sampler2D densityMap;
 uniform sampler2D bottomMap;
 uniform sampler2D activityMap;
@@ -120,6 +121,22 @@ vec3 silk(vec2 p, float variant, float strength) {
 }
 void main() {
   vec2 pixel=vec2(gl_FragCoord.x,resolution.y-gl_FragCoord.y);
+  if(mobileLayout>.5) {
+    // Phone composition: the same optical material, fewer layers and no silk
+    // particle loop. A broad right-hand crest folds into the primary dial.
+    vec2 m=pixel/resolution;
+    vec2 crest=vec2(.25+m.x*.78,(m.y+.06)*2.2);
+    vec3 mobileLight=liquidVolume(crest,0.,1.6);
+    vec2 cradle=vec2(m.x*.92+.05,(m.y-.46)*2.4+(m.x-.4)*.35);
+    mobileLight+=liquidVolume(cradle,1.,1.4);
+    mobileLight=1.-exp(-mobileLight*1.5);
+    // Keep the editorial text quiet; avoid rectangular canvas boundaries.
+    mobileLight*=mix(.22,1.,smoothstep(.24,.8,m.x));
+    mobileLight*=smoothstep(0.,.04,m.y)*(1.-smoothstep(.84,1.,m.y));
+    mobileLight*=smoothstep(0.,.04,m.x)*(1.-smoothstep(.97,1.,m.x));
+    gl_FragColor=vec4(mobileLight,clamp(max(mobileLight.r,max(mobileLight.g,mobileLight.b)),0.,.95));
+    return;
+  }
   vec2 p=(pixel/resolution*vec2(consoleSize.x+160.,consoleSize.y+190.)-vec2(80.,0.))/consoleSize;
   vec3 light=vec3(0.);
   // Main crest and fork occupy the hero and enter the metric row.
@@ -161,7 +178,7 @@ void main() {
 }
 `;
 
-export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: number }) {
+export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixelRatioCap?: number; mobile?: boolean }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -175,7 +192,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
     const initialize = () => {
       dispose?.(); dispose = undefined;
       element.dataset.renderer = "fallback";
-      if (!desktop.matches || reduced.matches) return;
+      if (desktop.matches === mobile || reduced.matches) return;
       const gl = surface.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: "high-performance" });
       if (!gl) return;
       const resources: WebGLShader[] = [];
@@ -210,6 +227,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("Liquid program linking failed");
         gl.useProgram(program);
+        gl.uniform1f(gl.getUniformLocation(program,"mobileLayout"),mobile ? 1 : 0);
         const loadDensity=(unit:number,name:string,url:string)=>{
           const texture=gl.createTexture(); if(!texture) throw new Error("Liquid texture allocation failed");
           textures.push(texture);gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,texture);
@@ -224,8 +242,10 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
         };
         loadDensity(0,"densityMap","/media/novus-hero-liquid.png");
         loadDensity(1,"bottomMap","/media/novus-bottom-flow.png");
-        loadDensity(2,"activityMap","/media/novus-activity-stream.png");
-        loadDensity(3,"todayMap","/media/novus-today-signal.png");
+        if (!mobile) {
+          loadDensity(2,"activityMap","/media/novus-activity-stream.png");
+          loadDensity(3,"todayMap","/media/novus-today-signal.png");
+        }
         buffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
         gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
         const position=gl.getAttribLocation(program,"position");
@@ -237,7 +257,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
         const resize=()=>{
           const bounds=element.getBoundingClientRect();
           // Explicit quality ceiling; a single context covers the complete console.
-          const ratio=Math.min(devicePixelRatio || 1,Math.max(.75,Math.min(2,pixelRatioCap)));
+          const ratio=Math.min(devicePixelRatio || 1,Math.max(.75,Math.min(mobile ? 1.2 : 2,pixelRatioCap)));
           surface.width=Math.round(bounds.width*ratio); surface.height=Math.round(bounds.height*ratio);
           gl.viewport(0,0,surface.width,surface.height);
           gl.uniform2f(uniforms.resolution,surface.width,surface.height);
@@ -260,7 +280,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
           const b=parent.getBoundingClientRect(); tx=(event.clientX-b.left)/b.width;ty=(event.clientY-b.top)/b.height-.5;
         };
         const leave=()=>{tx=.5;ty=0;};
-        parent.addEventListener("pointermove",move);parent.addEventListener("pointerleave",leave);
+        if (!mobile) { parent.addEventListener("pointermove",move);parent.addEventListener("pointerleave",leave); }
         document.addEventListener("visibilitychange",resume);
         const lost=(event:Event)=>{event.preventDefault();contextLost=true;resourcesLost=true;cancelAnimationFrame(frame);frame=0;element.dataset.renderer="fallback";};
         surface.addEventListener("webglcontextlost",lost);
@@ -271,6 +291,6 @@ export function NowLiquidField({ pixelRatioCap = 1.35 }: { pixelRatioCap?: numbe
     initialize();desktop.addEventListener("change",initialize);reduced.addEventListener("change",initialize);
     surface.addEventListener("webglcontextrestored",initialize);
     return ()=>{dispose?.();desktop.removeEventListener("change",initialize);reduced.removeEventListener("change",initialize);surface.removeEventListener("webglcontextrestored",initialize);};
-  }, [pixelRatioCap]);
-  return <div ref={root} className="now-liquid-field" aria-hidden="true" data-renderer="fallback"><canvas ref={canvas}/><div className="now-liquid-field__fallback" /></div>;
+  }, [pixelRatioCap, mobile]);
+  return <div ref={root} className={`now-liquid-field${mobile ? " now-liquid-field--mobile" : ""}`} aria-hidden="true" data-renderer="fallback"><canvas ref={canvas}/><div className="now-liquid-field__fallback" /></div>;
 }
