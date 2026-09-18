@@ -1,5 +1,43 @@
 # Novus desktop Now instrumentation — screenshot reconstruction QA
 
+## Desktop fidelity refinement — 2026-09-18 (latest)
+
+Source: the owned mockup preserved in the left 1680×945 region of `.golden-reference-desktop-final-comparison.png`, normalized to 1672×941. Source content crop: x203/y140 to x1110/y778, excluding sidebar and command chrome. Existing top navigation remains the intentional architectural exception.
+
+Implementation: `artifacts/visual-qa/fidelity-final.png`, 1672×1050 CSS pixels at DPR 1. Empty local fixture state, not a real account. Console 1120×786 at x276/y91; width-normalized to 907 pixels without aspect distortion. Full comparison: `fidelity-final-compare.png`; transparent overlay: `fidelity-final-compare-overlay.png`; focused regions: `fidelity-final-compare-metrics.png` and `fidelity-final-compare-lower.png`.
+
+### Comparison iterations
+
+1. `fidelity-01`: reduced crest fill and fine-strand density; tightened lower action rows; added shared reflected light. Review found excessive uniform blue pickup, weak dormant instruments, and a too-high incoming stream.
+2. `fidelity-02`: reduced pickup, lowered the incoming flow, refined rings and added an explicitly decorative dormant momentum signal. Review found greeting placement/scale drift, local signals too low, and uneven lower text positioning.
+3. `fidelity-03`: reduced optical noise, refined local padding, and used the new overlay to identify greeting and readout inset differences.
+4. `fidelity-04`: corrected greeting size/position, metric inset, Today row spacing, and local signal position. Populated 1024px inspection caught graphics overlapping multi-digit values.
+5. `fidelity-final`: compact desktop graphics moved above the values; reinforced the flow through the metric row. Repeated full/focused comparisons and interaction checks.
+
+### Required fidelity surfaces
+
+- Typography: same existing font system; greeting now 49px at the rendered scale, matching the target's hierarchy and two-line wrap. Mono labels, metric numerals, lower headings, icon sizing and action rows inspected in focused crops. Dynamic greeting/copy remains real.
+- Geometry: normalized metric widths approximately 143/153/143/136/192px, against target approximately 144/154/144/137/193px. Lower modules approximately 242/288/265px, 259px tall; their top is 356px below the content origin, matching the target lower-row position. These are image measurements, not original design-file coordinates.
+- Materials: stronger localized top reflections, translucent dark centers, quieter sides, and lower silver-blue pickup. The initial excessive blue wash was reduced. Rings use broken light segments rather than uniform bright outlines. No normal-renderer hard raster boundaries observed.
+- Graphics: existing density inputs, continuous WebGL material and isolated shared clock retained. Crest keeps darker folds, local activity/Today signal placement is closer, and the bottom composition now has a broader dominant arc with fewer competing strands. No new raster asset or per-card rendering loop was added.
+- Content: no invented history. Task/habit/progress instruments use actual fields. Momentum's decorative trace is aria-hidden and accompanied by “No trend history yet.” The sparse Recent Activity state intentionally differs from concept events in the target.
+
+### Residual P3 differences / intentional constraints
+
+- Liquid branch contours, particle distribution and individual glints are not identical to the static mockup. They remain a real-time approximation using the existing density source, not a pixel-identical reconstruction.
+- The target Today signal has sharper isolated points; current signal is softer. Lower reflections and font rasterization differ slightly.
+- Target concept data, sidebar and marketing/device framing are intentionally not copied. These are not evidence of implementation drift.
+
+### Verification
+
+`fidelity-final-checks.json`: six browser checks passed, no console/page errors. Tested local fixture task/habit updates, prompt prefill/chat contract, navigation, context recovery, reduced-motion fallback/restoration, 1024px layout and mobile preservation. Motion evidence: `fidelity-final-10s.png`. Geometry is recorded in `fidelity-final.json`. Live authenticated AI/database service execution is not covered by this fixture harness.
+
+The scoped desktop layout/material refinement passes visual QA with the above remaining approximation differences; this does not claim exact pixel parity or user approval of the canonical design.
+
+final result: passed
+
+---
+
 ## Stage 1J implementation — 2026-09-18 (current; supersedes reports below)
 
 Meaningful application changes are implemented. This is not a claim of pixel-perfect target parity.

@@ -997,8 +997,8 @@ html {
   .now-canonical .now-desktop__hero::before,
   .now-canonical .now-desktop__hero::after { display: none; }
   .now-canonical .now-desktop__context { top: 18px; left: 40px; }
-  .now-canonical .now-desktop__copy { top: 55px; left: 40px; width: 42%; min-width: 0; }
-  .now-canonical .now-desktop__copy h2 { font-size: 46px; font-weight: 550; line-height: 1.06; letter-spacing: -.045em; }
+  .now-canonical .now-desktop__copy { top: 50px; left: 50px; width: 42%; min-width: 0; }
+  .now-canonical .now-desktop__copy h2 { font-size: 49px; font-weight: 550; line-height: 1.06; letter-spacing: -.045em; }
   .now-canonical .now-desktop__copy p { margin-top: 19px; max-width: 415px; font-size: 12px; line-height: 1.65; color: #c2c8cf; }
   .now-canonical .now-desktop__dial { top: 65px; right: 38px; width: 174px; height: 174px; background: radial-gradient(circle,rgba(1,3,6,.8) 28%,rgba(4,8,13,.26) 60%,transparent 72%); backdrop-filter: blur(1px); }
   .now-canonical .now-desktop__dial .radial-instrument { width: 174px; }
@@ -1006,26 +1006,27 @@ html {
   .now-canonical .now-desktop__dial::before { border-top-color:rgba(191,219,241,.48); border-left-color:rgba(167,201,228,.23); box-shadow:inset 0 0 20px rgba(137,183,220,.06),0 0 16px rgba(175,210,241,.05); }
   .now-canonical .now-desktop__dial::after { width: 205px; height: 205px; top:50%; border-style: solid; opacity:.45; animation:none; }
   .now-canonical .now-desktop__dial > span { top: -31px; font-size: 7px; }
-  .now-canonical .now-metric-row { grid-template-columns: 1fr 1.07fr 1fr .95fr 1.34fr; gap: 24px; padding: 0 34px 24px 42px; border: 0; }
+  .now-canonical .now-metric-row { grid-template-columns: 1fr 1.07fr 1fr .95fr 1.34fr; gap: 24px; padding: 0 34px 29px 42px; border: 0; }
   .now-canonical .metric-instrument { height: 146px; padding: 16px; }
   .now-canonical .metric-instrument__head { font-size: 12px; color: #c0ccd8; }
-  .now-canonical .metric-instrument > strong { margin-top: 34px; font-size: 36px; font-weight: 350; color: #c3d9eb; }
-  .now-canonical .metric-instrument > small { font-family: var(--font-inter),sans-serif; font-size: 10px; text-transform: none; letter-spacing: 0; color:#99a7b5; margin-top: 9px; }
+  .now-canonical .metric-instrument > strong { margin-top: 39px; margin-left:10px; font-size: 36px; font-weight: 350; color: #c3d9eb; }
+  .now-canonical .metric-instrument > small { font-family: var(--font-inter),sans-serif; font-size: 10px; text-transform: none; letter-spacing: 0; color:#99a7b5; margin-top: 9px; margin-left:10px; }
   .now-canonical .target-instrument { border-radius: 12px; background: linear-gradient(150deg,rgba(136,165,194,.14),transparent 31%),linear-gradient(115deg,rgba(6,9,13,.5),rgba(0,2,4,.28) 64%,rgba(29,36,44,.22)); backdrop-filter:blur(3px) saturate(.75); -webkit-backdrop-filter:blur(3px) saturate(.75); box-shadow:inset 0 1px 0 rgba(222,234,246,.29),inset 1px 0 0 rgba(214,233,251,.14),inset -1px 0 0 rgba(191,208,225,.18),inset 0 -1px 0 rgba(181,202,223,.19),inset 0 -15px 35px rgba(0,0,0,.18),0 8px 26px rgba(0,0,0,.22); }
   .now-canonical .target-instrument::before { inset:0; animation:none; transform:none; background:radial-gradient(ellipse 100% 12% at 15% 0,rgba(191,213,236,.2),transparent 80%),radial-gradient(ellipse 8% 80% at 0 0,rgba(221,237,254,.12),transparent 80%); }
   .now-canonical .target-instrument::after { opacity:.25; }
+  .now-canonical .metric-instrument::before { background:radial-gradient(ellipse 110% 24% at 14% 0,rgba(172,202,238,.28),transparent 80%),radial-gradient(ellipse 8% 80% at 0 0,rgba(221,237,254,.16),transparent 80%); }
   .now-canonical .target-instrument { backdrop-filter:blur(1px) saturate(.8); -webkit-backdrop-filter:blur(1px) saturate(.8); }
   .now-canonical .now-lower-grid { grid-template-columns: .94fr 1.12fr 1.03fr; gap:31px; padding:0 34px 26px 42px; min-height:0; }
-  .now-canonical .now-lower-grid > .target-instrument { min-height:320px; padding:21px 20px; background:linear-gradient(145deg,rgba(30,35,42,.22),rgba(1,3,6,.3) 40%,rgba(15,22,31,.23)); }
-  .now-canonical .now-lower-grid > .target-instrument { background:linear-gradient(180deg,rgba(9,12,17,.16),rgba(2,4,7,.2) 55%,rgba(71,94,121,.16)); }
-  .now-canonical .now-lower-grid > .target-instrument::before { opacity:.38; }
-  .now-canonical .now-lower-grid h3 { font-size:19px; font-weight:450; margin-top:23px; }
+  .now-canonical .now-lower-grid > .target-instrument { min-height:320px; padding:15px 20px 21px; background:linear-gradient(145deg,rgba(30,35,42,.22),rgba(1,3,6,.3) 40%,rgba(15,22,31,.23)); }
+  .now-canonical .now-lower-grid > .target-instrument { background:radial-gradient(ellipse at 100% 100%,rgba(128,165,205,.15),transparent 65%),linear-gradient(180deg,rgba(9,12,17,.2),rgba(2,4,7,.16) 45%,rgba(71,94,121,.2)); box-shadow:inset 0 1px 0 rgba(217,228,240,.24),inset 1px 0 0 rgba(180,202,225,.12),inset -1px 0 0 rgba(162,191,219,.1),inset 0 -1px 0 rgba(208,226,245,.26),inset 0 -24px 45px rgba(126,163,207,.055),0 8px 26px rgba(0,0,0,.22); }
+  .now-canonical .now-lower-grid > .target-instrument::before { opacity:.65; }
+  .now-canonical .now-lower-grid h3 { font-size:19px; font-weight:450; margin-top:18px; }
   .now-canonical .target-meta { color:#a0acb8; font-size:8px; letter-spacing:.14em; }
-  .now-canonical .starter-actions { margin-top:16px; }
+  .now-canonical .starter-actions { margin-top:4px; }
   .now-canonical .starter-actions > a,.now-canonical .starter-actions > button { min-height:35px; border:0; gap:7px; }
   .now-canonical .starter-actions strong { font-size:12.5px; font-weight:400; color:#c5ced8; }
   .now-canonical .starter-actions small { display:none; }
-  .now-canonical .now-up-next { margin-top:19px; }
+  .now-canonical .now-up-next { margin-top:7px; }
   .now-canonical .now-intel-row { min-height:53px; border-color:rgba(192,211,231,.055); gap:11px; }
   .now-canonical .now-intel-row strong { font-weight:450; font-size:13.5px; line-height:1.4; }
   .now-canonical .now-intel-row small { font-size:9px; letter-spacing:0; text-transform:none; font-family:var(--font-inter),sans-serif; color:#a0adbb; }
@@ -1041,8 +1042,13 @@ html {
   .now-canonical .metric-instrument--momentum > strong { font-size:18px; margin-top:49px; letter-spacing:-.02em; }
   .now-canonical .metric-instrument--momentum > small { font-size:9px; }
   .now-canonical .metric-instrument--momentum > strong,.now-canonical .metric-instrument--momentum > small { position:relative; z-index:2; }
-  .now-canonical .metric-mini-radial { width:40px; height:40px; opacity:.55; right:12px; bottom:15px; }
+  .now-canonical .metric-mini-radial { width:40px; height:40px; opacity:.9; right:12px; bottom:15px; filter:drop-shadow(0 0 5px rgba(189,222,248,.3)); }
   .now-canonical .metric-mini-radial { top:61px; bottom:auto; }
+  .now-canonical .metric-mini-radial .radial-instrument__track { stroke:rgba(183,215,243,.48); stroke-dasharray:40 4 1 4; }
+  .now-canonical .now-desktop__dial .radial-instrument__track { stroke:rgba(181,211,240,.23); stroke-dasharray:78 2 30 3 70 2 83 2; filter:drop-shadow(0 0 6px rgba(184,221,253,.22)); }
+  .now-canonical .now-momentum-dormant { position:absolute; right:10px; top:64px; width:45%; height:44px; opacity:.52; }
+  .now-canonical .now-momentum-dormant svg { width:100%;height:100%;overflow:visible;fill:none;stroke:#a9c9e5;stroke-width:1;filter:drop-shadow(0 2px 4px rgba(174,215,252,.55)); }
+  .now-canonical .now-completion-path svg { stroke:rgba(188,217,243,.4); }
   .now-canonical .metric-bars { top:68px; bottom:auto; }
   .now-canonical .metric-rhythm { top:73px; bottom:auto; }
   .now-canonical .now-completion-path { top:62px; bottom:auto; width:42%; }
@@ -1055,6 +1061,15 @@ html {
   .os-atmosphere--now { opacity:0; }
 }
 .now-liquid-field { position:absolute; z-index:0; pointer-events:none; inset:0 -80px -190px; }
+/* Compact desktop instruments keep their live graphics above, not across,
+   multi-digit readouts. The mobile instrument layout is intentionally intact. */
+@media (min-width:1024px) and (max-width:1200px) {
+  .now-canonical .metric-mini-radial { top:43px;width:25px;height:25px; }
+  .now-canonical .metric-bars { top:44px;height:18px; }
+  .now-canonical .metric-rhythm { top:45px;gap:5px; }
+  .now-canonical .now-completion-path { top:42px;height:20px; }
+  .now-canonical .now-momentum-dormant { top:40px;height:25px; }
+}
 .now-completion-path { position:absolute; right:8px; bottom:11px; width:48%; height:32px; }
 .now-completion-path svg { width:100%;height:100%;fill:none;stroke:rgba(190,217,240,.2);stroke-width:1; }
 .now-completion-path path:last-child { stroke:#c9e3f6;filter:drop-shadow(0 0 3px #a8cae7);transition:stroke-dasharray .6s ease; }

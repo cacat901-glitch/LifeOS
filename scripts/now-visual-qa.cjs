@@ -53,7 +53,14 @@ let activeBrowser;
   const name = process.env.QA_CAPTURE || 'iteration';
   await page.screenshot({ path: path.join(output, name + '.png'), fullPage: true });
   const bounds = await page.locator('.now-desktop').boundingBox();
-  fs.writeFileSync(path.join(output, name + '.json'), JSON.stringify({ bounds, viewport: page.viewportSize(), errors }, null, 2));
+  const geometry = await page.locator('.now-desktop').evaluate(root => {
+    const origin = root.getBoundingClientRect();
+    return [...root.querySelectorAll('.now-desktop__hero, .metric-instrument, .now-lower-grid > .target-instrument')].map(element => {
+      const b = element.getBoundingClientRect();
+      return { className: element.className, x: b.x-origin.x, y:b.y-origin.y, width:b.width, height:b.height };
+    });
+  });
+  fs.writeFileSync(path.join(output, name + '.json'), JSON.stringify({ bounds, geometry, viewport: page.viewportSize(), errors }, null, 2));
   console.log(JSON.stringify({ bounds, renderer: await page.locator('.now-liquid-field').getAttribute('data-renderer'), errors }, null, 2));
   if (process.env.QA_MOTION) {
     await page.waitForTimeout(10000);

@@ -28,6 +28,14 @@ result.paste(reference, (0, 30))
 result.paste(candidate, (927, 30))
 output = Path(sys.argv[1]).with_name(Path(sys.argv[1]).stem + "-compare.png")
 result.save(output)
+# An equal-width transparent overlay makes alignment drift visible without
+# treating dynamic copy, missing user history, or moving liquid as exact pixels.
+overlay_height = max(reference.height, candidate.height)
+reference_layer = Image.new('RGB', (907, overlay_height), '#030508')
+candidate_layer = reference_layer.copy()
+reference_layer.paste(reference, (0, 0))
+candidate_layer.paste(candidate, (0, 0))
+Image.blend(reference_layer, candidate_layer, .5).save(output.with_name(output.stem + '-overlay.png'))
 for name, top, bottom in [('metrics', 210, 336), ('lower', 355, 635)]:
     focused = Image.new('RGB', (1834, bottom-top), '#111318')
     focused.paste(reference.crop((0, top, 907, bottom)), (0, 0))

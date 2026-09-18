@@ -36,8 +36,8 @@ float density(vec2 uv, float bottom) {
 vec3 liquidVolume(vec2 uv, float bottom, float strength) {
   if(uv.x<0. || uv.x>1. || uv.y<0. || uv.y>1.) return vec3(0.);
   vec2 flow=vec2(fbm(uv*vec2(6.,4.)+vec2(-time*.06,time*.04)),fbm(uv*vec2(8.,5.)+vec2(time*.04,-time*.055)))-.5;
-  vec2 q=uv+flow*vec2(.018,.045)+vec2(pointer.y*.001,pointer.y*.003);
-  float h=density(q,bottom)*.6+(density(q+vec2(.0015,.002),bottom)+density(q-vec2(.0015,.002),bottom))*.2;
+  vec2 q=uv+flow*vec2(.01,.026)+vec2(pointer.y*.001,pointer.y*.003);
+  float h=density(q,bottom)*.7+(density(q+vec2(.002,.003),bottom)+density(q-vec2(.002,.003),bottom))*.15;
   float dx=density(q+vec2(.004,0),bottom)-density(q-vec2(.004,0),bottom);
   float dy=density(q+vec2(0,.008),bottom)-density(q-vec2(0,.008),bottom);
   vec3 normal=normalize(vec3(-dx*3.,-dy*3.,.55));
@@ -50,7 +50,9 @@ vec3 liquidVolume(vec2 uv, float bottom, float strength) {
   // The sampled density establishes shape; animated optical terms establish
   // the surface. Separate depths refract differently rather than translating.
   float diffuse=(density(q+vec2(.012,.02),bottom)+density(q-vec2(.012,.02),bottom))*.5;
-  float volume=h*(.68+reflection*.32)+advected*.035+diffuse*.15;
+  // Separate translucent body from silver ridges: dark folds remain visible
+  // even when the crest catches the light.
+  float volume=pow(h,1.5)*(.6+reflection*.5)+advected*.02+diffuse*.09;
   float threads=caustic*pow(h,1.5)*(.035+.07*fresnel);
   float rim=clamp(length(vec2(dx,dy)),0.,.12)*.04;
   vec3 silver=mix(vec3(.63,.72,.85),vec3(.91,.96,1.),reflection*.6+caustic*.4);
@@ -58,12 +60,12 @@ vec3 liquidVolume(vec2 uv, float bottom, float strength) {
 }
 vec3 undercurrent(vec2 p) {
   float arch=.24+.8*pow(p.x-.43,2.);
-  float disturbance=(fbm(vec2(p.x*7.-time*.04,p.y*3.+time*.03))-.5)*.045;
+  float disturbance=(fbm(vec2(p.x*4.-time*.04,p.y*2.+time*.03))-.5)*.025;
   float d=p.y-arch+disturbance;
-  float width=.037+.065*gaussian(p.x-.47,.3);
-  float body=gaussian(d,width)*.14;
+  float width=.052+.085*gaussian(p.x-.47,.3);
+  float body=gaussian(d,width)*.26;
   float edges=gaussian(d+width*.45,.006)*.2+gaussian(d-width*.4,.004)*.24;
-  float interior=pow(.5+.5*sin(d*270.+fbm(vec2(p.x*5.-time*.1,d*12.))*13.),12.);
+  float interior=pow(.5+.5*sin(d*170.+fbm(vec2(p.x*4.-time*.1,d*8.))*7.),12.);
   float light=body+interior*gaussian(d,width)*.09+edges;
   return vec3(.73,.84,1.)*light*(1.-smoothstep(.75,1.2,abs(p.x-.45)*2.));
 }
@@ -119,29 +121,34 @@ void main() {
   vec3 light=vec3(0.);
   // Main crest and fork occupy the hero and enter the metric row.
   vec2 hero=vec2((p.x-.14)/.9,p.y*consoleSize.y/heroHeight);
-  light+=silk(hero,0.,.28);
-  vec2 heroVolume=vec2((p.x-.15)/.91,(p.y*consoleSize.y/(heroHeight+40.)+.02)/1.16);
-  light+=liquidVolume(heroVolume,0.,1.6);
+  light+=silk(hero,0.,.12);
+  vec2 heroVolume=vec2((p.x-.15)/.91,(p.y*consoleSize.y/(heroHeight+40.)+.075)/1.16);
+  heroVolume.y-=.11*gaussian(heroVolume.x-.32,.22);
+  light+=liquidVolume(heroVolume,0.,1.65);
   vec2 fork=hero; fork.y=1.42-hero.y; fork.x+=.03;
   light+=silk(fork,0.,.12)*smoothstep(.56,.85,hero.x);
   // A single continuous diagonal connecting the hero to the first instruments.
   vec2 bridge=vec2(1.-p.x,(p.y-.24)*5.);
   vec2 channel=vec2(.38+(p.x-(.28+.026*sin((p.y-.31)*30.)))*2.2,(p.y-.28)*3.4);
-  light+=liquidVolume(channel,2.,.9)*gaussian(p.x-.29,.052);
+  light+=liquidVolume(channel,2.,1.45)*gaussian(p.x-.29,.065);
   // Local material behind Recent Activity, and a restrained Today trace.
   vec2 activity=vec2((p.x-.63)*3.,(p.y-.65)*4.);
-  light+=liquidVolume(vec2((p.x-.64)*2.8,(p.y-.7)*3.3),2.,1.75)*smoothstep(.64,.7,p.x);
+  light+=liquidVolume(vec2((p.x-.64)*2.8,(p.y-.69)*3.3),2.,2.05)*smoothstep(.64,.7,p.x);
   vec2 today=vec2(p.x*3.4,(p.y-.82)*6.);
-  light+=liquidVolume(vec2(p.x*3.3,(p.y-.69)*3.4),3.,1.7)*(1.-smoothstep(.29,.36,p.x));
+  light+=liquidVolume(vec2((p.x-.025)*3.3,(p.y-.72)*3.4),3.,2.1)*(1.-smoothstep(.29,.36,p.x));
+  // Broad reflected light connects the lower optical instruments to the flow.
+  // It shares the material clock, and never encodes user data.
+  float pickup=gaussian(p.y-.94,.075)*( .76+.08*sin(time*.18+p.x*4.));
+  light+=vec3(.055,.078,.11)*pickup*(.45+.55*gaussian(p.x-.77,.4));
   // Decorative dormant signal, deliberately not a historical data chart.
-  light+=silk(vec2((p.x-.82)*6.,(p.y-.435)*28.),2.,.85)*smoothstep(.82,.85,p.x);
+  light+=silk(vec2((p.x-.82)*6.,(p.y-.435)*28.),2.,.28)*smoothstep(.82,.85,p.x);
   // Wide intersecting arcs beneath the console, not a scrolling background.
   vec2 lower=vec2((p.x+.13)/1.2,(p.y-.87)*4.4);
-  light+=liquidVolume(vec2((p.x+.16)/1.25,(p.y-.86)*2.8+.5*pow(p.x-.4,2.)),1.,.62);
+  light+=liquidVolume(vec2((p.x+.16)/1.25,(p.y-.86)*2.8+.5*pow(p.x-.4,2.)),1.,.32);
   light+=undercurrent(vec2(p.x,(p.y-.96)*4.4));
-  light+=silk(lower,1.,.3);
+  light+=silk(lower,1.,.14);
   vec2 crossing=vec2(lower.x,1.1-lower.y);
-  light+=silk(crossing,2.,.15);
+  light+=silk(crossing,2.,.07);
   // Filmic compression preserves internal detail at the silver crest.
   light=1.-exp(-light*1.5);
   vec2 screen=pixel/resolution;

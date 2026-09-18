@@ -221,7 +221,7 @@ function MetricInstrument({ kind = "progress", label, value, detail, progress = 
       {kind === "tasks" && <div className="metric-bars" role="meter" aria-label="Task completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ height: '100%', '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
       {kind === "habits" && <div className="metric-rhythm" role="meter" aria-label="Habit completion today, not a weekly history" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
       {kind === "progress" && <div className="now-completion-path" role="meter" aria-label="Overall completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}><svg viewBox="0 0 120 36" aria-hidden="true"><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100"/><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100" style={{ strokeDasharray: `${amount} 100` }}/></svg></div>}
-      {kind === "momentum" && <div className="now-momentum-dormant" aria-hidden="true" />}
+      {kind === "momentum" && <div className="now-momentum-dormant" aria-hidden="true"><svg viewBox="0 0 110 44"><path d="M2 30 H14 Q18 30 18 25 V21 Q18 17 22 17 H27 Q31 17 31 21 V27 Q31 31 35 31 H43 Q47 31 47 27 V25 Q47 21 51 21 H60 Q64 21 64 25 V28 Q64 32 68 32 H77 Q81 32 81 28 V21 Q81 17 85 17 H92 Q96 17 96 21 V25 Q96 29 100 29 H108" /></svg></div>}
     </article>
   );
 }
