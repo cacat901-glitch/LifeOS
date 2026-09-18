@@ -53,6 +53,9 @@ vec3 liquidVolume(vec2 uv, float bottom, float strength) {
   // Separate translucent body from silver ridges: dark folds remain visible
   // even when the crest catches the light.
   float volume=pow(h,1.5)*(.6+reflection*.5)+advected*.02+diffuse*.09;
+  // Stage 1K precision enhancement is restricted to the Today signal map.
+  // Hero (0), bottom flow (1), and activity material (2) are unchanged.
+  if(bottom>2.5) volume+=pow(density(q,bottom),2.)*.27;
   float threads=caustic*pow(h,1.5)*(.035+.07*fresnel);
   float rim=clamp(length(vec2(dx,dy)),0.,.12)*.04;
   vec3 silver=mix(vec3(.63,.72,.85),vec3(.91,.96,1.),reflection*.6+caustic*.4);

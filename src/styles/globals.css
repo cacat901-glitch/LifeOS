@@ -1060,6 +1060,82 @@ html {
   .now-canonical .instrument-dormant { opacity:.25; }
   .os-atmosphere--now { opacity:0; }
 }
+/* Canonical optical material: opt-in, reusable beyond Now without propagating
+   this pass into other Spaces. Light presets describe local illumination. */
+.optical-surface {
+  --optical-light-x: 14%;
+  --optical-light-y: 0%;
+  --optical-pickup: .16;
+  --optical-edge: .38;
+  --optical-diffusion: 1.3px;
+  --optical-shadow: .22;
+  --optical-response: 180ms;
+}
+.optical-surface[data-optical-light="stream"] { --optical-light-x:85%;--optical-light-y:100%;--optical-pickup:.18;--optical-edge:.27;--optical-diffusion:.8px; }
+.optical-surface[data-optical-light="cadence"] { --optical-light-x:12%;--optical-light-y:85%;--optical-pickup:.12;--optical-edge:.28;--optical-diffusion:1px; }
+.optical-surface[data-optical-light="quiet"] { --optical-light-x:70%;--optical-light-y:0%;--optical-pickup:.065;--optical-edge:.2;--optical-diffusion:1.8px; }
+.optical-surface[data-optical-light="signal"] { --optical-light-x:100%;--optical-light-y:65%;--optical-pickup:.14;--optical-edge:.32; }
+.optical-surface,
+.now-canonical .target-instrument.optical-surface {
+  position:relative;
+  border:0;
+  border-radius:12px;
+  background:radial-gradient(ellipse at var(--optical-light-x) var(--optical-light-y),rgba(154,183,215,var(--optical-pickup)),transparent 65%),linear-gradient(120deg,rgba(5,8,12,.38),rgba(1,3,6,.18) 62%,rgba(5,8,12,.34));
+  backdrop-filter:blur(var(--optical-diffusion)) saturate(.78);
+  -webkit-backdrop-filter:blur(var(--optical-diffusion)) saturate(.78);
+  box-shadow:inset 0 1px 0 rgba(216,233,249,.1),inset 0 -1px 0 rgba(173,196,220,.07),inset 0 -16px 28px rgba(0,1,3,var(--optical-shadow)),0 9px 24px rgba(0,0,0,.15);
+}
+.optical-surface::before,
+.now-canonical .target-instrument.optical-surface::before {
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:inherit;opacity:1;animation:none;transform:none;
+  background:radial-gradient(ellipse 70% 2.5% at var(--optical-light-x) 0,rgba(219,233,249,var(--optical-edge)),transparent 80%),linear-gradient(180deg,rgba(215,231,249,.22),transparent 38% 72%,rgba(194,216,239,.09)) left / 1px 100% no-repeat,linear-gradient(180deg,transparent 18% 60%,rgba(191,218,245,.16)) right / 1px 100% no-repeat,linear-gradient(90deg,transparent 8%,rgba(176,207,238,.18) 72%,transparent) bottom / 100% 1px no-repeat;
+}
+.optical-surface::after,
+.now-canonical .target-instrument.optical-surface::after {
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:0;opacity:1;
+  background:radial-gradient(ellipse 28% 40% at var(--optical-light-x) var(--optical-light-y),rgba(198,222,246,.07),transparent 90%);
+}
+@media (min-width:1024px) {
+  .now-canonical .metric-instrument.optical-surface > strong { position:relative;z-index:2;font-variant-numeric:tabular-nums; }
+  .now-canonical .optical-surface .metric-instrument__head { position:relative;z-index:2; }
+  .now-canonical .optical-surface .metric-instrument__head svg { width:10px;height:10px;opacity:.7; }
+  .now-canonical .optical-surface .metric-mini-radial { top:53px;right:12px;width:52px;height:52px;min-width:0; }
+  .score-calibration__ticks { position:absolute;right:8px;top:49px;width:60px;height:60px;border:1px solid rgba(192,216,242,.14);border-left-color:transparent;border-bottom-color:rgba(203,225,248,.3);border-radius:50%;box-shadow:inset 0 0 9px rgba(182,213,244,.06); }
+  .now-canonical .optical-surface .metric-mini-radial .radial-instrument__track { stroke-dasharray:18 4 2 4;stroke-width:1;stroke:rgba(197,219,244,.56); }
+  .now-canonical .optical-surface .metric-bars { top:63px;right:12px;width:65px;height:34px;gap:4px;border-bottom:1px solid rgba(193,214,237,.21);padding-bottom:3px; }
+  .now-canonical .optical-surface .metric-bars i { flex:1;width:auto;background:linear-gradient(to top,#d2e5f8 var(--fill),rgba(188,209,231,.24) var(--fill));box-shadow:inset 0 1px 0 rgba(221,235,249,.32); }
+  .instrument-zero { position:absolute;bottom:-11px;left:0;color:rgba(179,201,222,.55);font:6px var(--font-mono),monospace; }
+  .now-canonical .optical-surface .metric-rhythm { width:65px;top:63px;right:12px;gap:6px;grid-template-columns:repeat(5,1fr); }
+  .now-canonical .optical-surface .metric-rhythm i { width:5px;height:5px;border-radius:2px;border-color:rgba(184,210,236,.35);box-shadow:0 0 4px rgba(161,199,239,.07); }
+  .now-canonical .optical-surface .now-completion-path { top:40px;right:9px;width:44%;height:25px; }
+  .trajectory-anchors { fill:#9ebbd6;stroke:none;opacity:.6; }
+  .now-canonical .optical-surface .now-completion-path path:first-child { stroke:rgba(194,217,242,.44); }
+  .now-canonical .optical-surface .now-momentum-dormant { top:59px;right:9px;width:47%;height:49px;opacity:.7; }
+  .now-momentum-dormant .signal-depth { fill:rgba(171,204,239,.07);stroke:none; }
+  .now-canonical .optical-surface .starter-actions > :not(:first-child) { border-top:1px solid rgba(172,199,225,.035); }
+  .now-canonical .optical-surface .focus-list__check { width:12px;height:12px;border-color:rgba(199,219,242,.42);background:linear-gradient(145deg,rgba(201,220,242,.12),rgba(4,7,11,.35));box-shadow:inset 0 1px 0 rgba(224,235,248,.1); }
+  .now-canonical .optical-surface .now-panel-link { min-height:24px;padding:0 8px;border-radius:4px;background:rgba(5,9,15,.35);border-top:1px solid rgba(193,216,241,.12); }
+  .now-canonical .optical-surface .now-row-icon { border:1px solid rgba(202,223,246,.13);background:linear-gradient(135deg,rgba(190,211,235,.14),rgba(23,30,39,.18));box-shadow:inset 0 1px 0 rgba(218,234,251,.13); }
+  .now-canonical .optical-surface .now-intel-row > svg { padding:5px;border-color:rgba(185,210,237,.16);background:rgba(163,190,220,.045); }
+  .now-canonical .optical-surface .now-intel-row { border-color:rgba(192,213,237,.075); }
+  .now-canonical .optical-surface .now-intel-row:hover,.now-canonical .optical-surface .starter-actions > :hover { background:linear-gradient(90deg,rgba(193,216,243,.045),transparent); }
+  .now-canonical .optical-surface .now-intel-row,.now-canonical .optical-surface .starter-actions > * { transition:background var(--optical-response) ease; }
+  .now-canonical .optical-surface .now-prompts-footer { background:linear-gradient(180deg,rgba(174,203,235,.025),rgba(174,203,235,.07));border-top-color:rgba(187,215,241,.13); }
+  .now-canonical .optical-surface .activity-list > div { border-color:rgba(177,206,235,.07); }
+  .now-canonical .optical-surface .activity-dot { width:7px;height:7px;box-shadow:0 0 0 4px rgba(170,204,234,.035),0 0 10px rgba(187,220,246,.13); }
+  .activity-sources { display:flex;gap:9px;margin-top:14px; }
+  .activity-sources a { display:flex;align-items:center;gap:5px;padding:5px 6px;border-top:1px solid rgba(197,216,239,.13);border-radius:4px;background:rgba(163,188,217,.035);font-size:9px;color:#97a9bb;transition:color 180ms ease,background 180ms ease; }
+  .activity-sources a:hover { color:#dceafb;background:rgba(163,188,217,.1); }
+  .activity-sources svg { width:11px;height:11px;stroke-width:1.4; }
+}
+@media (min-width:1024px) and (max-width:1200px) {
+  .now-canonical .optical-surface .metric-mini-radial { top:40px;width:27px;height:27px; }
+  .score-calibration__ticks { top:37px;right:9px;width:33px;height:33px; }
+  .now-canonical .optical-surface .metric-bars { top:42px;height:20px; }
+  .now-canonical .optical-surface .metric-rhythm { top:40px;gap:4px;width:54px; }
+  .now-canonical .optical-surface .now-completion-path { top:40px;height:23px; }
+  .now-canonical .optical-surface .now-momentum-dormant { top:38px;height:26px; }
+}
 .now-liquid-field { position:absolute; z-index:0; pointer-events:none; inset:0 -80px -190px; }
 /* Compact desktop instruments keep their live graphics above, not across,
    multi-digit readouts. The mobile instrument layout is intentionally intact. */

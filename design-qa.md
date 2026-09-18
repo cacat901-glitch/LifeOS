@@ -175,3 +175,59 @@ Both in-app browser control and the native computer-use JavaScript runtime fail 
 4. Repeat rendered full-view and focused comparisons; then validate interactions, TypeScript, and build.
 
 final result: blocked
+
+## Stage 1K — desktop Now material lock, 2026-09-18
+
+This stage supersedes the historical blocked review above. The user's current
+liquid identity, not the mockup liquid, is the source of truth. Scope is desktop
+Now only; mobile and secondary Spaces are not being redesigned.
+
+### Visual iterations
+
+- Captured `artifacts/visual-qa/stage1k-baseline.png` before editing. Console
+  remains 1120 x 786 at the 1672px desktop viewport. Hero, greeting, large score,
+  navigation, metric row and lower-module geometry are unchanged.
+- Compared full and focused views with the original target recovered from the
+  existing golden comparison. Compared liquid separately with the baseline.
+- Replaced uniform gray panel pickup with five opt-in optical-light presets:
+  localized reflections, smoked diffusion, dark interiors and partial edges.
+- First iteration exposed an inherited radial minimum width and overbroad top
+  reflections. Corrected the concentric alignment and narrowed edge pickup.
+- Refined score calibration, task proportion bars, dormant habit grid, progress
+  anchors and inactive momentum depth. These are current-state instruments,
+  not fabricated histories. Momentum explicitly says no trend history exists.
+- Refined Today controls, Up Next rows/footer and Recent Activity architecture.
+  Empty activity includes real destination links, not fictional events.
+- Local Today signal received a small sharp-ridge contribution. Hero and bottom
+  shader paths, geometry, timing and rendering architecture are unchanged.
+- Populated-state review caught progress text/trace proximity; moved the trace
+  above the numerical readout. Compact desktop already uses that separation.
+
+### Reusable system
+
+`OpticalSurface` accepts `upper`, `stream`, `cadence`, `quiet`, or `signal`
+lighting. CSS variables expose pickup position, intensity, edge strength,
+diffusion, shadow and response timing. Lighting is art-directed; it is not a
+physical light simulation. Existing liquid remains visible through the material.
+`MetricInstrument` takes actual values and bounded completion percentages;
+`optical` is explicit opt-in. Other Spaces can adopt these later, with no current
+global reskin. No additional animation loops or graphics contexts were added.
+
+### Verification and boundaries
+
+- Reviewed empty and populated desktop screenshots, 1024px desktop, and mobile.
+- Ten-second capture pair verifies ongoing procedural movement; reduced-motion
+  fallback and WebGL context-loss recovery pass.
+- QA suite passes suggestion prefill/chat request-response contract, task and
+  habit PATCH contracts with optimistic state, navigation, rendering unmount,
+  and absence of horizontal overflow. Browser errors: none.
+- These interaction checks use local intercepted fixtures. They do not claim a
+  live AI response or a write to the user's production database.
+- TypeScript and production build pass. Existing metadataBase and dynamic
+  export-route build diagnostics remain outside this visual pass.
+- Design assessment: the remaining target differences are intentional (canonical
+  liquid, top navigation, true account data). Desktop Now is the proposed locked
+  material baseline, not a claim of pixel identity with the old mockup.
+
+Evidence: `stage1k-02-compare.png`, `stage1k-02-compare-canonical.png`, and
+`stage1k-final*` under `artifacts/visual-qa`. Generated captures stay local.

@@ -42,3 +42,13 @@ for name, top, bottom in [('metrics', 210, 336), ('lower', 355, 635)]:
     focused.paste(candidate.crop((0, top, 907, bottom)), (927, 0))
     focused.save(output.with_name(output.stem + '-' + name + '.png'))
 print(output)
+if len(sys.argv) > 3:
+    # Stage 1K: current liquid is canonical. Compare the complete scene to the
+    # saved pre-pass implementation separately from target panel comparisons.
+    baseline = Image.open(sys.argv[3]).convert('RGB')
+    pair = Image.new('RGB', (current.width + baseline.width, max(current.height, baseline.height) + 24), '#080b10')
+    ImageDraw.Draw(pair).text((8, 5), 'CANONICAL LIQUID / PRE-PASS', fill='white')
+    ImageDraw.Draw(pair).text((baseline.width + 8, 5), 'REFINED INSTRUMENTS / SAME LIQUID', fill='white')
+    pair.paste(baseline, (0, 24))
+    pair.paste(current, (baseline.width, 24))
+    pair.save(output.with_name(output.stem + '-canonical.png'))

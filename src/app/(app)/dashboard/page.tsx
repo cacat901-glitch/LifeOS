@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { NovusCore } from "@/components/novus/novus-core";
 import { NowLiquidField } from "@/components/novus/now-liquid-field";
 import { RadialInstrument } from "@/components/visual-system/instruments";
+import { MetricInstrument } from "@/components/visual-system/metric-instrument";
+import { OpticalSurface, type OpticalLight } from "@/components/visual-system/optical-surface";
 
 interface HabitItem { id: string; name: string; isCompleted: boolean; streak: number }
 interface TaskItem { id: string; title: string; priority: string; status: string; dueDate?: string | null }
@@ -144,21 +146,21 @@ export default function NowPage() {
         </div>
 
         <div className="now-metric-row">
-          <MetricInstrument kind="score" label="Life score" value={data.lifeScore.total} detail={`Grade ${data.lifeScore.grade}`} progress={data.lifeScore.total} />
-          <MetricInstrument kind="tasks" label="Tasks" value={openTasks.length} detail={`${data.tasks.done} of ${data.tasks.total} completed`} progress={taskProgress} />
-          <MetricInstrument kind="habits" label="Habits" value={data.habits.total} detail={`${data.habits.bestStreak} day best streak`} progress={habitProgress} />
-          <MetricInstrument kind="progress" label="Progress" value={`${overallProgress}%`} detail="Today" progress={overallProgress} />
-          <MetricInstrument kind="momentum" label="Momentum" value={momentumLabel(data.lifeScore.total)} detail="No trend history yet" progress={data.lifeScore.total} />
+          <MetricInstrument optical kind="score" label="Life score" value={data.lifeScore.total} detail={`Grade ${data.lifeScore.grade}`} progress={data.lifeScore.total} />
+          <MetricInstrument optical kind="tasks" label="Tasks" value={openTasks.length} detail={`${data.tasks.done} of ${data.tasks.total} completed`} progress={taskProgress} />
+          <MetricInstrument optical kind="habits" label="Habits" value={data.habits.total} detail={`${data.habits.bestStreak} day best streak`} progress={habitProgress} />
+          <MetricInstrument optical kind="progress" label="Progress" value={`${overallProgress}%`} detail="Today" progress={overallProgress} />
+          <MetricInstrument optical kind="momentum" label="Momentum" value={momentumLabel(data.lifeScore.total)} detail="No trend history yet" progress={data.lifeScore.total} />
         </div>
 
         <div className="now-lower-grid">
-          <InstrumentSection className="now-today" label="Today">
+          <InstrumentSection light="cadence" className="now-today" label="Today">
             <h3>Make sense of now.</h3>
             {focusItems.length ? <FocusList items={focusItems} /> : <StarterActions onAsk={() => setNovusOpen(true)} />}
             <button onClick={() => setNovusOpen(true)} className="now-panel-link">Ask Novus <ArrowRight /></button>
           </InstrumentSection>
 
-          <InstrumentSection label="Up next">
+          <InstrumentSection light="quiet" label="Up next">
             <div className="now-up-next">
               {upNextItems.map((item, index) => (
                 <button key={item.id} onClick={item.onClick} className="now-intel-row">
@@ -171,7 +173,7 @@ export default function NowPage() {
             <button onClick={() => setNovusOpen(true)} className="now-prompts-footer">View all prompts <ArrowRight /></button>
           </InstrumentSection>
 
-          <InstrumentSection label="Recent activity" className="now-activity">
+          <InstrumentSection light="stream" label="Recent activity" className="now-activity">
             <ActivityList data={data} />
           </InstrumentSection>
         </div>
@@ -203,27 +205,9 @@ export default function NowPage() {
   );
 }
 
-function InstrumentSection({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-  return <section className={cn("target-instrument", className)}><MetaLabel>{label}</MetaLabel>{children}</section>;
-}
-
-type MetricKind = "score" | "tasks" | "habits" | "progress" | "momentum";
-
-function MetricInstrument({ kind = "progress", label, value, detail, progress = 0 }: { kind?: MetricKind; label: string; value: number | string; detail: string; progress?: number }) {
-  const amount = Math.min(100, Math.max(0, progress));
-  const dormant = amount === 0;
-  return (
-    <article className={cn("target-instrument metric-instrument", `metric-instrument--${kind}`, dormant && "is-dormant")}>
-      <div className="metric-instrument__head"><span>{label}</span><ArrowRight /></div>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-      {kind === "score" && <RadialInstrument value={progress} label="" className="metric-mini-radial" />}
-      {kind === "tasks" && <div className="metric-bars" role="meter" aria-label="Task completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ height: '100%', '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
-      {kind === "habits" && <div className="metric-rhythm" role="meter" aria-label="Habit completion today, not a weekly history" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
-      {kind === "progress" && <div className="now-completion-path" role="meter" aria-label="Overall completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}><svg viewBox="0 0 120 36" aria-hidden="true"><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100"/><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100" style={{ strokeDasharray: `${amount} 100` }}/></svg></div>}
-      {kind === "momentum" && <div className="now-momentum-dormant" aria-hidden="true"><svg viewBox="0 0 110 44"><path d="M2 30 H14 Q18 30 18 25 V21 Q18 17 22 17 H27 Q31 17 31 21 V27 Q31 31 35 31 H43 Q47 31 47 27 V25 Q47 21 51 21 H60 Q64 21 64 25 V28 Q64 32 68 32 H77 Q81 32 81 28 V21 Q81 17 85 17 H92 Q96 17 96 21 V25 Q96 29 100 29 H108" /></svg></div>}
-    </article>
-  );
+function InstrumentSection({ label, children, className, light }: { label: string; children: React.ReactNode; className?: string; light?: OpticalLight }) {
+  const content = <><MetaLabel>{label}</MetaLabel>{children}</>;
+  return light ? <OpticalSurface light={light} className={className}>{content}</OpticalSurface> : <section className={cn("target-instrument", className)}>{content}</section>;
 }
 
 function StarterActions({ onAsk }: { onAsk: () => void }) {
@@ -252,7 +236,7 @@ function ActivityList({ data }: { data: DashboardData }) {
     if (data.recentJournal?.title) activity.push({ id: "journal", title: data.recentJournal.title, meta: "Recent journal entry" });
     return activity.slice(0, 4);
   }, [data]);
-  if (!items.length) return <div className="activity-dormant"><div className="activity-system-row"><Circle className="activity-system-icon" /><span><strong>Your activity timeline is ready</strong><small>Awaiting your first completed action</small></span></div><EmptyInstrument>Tasks, habits, journal entries, and workouts will appear here.</EmptyInstrument></div>;
+  if (!items.length) return <div className="activity-dormant"><div className="activity-system-row"><Circle className="activity-system-icon" /><span><strong>Your activity timeline is ready</strong><small>Awaiting your first completed action</small></span></div><nav className="activity-sources" aria-label="Activity sources"><a href="/tasks"><ListChecks />Tasks</a><a href="/habits"><Flame />Habits</a><a href="/journal"><NotebookPen />Journal</a></nav><EmptyInstrument>Completed actions will appear here as you go.</EmptyInstrument></div>;
   return <div className="activity-list">{items.map((item) => <div key={item.id}><span className="activity-dot" /><span><strong>{item.title}</strong><small>{item.meta}</small></span></div>)}</div>;
 }
 
