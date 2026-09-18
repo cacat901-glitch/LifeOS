@@ -6,6 +6,7 @@
 
 # Testing
 /coverage
+/artifacts/visual-qa/
 
 # Next.js
 /.next/

@@ -22,6 +22,9 @@ interface AppState {
   novusOpen: boolean;
   setNovusOpen: (open: boolean) => void;
   toggleNovus: () => void;
+  novusDraft: string | null;
+  openNovusWithPrompt: (prompt: string) => void;
+  clearNovusDraft: () => void;
 
   // Notifications
   notifications: Notification[];
@@ -60,6 +63,9 @@ export const useAppStore = create<AppState>((set) => ({
   novusOpen: false,
   setNovusOpen: (open) => set({ novusOpen: open }),
   toggleNovus: () => set((state) => ({ novusOpen: !state.novusOpen })),
+  novusDraft: null,
+  openNovusWithPrompt: (prompt) => set({ novusOpen: true, novusDraft: prompt }),
+  clearNovusDraft: () => set({ novusDraft: null }),
 
   // Notifications
   notifications: [],

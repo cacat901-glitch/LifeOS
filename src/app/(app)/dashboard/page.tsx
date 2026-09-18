@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Circle, RefreshCw } from "lucide-react";
+import { ArrowRight, Check, Circle, RefreshCw, ListChecks, Flame, Target, NotebookPen } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
 import { NovusCore } from "@/components/novus/novus-core";
-import { RadialInstrument, SignalTrace } from "@/components/visual-system/instruments";
+import { NowLiquidField } from "@/components/novus/now-liquid-field";
+import { RadialInstrument } from "@/components/visual-system/instruments";
 
 interface HabitItem { id: string; name: string; isCompleted: boolean; streak: number }
 interface TaskItem { id: string; title: string; priority: string; status: string; dueDate?: string | null }
@@ -29,7 +30,7 @@ type FocusItem = { id: string; title: string; meta: string; checked: boolean; on
 const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function NowPage() {
-  const { setNovusOpen } = useAppStore();
+  const { setNovusOpen, openNovusWithPrompt } = useAppStore();
   const reduceMotion = useReducedMotion();
   const [data, setData] = useState<DashboardData | null>(null);
   const [briefing, setBriefing] = useState("");
@@ -110,30 +111,23 @@ export default function NowPage() {
     data.habits.total ? habitProgress : null,
     data.goals.length ? goalProgress : null,
   ]);
-  const scoreTrace = [
-    data.lifeScore.breakdown.habits ?? 0,
-    data.lifeScore.breakdown.tasks ?? 0,
-    data.lifeScore.breakdown.goals ?? 0,
-    data.lifeScore.breakdown.mood ?? 0,
-    data.lifeScore.breakdown.workout ?? 0,
-  ];
   const coreState = focusItems.length ? "attention" : (data.habits.completed || data.tasks.done) ? "positive" : "idle";
   const summary = briefing || buildCurrentSummary(data);
   const upNextItems = insights.length
-    ? insights.slice(0, 4).map((insight, index) => ({ id: `${insight.title}-${index}`, title: insight.title, meta: insight.action || insight.message, onClick: () => setNovusOpen(true) }))
+    ? insights.slice(0, 4).map((insight, index) => ({ id: `${insight.title}-${index}`, title: insight.title, meta: insight.action || insight.message, onClick: () => openNovusWithPrompt(insight.action || insight.title) }))
     : focusItems.length
       ? focusItems.slice(0, 4).map((item) => ({ id: item.id, title: item.title, meta: item.meta, onClick: item.onToggle }))
       : [
-          { id: "priority-prompt", title: "Choose today's first priority", meta: "Novus suggestion", onClick: () => setNovusOpen(true) },
-          { id: "habit-prompt", title: "Design a habit that will stick", meta: "Novus suggestion", onClick: () => setNovusOpen(true) },
-          { id: "goal-prompt", title: "Shape a realistic first goal", meta: "Novus suggestion", onClick: () => setNovusOpen(true) },
-          { id: "review-prompt", title: "Plan a simple evening review", meta: "Novus suggestion", onClick: () => setNovusOpen(true) },
+          { id: "priority-prompt", title: "Choose today's first priority", meta: "Novus", onClick: () => openNovusWithPrompt("Help me choose today's first priority.") },
+          { id: "habit-prompt", title: "Design a habit that will stick", meta: "Novus", onClick: () => openNovusWithPrompt("Help me design a habit that will stick.") },
+          { id: "goal-prompt", title: "Shape a realistic first goal", meta: "Novus", onClick: () => openNovusWithPrompt("Help me shape a realistic first goal.") },
+          { id: "review-prompt", title: "Plan a simple evening review", meta: "Novus", onClick: () => openNovusWithPrompt("Help me plan a simple evening review.") },
         ];
 
   return (
     <motion.div initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.32 }} className="now-canonical">
       <section className="now-desktop" aria-label="Now overview">
-        <NovusCore state={coreState} variant="console-field" className="now-desktop__environment" />
+        <NowLiquidField />
         <div className="now-desktop__hero">
           <div className="now-desktop__context">
             <MetaLabel>{timeContext(clock)}</MetaLabel>
@@ -143,7 +137,6 @@ export default function NowPage() {
             <h2>{greeting(clock)},<br />{firstName}.</h2>
             <p>{summary}</p>
           </div>
-          <NovusCore state={coreState} variant="desktop-hero" className="now-desktop__liquid" />
           <div className="now-desktop__dial">
             <RadialInstrument value={data.lifeScore.total} label="Life score" />
             <span>Grade {data.lifeScore.grade}</span>
@@ -151,18 +144,17 @@ export default function NowPage() {
         </div>
 
         <div className="now-metric-row">
-          <MetricInstrument kind="score" label="Life score" value={data.lifeScore.total} detail={`Grade ${data.lifeScore.grade}`} progress={data.lifeScore.total} values={scoreTrace} />
-          <MetricInstrument kind="tasks" label="Tasks" value={openTasks.length} detail={`${data.tasks.done} completed`} bars={Math.min(7, data.tasks.total)} activeBars={Math.min(7, data.tasks.done)} />
+          <MetricInstrument kind="score" label="Life score" value={data.lifeScore.total} detail={`Grade ${data.lifeScore.grade}`} progress={data.lifeScore.total} />
+          <MetricInstrument kind="tasks" label="Tasks" value={openTasks.length} detail={`${data.tasks.done} of ${data.tasks.total} completed`} progress={taskProgress} />
           <MetricInstrument kind="habits" label="Habits" value={data.habits.total} detail={`${data.habits.bestStreak} day best streak`} progress={habitProgress} />
           <MetricInstrument kind="progress" label="Progress" value={`${overallProgress}%`} detail="Today" progress={overallProgress} />
-          <MetricInstrument kind="momentum" label="Momentum" value={momentumLabel(data.lifeScore.total)} detail={`${data.lifeScore.total}/100`} values={[taskProgress, habitProgress, goalProgress, data.mood?.score ? data.mood.score * 10 : 0]} />
+          <MetricInstrument kind="momentum" label="Momentum" value={momentumLabel(data.lifeScore.total)} detail="No trend history yet" progress={data.lifeScore.total} />
         </div>
 
         <div className="now-lower-grid">
           <InstrumentSection className="now-today" label="Today">
             <h3>Make sense of now.</h3>
             {focusItems.length ? <FocusList items={focusItems} /> : <StarterActions onAsk={() => setNovusOpen(true)} />}
-            <PanelMaterial variant="today" />
             <button onClick={() => setNovusOpen(true)} className="now-panel-link">Ask Novus <ArrowRight /></button>
           </InstrumentSection>
 
@@ -170,17 +162,17 @@ export default function NowPage() {
             <div className="now-up-next">
               {upNextItems.map((item, index) => (
                 <button key={item.id} onClick={item.onClick} className="now-intel-row">
-                  <span className="now-row-icon">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="now-row-icon" aria-hidden="true">{index === 0 ? <ListChecks /> : index === 1 ? <Flame /> : index === 2 ? <Target /> : <NotebookPen />}</span>
                   <span><strong>{item.title}</strong><small>{item.meta}</small></span>
                   <ArrowRight />
                 </button>
               ))}
             </div>
+            <button onClick={() => setNovusOpen(true)} className="now-prompts-footer">View all prompts <ArrowRight /></button>
           </InstrumentSection>
 
           <InstrumentSection label="Recent activity" className="now-activity">
             <ActivityList data={data} />
-            <PanelMaterial variant="activity" />
           </InstrumentSection>
         </div>
       </section>
@@ -217,19 +209,19 @@ function InstrumentSection({ label, children, className }: { label: string; chil
 
 type MetricKind = "score" | "tasks" | "habits" | "progress" | "momentum";
 
-function MetricInstrument({ kind = "progress", label, value, detail, values, progress = 0, bars, activeBars }: { kind?: MetricKind; label: string; value: number | string; detail: string; values?: number[]; progress?: number; bars?: number; activeBars?: number }) {
-  const dormant = values ? values.every((entry) => entry === 0) : bars === 0 || progress === 0;
-  const rhythmActive = Math.round((Math.min(100, Math.max(0, progress)) / 100) * 7);
+function MetricInstrument({ kind = "progress", label, value, detail, progress = 0 }: { kind?: MetricKind; label: string; value: number | string; detail: string; progress?: number }) {
+  const amount = Math.min(100, Math.max(0, progress));
+  const dormant = amount === 0;
   return (
     <article className={cn("target-instrument metric-instrument", `metric-instrument--${kind}`, dormant && "is-dormant")}>
       <div className="metric-instrument__head"><span>{label}</span><ArrowRight /></div>
       <strong>{value}</strong>
       <small>{detail}</small>
       {kind === "score" && <RadialInstrument value={progress} label="" className="metric-mini-radial" />}
-      {kind === "tasks" && <div className="metric-bars">{Array.from({ length: Math.max(7, bars || 0) }, (_, index) => <i key={index} className={index < (activeBars || 0) ? "is-active" : ""} style={{ height: `${32 + ((index * 17) % 58)}%` }} />)}</div>}
-      {kind === "habits" && <div className="metric-rhythm" aria-label={`${rhythmActive} of 7 rhythm markers active`}>{Array.from({ length: 7 }, (_, index) => <i key={index} className={index < rhythmActive ? "is-active" : ""} />)}</div>}
-      {kind === "progress" && <SignalTrace values={[0, progress * .18, progress * .43, progress * .67, progress]} label="Completion trajectory" />}
-      {kind === "momentum" && <SignalTrace values={values || [0, 0, 0, 0]} label={label} />}
+      {kind === "tasks" && <div className="metric-bars" role="meter" aria-label="Task completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ height: '100%', '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
+      {kind === "habits" && <div className="metric-rhythm" role="meter" aria-label="Habit completion today, not a weekly history" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}>{Array.from({ length: 10 }, (_, index) => <i key={index} style={{ '--fill': `${Math.min(1, Math.max(0, amount / 10 - index)) * 100}%` } as React.CSSProperties} />)}</div>}
+      {kind === "progress" && <div className="now-completion-path" role="meter" aria-label="Overall completion" aria-valuenow={amount} aria-valuemin={0} aria-valuemax={100}><svg viewBox="0 0 120 36" aria-hidden="true"><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100"/><path d="M3 30 C32 30 32 7 60 7 S93 30 117 6" pathLength="100" style={{ strokeDasharray: `${amount} 100` }}/></svg></div>}
+      {kind === "momentum" && <div className="now-momentum-dormant" aria-hidden="true" />}
     </article>
   );
 }
@@ -244,10 +236,6 @@ function StarterActions({ onAsk }: { onAsk: () => void }) {
   return <div className="starter-actions">{items.map((item) => item.href
     ? <a key={item.title} href={item.href}><span className="focus-list__check"><Check /></span><span><strong>{item.title}</strong><small>{item.meta}</small></span></a>
     : <button key={item.title} onClick={item.action}><span className="focus-list__check"><Check /></span><span><strong>{item.title}</strong><small>{item.meta}</small></span></button>)}</div>;
-}
-
-function PanelMaterial({ variant }: { variant: "today" | "activity" }) {
-  return <div className={cn("panel-material", `panel-material--${variant}`)} aria-hidden="true" />;
 }
 
 function FocusList({ items, empty }: { items: FocusItem[]; empty?: string }) {

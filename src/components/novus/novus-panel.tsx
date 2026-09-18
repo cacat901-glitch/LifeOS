@@ -22,7 +22,7 @@ export function NovusPanel() {
   const reduceMotion = useReducedMotion();
   const router = useRouter();
   const pathname = usePathname();
-  const { novusOpen, setNovusOpen, toggleNovus } = useAppStore();
+  const { novusOpen, setNovusOpen, toggleNovus, novusDraft, clearNovusDraft } = useAppStore();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -53,6 +53,10 @@ export function NovusPanel() {
   useEffect(() => {
     if (novusOpen) window.setTimeout(() => inputRef.current?.focus(), 80);
   }, [novusOpen]);
+
+  useEffect(() => {
+    if (novusDraft !== null) { setQuery(novusDraft); clearNovusDraft(); }
+  }, [novusDraft, clearNovusDraft]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

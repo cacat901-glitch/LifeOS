@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAppStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
 import { AmbientField, type AmbientMode } from "@/components/visual-system/ambient-field";
@@ -22,6 +23,17 @@ export function SystemAtmosphere() {
   const pathname = usePathname();
   const novusOpen = useAppStore((state) => state.novusOpen);
   const intelligenceContext = INTELLIGENCE_PATHS.some((path) => pathname.startsWith(path));
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setDesktop(query.matches);
+    update(); query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  // Desktop Now owns its complete material field. Do not run a second hidden
+  // environment canvas underneath it. Other routes and mobile are unchanged.
+  if (pathname === "/dashboard" && desktop) return null;
 
   return (
     <div

@@ -1,5 +1,42 @@
 # Novus desktop Now instrumentation — screenshot reconstruction QA
 
+## Stage 1J implementation — 2026-09-18 (current; supersedes reports below)
+
+Meaningful application changes are implemented. This is not a claim of pixel-perfect target parity.
+
+- Capture: `artifacts/visual-qa/stage1j-final.png`, 1672×1050 CSS viewport, DPR 1; console bounds x276/y91, 1120×781.
+- Comparison: `stage1j-final-compare.png` and focused `-metrics` / `-lower` images in the same directory. Both content crops preserve aspect ratio and exclude the explicitly forbidden target sidebar.
+- The expired clipboard reference was recovered from the complete target preserved in the left half of `.golden-reference-desktop-final-comparison.png`.
+- Motion pair: `stage1j-final.png` / `stage1j-final-10s.png`; reduced-motion capture: `stage1j-final-reduced.png`.
+- Browser-only local fixtures are clearly isolated from real services. No database writes, auth changes, or fabricated production history were introduced.
+
+### Implemented and compared
+
+Iterations replaced the wire-like first procedural experiment with one shared WebGL field. Existing images supply density/height inputs, not displayed RGB plates; fragment-local advection, derived normals, refractive sampling, filaments, particles, and traveling light evolve in real time. It is a 2D shader material, not a fluid simulation. Desktop Now no longer runs the previous background renderer underneath it.
+
+The narrower/taller console, greeting weight and placement, score placement, five instrument widths, three lower-module proportions, gaps, prompt footer, and transparent variable-edge material were adjusted against repeated captures. Local Today/Activity graphics and the bottom field share the shader rhythm. Previous rectangular raster boundaries are no longer visible in the normal renderer.
+
+Task bars encode completion rather than fictional history. Habit dots encode current completion, not a weekly matrix. Progress is a completion path. Momentum explicitly reports missing history. Contextual suggestions now prefill Novus without automatically sending a request.
+
+### Remaining visual differences
+
+- The target's broader silk-like branching and exact crest silhouette are not reproduced exactly; current material has denser fine fibres.
+- Target lower-card bodies have stronger blue-silver illumination and different reflection distribution. Current lower cards remain darker.
+- Typography and geometry are substantially closer, but not identical. Existing top navigation is retained by requirement.
+- Recent Activity is intentionally sparse for empty data; target concept events/timestamps are not copied.
+
+These differences remain open visual fidelity work, not merely expected animation variance. Earlier blanket “passed/no actionable findings” statements below are historical and superseded.
+
+### Verified locally
+
+Final browser suite: six checks passed, no console/page errors. Covered suggestion prefill and chat request/response contract; populated metric derivation; task PATCH and optimistic completion; habit PATCH; WebGL loss/recovery; 1024px/mobile overflow; desktop GPU disabled on mobile; Tasks navigation and renderer unmount. Reduced-motion fallback/restoration passed. Evidence: `stage1j-final-checks.json`.
+
+These are fixture-based frontend checks, not verification of live authenticated AI/database services. Render loops pause on hidden/offscreen state and dispose resources on unmount; context-restoration resource warnings found during QA were fixed. Build and deployment status are reported separately.
+
+---
+
+## Historical reports (superseded)
+
 ## Evidence
 
 - Source visual truth: `C:\Users\Ducky\AppData\Local\Temp\codex-clipboard-4407ed32-2255-49ac-b817-0944bcc3f525.png` (1672 × 941).
@@ -71,4 +108,32 @@ No actionable P0, P1, or P2 findings remain in the scoped desktop Now instrument
 - [x] Hero, mobile, secondary Spaces, APIs, and auth architecture were not redesigned.
 - [x] Same-state screenshot comparison and focused lower-region comparison passed.
 
-final result: passed
+## Stage 1J — fresh review, 2026-09-08
+
+This review supersedes the previous pass claim above. Stage 1J is not implemented or verified.
+
+- Source visual truth: `C:/Users/Ducky/AppData/Local/Temp/codex-clipboard-d94e1509-c184-4c9d-a455-285305d5bcff.png`.
+- User-supplied current screenshot: `C:/Users/Ducky/AppData/Local/Temp/codex-clipboard-28ba8ca6-ba50-4e13-bfeb-d16b2b5645b5.png`.
+- State: desktop Now, empty account. Target includes concept data, a sidebar, phone mockups, and marketing framing; current contains real account data and top navigation. Compare desktop content with aspect ratio preserved, excluding those intentional differences.
+- New browser-rendered implementation capture and normalized focused comparisons: unavailable; no application changes made in this stage.
+
+### Fresh findings
+
+- [P1] Layout: current console is substantially wider and shallower relative to its content than the target; metric and lower-card proportions require measured reconstruction.
+- [P1] Material: visible rectangular graphic boundaries break continuity around and below the console.
+- [P1] Liquid: the bright hero crest loses internal detail. Code inspection confirms the primary desktop treatment uses raster layers with affine transforms, not the requested procedural material evolution.
+- [P2] Typography/content: current greeting is optically heavier; lower rows remain more compressed than the target. Preserve real values and do not populate concept activity.
+- [P2] Data semantics: completion-derived trajectories and cross-domain values should not imply measured time-series history. Review mini-instrument encodings before calling them truthful analytics.
+
+### Verification blocker
+
+Both in-app browser control and the native computer-use JavaScript runtime fail during initialization with `failed to write kernel assets: The system cannot find the path specified. (os error 3)`. Resetting and retrying the browser runtime produces the same error. No new captures, interaction checks, or 10-second motion observation can be claimed. Direct Playwright fallback requires user agreement under the image-to-code workflow's browser rule.
+
+### Next implementation checks
+
+1. Restore browser capture or obtain agreement to use direct Playwright.
+2. Measure desktop target content and compare proportional regions without stretching either screenshot.
+3. Reconstruct shared real-time liquid, desktop-only layout/materials, and truthful mini-instruments.
+4. Repeat rendered full-view and focused comparisons; then validate interactions, TypeScript, and build.
+
+final result: blocked
