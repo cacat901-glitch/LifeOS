@@ -7,13 +7,14 @@ interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  layerClassName?: string;
 }
 
-function Dialog({ open, onOpenChange, children }: DialogProps) {
+function Dialog({ open, onOpenChange, children, layerClassName }: DialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className={cn("fixed inset-0 z-50", layerClassName)}>
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in"
         onClick={() => onOpenChange(false)}

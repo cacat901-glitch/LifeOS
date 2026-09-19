@@ -1,310 +1,148 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, Check, CircleAlert, Plus, Repeat2, RotateCcw, Trash2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SpaceHeading } from "@/components/visual-system/space-heading";
-import { RadialInstrument } from "@/components/visual-system/instruments";
+import { Input } from "@/components/ui/input";
+import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import { useAppStore } from "@/hooks/use-store";
+import styles from "./habits.module.css";
 
-interface Habit {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  currentStreak: number;
-  totalCompletions: number;
-  frequency: string;
-  logs: { completed: boolean }[];
-  category?: { name: string };
+type HabitFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM";
+interface Habit { id: string; name: string; description?: string; icon: string; color: string; currentStreak: number; longestStreak?: number; totalCompletions: number; frequency: HabitFrequency; targetDays?: number[]; logs: { completed: boolean }[]; category?: { name: string }; }
+
+const ICONS = ["✅", "💧", "📚", "🧘", "💪", "📝", "🌙", "🥗", "🏃", "💊", "🎯", "🌅", "🛏", "🧹", "🎵", "💻", "🚶", "🧠", "🌿", "⭐"];
+const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#06b6d4", "#84cc16", "#f97316"];
+const FREQUENCIES: HabitFrequency[] = ["DAILY", "WEEKLY", "MONTHLY"];
+const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function isComplete(habit: Habit) { return habit.logs?.some((log) => log.completed) ?? false; }
+function frequencyLabel(frequency: HabitFrequency) { return frequency.toLowerCase().replace(/^./, (letter) => letter.toUpperCase()); }
+
+function ScheduleBand({ habit }: { habit: Habit }) {
+  const selectedDays = habit.frequency === "DAILY" ? DAY_LABELS.map((_, index) => index) : habit.targetDays || [];
+  if (habit.frequency !== "DAILY" && selectedDays.length === 0) return <span className={styles.frequencyBand} aria-hidden="true" data-frequency={habit.frequency.toLowerCase()}>{Array.from({ length: 7 }, (_, index) => <i key={index} />)}</span>;
+  return <span className={styles.dayBand} aria-label={`${frequencyLabel(habit.frequency)} schedule`}>{DAY_LABELS.map((label, index) => <i key={`${label}-${index}`} data-active={selectedDays.includes(index)}><span>{label}</span></i>)}</span>;
 }
 
-const ICONS = ["✅","💧","📚","🧘","💪","📝","🌙","🥗","🏃","💊","🎯","🌅","🛏","🧹","🎵","💻","🚶","🧠","🌿","⭐"];
-const COLORS = ["#6366f1","#8b5cf6","#ec4899","#10b981","#f59e0b","#3b82f6","#ef4444","#06b6d4","#84cc16","#f97316"];
+function CompletionArc({ value, completed, total }: { value: number; completed: number; total: number }) {
+  const radius = 48; const circumference = 2 * Math.PI * radius;
+  return <div className={styles.completionArc} role="meter" aria-label="Habits completed today" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}>
+    <svg viewBox="0 0 120 120" aria-hidden="true"><circle className={styles.arcTrack} cx="60" cy="60" r={radius} /><circle className={styles.arcValue} cx="60" cy="60" r={radius} style={{ strokeDasharray: circumference, strokeDashoffset: circumference * (1 - value / 100) }} />{Array.from({ length: 12 }, (_, index) => <line key={index} x1="60" y1="5" x2="60" y2="9" transform={`rotate(${index * 30} 60 60)`} />)}</svg>
+    <div><strong>{completed}<span>/{total}</span></strong><small>today</small></div>
+  </div>;
+}
+
+function HabitsSkeleton() {
+  return <div className={styles.page} aria-label="Loading habits" aria-busy="true"><div className={`${styles.skeleton} ${styles.skeletonHeader}`} /><div className={`${styles.skeleton} ${styles.skeletonRhythm}`} /><div className={styles.skeletonList}>{Array.from({ length: 5 }, (_, index) => <div key={index} className={`${styles.skeleton} ${styles.skeletonRow}`} />)}</div></div>;
+}
 
 export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<"FREE" | "PRO">("FREE");
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" });
+  const [form, setForm] = useState({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" as HabitFrequency });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState("");
+  const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+  const openNovusWithPrompt = useAppStore((state) => state.openNovusWithPrompt);
 
-  const load = useCallback(async () => {
-    const [habitsRes, userRes] = await Promise.all([
-      fetch("/api/habits"),
-      fetch("/api/user"),
-    ]);
-    if (habitsRes.ok) setHabits(await habitsRes.json());
-    if (userRes.ok) {
-      const u = await userRes.json();
-      setPlan(u?.subscription?.plan === "PRO" ? "PRO" : "FREE");
-    }
-    setLoading(false);
+  const load = useCallback(async (showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const [habitsResponse, userResponse] = await Promise.all([fetch("/api/habits"), fetch("/api/user")]);
+      if (!habitsResponse.ok) throw new Error();
+      setHabits(await habitsResponse.json());
+      if (userResponse.ok) { const user = await userResponse.json(); setPlan(user?.subscription?.plan === "PRO" ? "PRO" : "FREE"); }
+      setError(null);
+    } catch { setError("Habits could not be loaded. Check your connection and try again."); }
+    finally { setLoading(false); }
   }, []);
-
   useEffect(() => { load(); }, [load]);
 
-  const toggle = async (habitId: string, currentlyDone: boolean) => {
-    setHabits((prev) =>
-      prev.map((h) => h.id === habitId ? { ...h, logs: [{ completed: !currentlyDone }] } : h)
-    );
-    await fetch("/api/habits", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId, completed: !currentlyDone }),
-    });
-    load();
+  const completed = useMemo(() => habits.filter(isComplete), [habits]);
+  const total = habits.length;
+  const completionRate = total ? Math.round((completed.length / total) * 100) : 0;
+  const bestStreak = total ? Math.max(...habits.map((habit) => habit.longestStreak ?? habit.currentStreak ?? 0)) : 0;
+  const totalCompletions = habits.reduce((sum, habit) => sum + (habit.totalCompletions || 0), 0);
+  const atFreeLimit = plan === "FREE" && total >= 3;
+
+  const markPending = (habitId: string, pending: boolean) => setPendingIds((current) => { const next = new Set(current); if (pending) next.add(habitId); else next.delete(habitId); return next; });
+
+  const toggle = async (habit: Habit) => {
+    if (pendingIds.has(habit.id)) return;
+    const currentlyDone = isComplete(habit); markPending(habit.id, true);
+    setHabits((current) => current.map((item) => item.id === habit.id ? { ...item, logs: [{ completed: !currentlyDone }] } : item));
+    try { const response = await fetch("/api/habits", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId: habit.id, completed: !currentlyDone }) }); if (!response.ok) throw new Error(); await load(); }
+    catch { setHabits((current) => current.map((item) => item.id === habit.id ? habit : item)); setError("That habit could not be updated. Its previous state has been restored."); }
+    finally { markPending(habit.id, false); }
   };
 
-  const createHabit = async () => {
-    if (!form.name.trim()) return;
-    setSaving(true);
-    setError("");
-    const res = await fetch("/api/habits", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
-      setShowCreate(false);
-      setForm({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" });
-      load();
-    } else {
-      const d = await res.json();
-      setError(d.error || "Failed to create habit");
-    }
-    setSaving(false);
+  const createHabit = async (event: React.FormEvent) => {
+    event.preventDefault(); if (!form.name.trim() || saving) return; setSaving(true); setFormError("");
+    try {
+      const response = await fetch("/api/habits", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, name: form.name.trim() }) });
+      if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.error || "The habit could not be created."); }
+      setShowCreate(false); setForm({ name: "", icon: "✅", color: "#6366f1", frequency: "DAILY" }); await load();
+    } catch (cause) { setFormError(cause instanceof Error ? cause.message : "The habit could not be created."); }
+    finally { setSaving(false); }
   };
 
-  const deleteHabit = async (habitId: string) => {
-    if (!confirm("Delete this habit?")) return;
-    await fetch("/api/habits", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habitId }),
-    });
-    load();
+  const deleteHabit = async (habit: Habit) => {
+    if (pendingIds.has(habit.id) || !confirm(`Delete “${habit.name}”?`)) return;
+    markPending(habit.id, true); setHabits((current) => current.filter((item) => item.id !== habit.id));
+    try { const response = await fetch("/api/habits", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ habitId: habit.id }) }); if (!response.ok) throw new Error(); setError(null); }
+    catch { setHabits((current) => current.some((item) => item.id === habit.id) ? current : [...current, habit]); setError("That habit could not be deleted. It has been restored."); }
+    finally { markPending(habit.id, false); }
   };
 
   const handleNewHabit = async () => {
-    if (plan === "FREE" && habits.length >= 3) {
-      const res = await fetch("/api/stripe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "checkout" }),
-      });
-      if (res.ok) {
-        const { url } = await res.json();
-        if (url) window.location.href = url;
-      }
-    } else {
-      setShowCreate(true);
-    }
+    if (!atFreeLimit) { setFormError(""); setShowCreate(true); return; }
+    setSaving(true);
+    try { const response = await fetch("/api/stripe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "checkout" }) }); if (!response.ok) throw new Error(); const data = await response.json(); if (data.url) window.location.href = data.url; }
+    catch { setError("Checkout could not be opened. Please try again."); }
+    finally { setSaving(false); }
   };
 
-  const completed = habits.filter((h) => h.logs?.some((l) => l.completed)).length;
-  const total = habits.length;
-  const bestStreak = total > 0 ? Math.max(...habits.map((h) => h.currentStreak)) : 0;
-  const totalCompletions = habits.reduce((s, h) => s + h.totalCompletions, 0);
-  const atFreeLimit = plan === "FREE" && total >= 3;
+  if (loading) return <HabitsSkeleton />;
+  return <div className={styles.page}>
+    <header className={styles.header}>
+      <div className={styles.headingCopy}><h2>Habits</h2><p>Build consistency through small actions repeated over time.</p><div className={styles.headerState} aria-label={`${completed.length} of ${total} habits completed today`}><span>Today</span><i aria-hidden="true" /><span>{completed.length} of {total} complete</span></div></div>
+      <button className={styles.primaryAction} onClick={handleNewHabit} disabled={saving}><Plus aria-hidden="true" />{atFreeLimit ? "Upgrade for more" : "New habit"}</button>
+      <span className={styles.headerCadence} aria-hidden="true">{Array.from({ length: 18 }, (_, index) => <i key={index} />)}</span>
+    </header>
 
-  if (loading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-16 rounded-2xl bg-muted/50" />)}
-      </div>
-    );
-  }
+    {atFreeLimit && <div className={styles.limitNotice}><div><strong>Free plan limit reached</strong><span>Three active habits are included. Upgrade for unlimited habits.</span></div><button onClick={handleNewHabit} disabled={saving}>Upgrade to Pro<ArrowRight aria-hidden="true" /></button></div>}
+    {error && <div className={styles.error} role="alert"><CircleAlert aria-hidden="true" /><span>{error}</span><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></div>}
 
-  return (
-    <div className="space-y-6 animate-fade-in">
+    <OpticalSurface className={styles.rhythmOverview} light="cadence" aria-label="Today’s habit rhythm">
+      <div className={styles.overviewLead}><CompletionArc value={completionRate} completed={completed.length} total={total} /><div><span className={styles.metaLabel}>Daily rhythm</span><h3>{total === 0 ? "Ready to begin" : completed.length === total ? "Today is complete" : "Today in progress"}</h3><p>{total === 0 ? "Create a habit to establish your first recurring action." : `${completionRate}% of today’s active habits are complete.`}</p></div></div>
+      <div className={styles.cadenceLine} aria-hidden="true"><span>{Array.from({ length: 14 }, (_, index) => <i key={index} data-active={total > 0 && index < Math.round((completionRate / 100) * 14)} />)}</span><b /></div>
+      <dl className={styles.overviewMetrics}><div><dt>Active</dt><dd>{total}</dd><small>habits</small></div><div><dt>Best streak</dt><dd>{bestStreak}<span>d</span></dd><small>recorded</small></div><div><dt>Completions</dt><dd>{totalCompletions}</dd><small>all time</small></div></dl>
+    </OpticalSurface>
 
-      {/* Header */}
-      <SpaceHeading eyebrow="Rhythm instrumentation" title="Habits" description="Consistency, streaks, and today’s rhythm." action={
-        <Button size="sm" onClick={handleNewHabit}>
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {atFreeLimit ? "Upgrade for More" : "New Habit"}
-        </Button>
-      } />
+    <OpticalSurface className={styles.todaySurface} light="quiet" aria-label="Today’s habits">
+      <div className={styles.todayHeader}><div><span className={styles.metaLabel}>Today</span><h3>Your rhythm</h3><p>{total ? `${total - completed.length} remaining today` : "No active habits yet"}</p></div><Repeat2 aria-hidden="true" /></div>
+      {habits.length === 0 ? <div className={styles.emptyState}><div className={styles.emptyCadence} aria-hidden="true"><Repeat2 />{Array.from({ length: 9 }, (_, index) => <i key={index} />)}</div><h3>No habits yet</h3><p>Create your first recurring action. Novus will show real completion and streak data as you build it.</p><button onClick={handleNewHabit}><Plus aria-hidden="true" />Create first habit</button></div> :
+        <ul className={styles.habitList} aria-live="polite">{habits.map((habit) => { const done = isComplete(habit); const pending = pendingIds.has(habit.id); return <li key={habit.id} className={styles.habitRow} data-complete={done} aria-busy={pending}>
+          <button className={styles.ritualControl} role="checkbox" aria-checked={done} aria-label={`${done ? "Mark incomplete" : "Complete"}: ${habit.name}`} onClick={() => toggle(habit)} disabled={pending}><span className={styles.ritualRing} aria-hidden="true" />{done ? <Check aria-hidden="true" /> : <span className={styles.habitIcon} aria-hidden="true">{habit.icon || "•"}</span>}</button>
+          <div className={styles.habitCopy}><div><strong>{habit.name}</strong>{habit.currentStreak > 0 && <span className={styles.streak}>{habit.currentStreak} day streak</span>}</div>{habit.description && <p>{habit.description}</p>}<div className={styles.rowMeta}><span>{frequencyLabel(habit.frequency)}</span>{habit.category?.name && <span>{habit.category.name}</span>}<span>{habit.totalCompletions || 0} total completions</span></div></div>
+          <ScheduleBand habit={habit} /><button className={styles.deleteButton} onClick={() => deleteHabit(habit)} disabled={pending} aria-label={`Delete ${habit.name}`}><Trash2 aria-hidden="true" /></button><span className={styles.completionSignal} aria-hidden="true">{Array.from({ length: 7 }, (_, index) => <i key={index} />)}</span>
+        </li>; })}</ul>}
+      <footer className={styles.todayFooter}><span>{completed.length} completed today</span><button onClick={() => openNovusWithPrompt("Help me build consistency with my habits")}>Ask Novus about consistency<ArrowRight aria-hidden="true" /></button></footer>
+    </OpticalSurface>
 
-      {/* Free plan limit banner */}
-      {atFreeLimit && (
-        <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">You&apos;ve reached the free plan limit (3/3 habits)</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Upgrade to Pro for unlimited habits.</p>
-          </div>
-          <button
-            onClick={handleNewHabit}
-            className="shrink-0 inline-flex items-center justify-center h-8 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-medium"
-          >
-            Upgrade to Pro
-          </button>
-        </div>
-      )}
-
-      {/* Today's Progress */}
-      {total > 0 && (
-        <Card>
-          <CardContent className="grid items-center gap-5 p-6 sm:grid-cols-[1fr_126px]">
-            <div>
-              <div>
-                <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-primary">Live completion</p>
-                <h3 className="mt-2 font-display text-2xl font-medium tracking-[-0.04em]">Today&apos;s Progress</h3>
-                <p className="text-sm text-muted-foreground">{completed} of {total} completed</p>
-              </div>
-              <Progress value={(completed / total) * 100} className="mt-5" />
-            </div>
-            <RadialInstrument value={Math.round((completed / total) * 100)} label="Today" className="mx-auto w-[126px]" />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{bestStreak}</div><div className="text-xs text-muted-foreground">Best Streak</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{total > 0 ? Math.round((completed / total) * 100) : 0}%</div><div className="text-xs text-muted-foreground">Today</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{totalCompletions}</div><div className="text-xs text-muted-foreground">Total Completions</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{total}</div><div className="text-xs text-muted-foreground">Active Habits</div></CardContent></Card>
-      </div>
-
-      {/* Habits List */}
-      {habits.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <span className="text-4xl block mb-3">✅</span>
-            <h3 className="font-semibold mb-1">No habits yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">Create your first habit to start building routines.</p>
-            <Button onClick={() => setShowCreate(true)}>Create First Habit</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {habits.map((habit) => {
-            const done = habit.logs?.some((l) => l.completed);
-            return (
-              <Card key={habit.id} className={`card-hover group ${done ? "novus-complete" : ""}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => toggle(habit.id, done)}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-                        done ? "bg-primary/20 ring-2 ring-primary" : "bg-muted hover:ring-2 hover:ring-primary"
-                      }`}
-                    >
-                      {done
-                        ? <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                        : <span className="text-lg">{habit.icon || "•"}</span>
-                      }
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{habit.name}</span>
-                        {habit.currentStreak >= 3 && (
-                          <Badge variant="secondary" className="text-[10px]">{habit.currentStreak}d streak</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-xs text-muted-foreground capitalize">{habit.frequency?.toLowerCase()}</span>
-                        {habit.category && <span className="text-xs text-muted-foreground">{habit.category.name}</span>}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => deleteHabit(habit.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Create Dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Create New Habit</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-            )}
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Habit Name</label>
-              <Input
-                placeholder="e.g. Morning Meditation"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                onKeyDown={(e) => e.key === "Enter" && createHabit()}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-2">Icon</label>
-              <div className="flex flex-wrap gap-2">
-                {ICONS.map((icon) => (
-                  <button
-                    key={icon}
-                    onClick={() => setForm({ ...form, icon })}
-                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all ${
-                      form.icon === icon ? "ring-2 ring-primary bg-primary/10" : "hover:bg-muted"
-                    }`}
-                  >
-                    {icon}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-2">Color</label>
-              <div className="flex gap-2">
-                {COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setForm({ ...form, color: c })}
-                    className={`w-7 h-7 rounded-full transition-all ${
-                      form.color === c ? "ring-2 ring-offset-2 ring-offset-background ring-foreground" : ""
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Frequency</label>
-              <div className="flex gap-2">
-                {["DAILY", "WEEKLY", "MONTHLY"].map((f) => (
-                  <Button
-                    key={f}
-                    variant={form.frequency === f ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setForm({ ...form, frequency: f })}
-                  >
-                    {f.charAt(0) + f.slice(1).toLowerCase()}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button className="flex-1" onClick={createHabit} disabled={saving || !form.name.trim()}>
-                {saving ? "Creating..." : "Create Habit"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-    </div>
-  );
+    <Dialog open={showCreate} onOpenChange={setShowCreate} layerClassName={styles.dialogLayer}><DialogContent className={styles.habitDialog} role="dialog" aria-modal="true" aria-labelledby="new-habit-title" onKeyDown={(event) => { if (event.key === "Escape") setShowCreate(false); }}>
+      <DialogHeader className={styles.dialogHeader}><div><span className={styles.metaLabel}>Add to rhythm</span><DialogTitle id="new-habit-title">New habit</DialogTitle></div><button className={styles.dialogClose} onClick={() => setShowCreate(false)} aria-label="Close new habit form"><X aria-hidden="true" /></button></DialogHeader>
+      <form className={styles.habitForm} onSubmit={createHabit}>{formError && <div className={styles.formError} role="alert">{formError}</div>}
+        <div><label htmlFor="habit-name">Habit name</label><Input id="habit-name" autoFocus placeholder="Morning meditation" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></div>
+        <fieldset><legend>Icon</legend><div className={styles.iconChoices}>{ICONS.map((icon) => <button type="button" key={icon} aria-pressed={form.icon === icon} aria-label={`Use ${icon} icon`} onClick={() => setForm({ ...form, icon })}>{icon}</button>)}</div></fieldset>
+        <fieldset><legend>Color</legend><div className={styles.colorChoices}>{COLORS.map((color) => <button type="button" key={color} aria-pressed={form.color === color} aria-label={`Use color ${color}`} style={{ "--habit-color": color } as React.CSSProperties} onClick={() => setForm({ ...form, color })} />)}</div></fieldset>
+        <fieldset><legend>Frequency</legend><div className={styles.frequencyChoices}>{FREQUENCIES.map((frequency) => <button type="button" key={frequency} aria-pressed={form.frequency === frequency} onClick={() => setForm({ ...form, frequency })}>{frequencyLabel(frequency)}</button>)}</div></fieldset>
+        <div className={styles.formActions}><button type="button" onClick={() => setShowCreate(false)}>Cancel</button><button type="submit" disabled={saving || !form.name.trim()}>{saving ? "Creating…" : "Create habit"}</button></div>
+      </form>
+    </DialogContent></Dialog>
+  </div>;
 }
