@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useAppStore } from "@/hooks/use-store";
 
 // One transparent WebGL surface owns all desktop Now liquid. The same material
 // is evaluated along authored hero, card and under-console flow paths. Existing
@@ -178,9 +179,12 @@ void main() {
 }
 `;
 
-export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixelRatioCap?: number; mobile?: boolean }) {
+export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intelligence = false, activity = 1 }: { pixelRatioCap?: number; mobile?: boolean; intelligence?: boolean; activity?: number }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const novusOpen = useAppStore(state => state.novusOpen);
+  const activityRef = useRef(activity);
+  activityRef.current = activity;
   useEffect(() => {
     const element = root.current;
     const surface = canvas.current;
@@ -192,7 +196,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixel
     const initialize = () => {
       dispose?.(); dispose = undefined;
       element.dataset.renderer = "fallback";
-      if (desktop.matches === mobile || reduced.matches) return;
+      if ((!intelligence && (desktop.matches === mobile || novusOpen)) || reduced.matches) return;
       const gl = surface.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: "high-performance" });
       if (!gl) return;
       const resources: WebGLShader[] = [];
@@ -251,7 +255,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixel
         const position=gl.getAttribLocation(program,"position");
         gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
         const uniforms={ resolution:gl.getUniformLocation(program,"resolution"),size:gl.getUniformLocation(program,"consoleSize"),time:gl.getUniformLocation(program,"time"),pointer:gl.getUniformLocation(program,"pointer"),hero:gl.getUniformLocation(program,"heroHeight") };
-        let frame=0, elapsed=0, previous=0, inView=true, contextLost=false;
+        let frame=0, elapsed=0, previous=0, inView=true, contextLost=false, speed=1;
         let px=.5, py=0, tx=.5, ty=0;
         const parent=element.parentElement!;
         const resize=()=>{
@@ -266,7 +270,8 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixel
         };
         const draw=(now:number)=>{
           if(document.hidden || !inView || contextLost) { previous=0; frame=0; return; }
-          if(previous) elapsed+=Math.min((now-previous)/1000,.05);
+          speed+=(activityRef.current-speed)*.025;
+          if(previous) elapsed+=Math.min((now-previous)/1000,.05)*(intelligence ? speed : 1);
           previous=now; px+=(tx-px)*.035; py+=(ty-py)*.035;
           gl.uniform1f(uniforms.time,elapsed); gl.uniform2f(uniforms.pointer,px,py);
           gl.drawArrays(gl.TRIANGLES,0,6);
@@ -291,6 +296,6 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false }: { pixel
     initialize();desktop.addEventListener("change",initialize);reduced.addEventListener("change",initialize);
     surface.addEventListener("webglcontextrestored",initialize);
     return ()=>{dispose?.();desktop.removeEventListener("change",initialize);reduced.removeEventListener("change",initialize);surface.removeEventListener("webglcontextrestored",initialize);};
-  }, [pixelRatioCap, mobile]);
+  }, [pixelRatioCap, mobile, intelligence, novusOpen]);
   return <div ref={root} className={`now-liquid-field${mobile ? " now-liquid-field--mobile" : ""}`} aria-hidden="true" data-renderer="fallback"><canvas ref={canvas}/><div className="now-liquid-field__fallback" /></div>;
 }

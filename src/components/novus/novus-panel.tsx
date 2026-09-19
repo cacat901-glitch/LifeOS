@@ -3,20 +3,22 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertTriangle, ArrowRight, ArrowUp, X } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { ArrowUp, X } from "lucide-react";
 import { useAppStore } from "@/hooks/use-store";
 import { NovusMark } from "@/components/shared/novus-logo";
-import { NovusCore } from "@/components/novus/novus-core";
-import { cn } from "@/lib/utils";
+import { AIActionConfirmation, AIActionResults, IntelligenceLiquid, IntelligenceResponse, NovusPromptRow, type IntelligenceResult, type IntelligenceState } from "./intelligence-primitives";
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
-
-const DEFAULT_SUGGESTIONS = [
-  "What should I focus on today?",
-  "How was my week?",
-  "Create a habit to read 20 min nightly",
-  "Log my mood as 8",
-];
+type ChatMsg = { role: "user" | "assistant"; content: string; results?: IntelligenceResult[]; degraded?: boolean };
+type ChatResponse = { reply?: string; error?: string; degraded?: boolean; requiresConfirmation?: boolean; pendingActions?: unknown[]; confirmationSummary?: string[]; executed?: boolean; results?: IntelligenceResult[]; accountDeleted?: boolean };
+const contexts: Record<string, { name: string; prompts: string[] }> = {
+  dashboard: { name: "Now", prompts: ["What should I focus on today?", "Explain my current Life Score", "What pattern should I pay attention to?", "Create a task for my top priority"] },
+  habits: { name: "Habits", prompts: ["Which habit needs attention?", "Help me create a habit that will stick", "What is affecting my consistency?", "Help me rebuild a streak"] },
+  tasks: { name: "Tasks", prompts: ["Help me prioritize my tasks", "What should I focus on next?", "Create a task for my top priority", "Help me break down a difficult task"] },
+  goals: { name: "Goals", prompts: ["Which goal needs attention?", "Break a goal into milestones", "How are my goals progressing?", "Help me choose my next priority"] },
+};
+const spaceNames: Record<string, string> = { journal: "Journal", finance: "Finance", workout: "Workout", mood: "Mood", projects: "Projects", statistics: "Statistics", timeline: "Timeline", settings: "Settings", analyst: "Analyst", dna: "Life DNA", review: "Weekly Review", "weekly-review": "Weekly Review", spaces: "Spaces" };
+const generalPrompts = ["What should I focus on today?", "What pattern do you notice this week?", "Help me choose my next priority", "Help me reflect on my day"];
 
 export function NovusPanel() {
   const reduceMotion = useReducedMotion();
@@ -28,150 +30,126 @@ export function NovusPanel() {
   const [thinking, setThinking] = useState(false);
   const [pending, setPending] = useState<{ actions: unknown[]; summary: string[] } | null>(null);
   const [executing, setExecuting] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const [failure, setFailure] = useState<{ text: string; request?: string } | null>(null);
+  const busyRef = useRef(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const suggestions = pathname === "/dashboard"
-    ? ["What should I focus on today?", "Explain my current Life Score", "What pattern should I pay attention to?", "Create a task for my top priority"]
-    : pathname === "/habits"
-      ? ["Which habit needs attention?", "Create a habit to read 20 min nightly", "What is affecting my consistency?", "Help me rebuild a streak"]
-      : pathname === "/goals"
-        ? ["Which goal needs attention?", "Break a goal into milestones", "How are my goals progressing?", "Help me choose my next priority"]
-        : DEFAULT_SUGGESTIONS;
+  const followRef = useRef(true);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const key = pathname.split("/")[1];
+  const context = contexts[key];
+  const contextName = context?.name || spaceNames[key] || "Your life";
+  const suggestions = context?.prompts || generalPrompts;
+  const state: IntelligenceState = executing ? "executing" : thinking ? "thinking" : failure ? "error" : complete ? "complete" : focused ? "focused" : "idle";
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") {
-        event.preventDefault();
-        toggleNovus();
-      }
-      if (event.key === "Escape") setNovusOpen(false);
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") { event.preventDefault(); toggleNovus(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [setNovusOpen, toggleNovus]);
-
+  }, [toggleNovus]);
+  useEffect(() => { if (novusDraft !== null) { setQuery(novusDraft); clearNovusDraft(); } }, [novusDraft, clearNovusDraft]);
   useEffect(() => {
-    if (novusOpen) window.setTimeout(() => inputRef.current?.focus(), 80);
+    if (!complete) return;
+    const timer = window.setTimeout(() => setComplete(false), 1500);
+    return () => clearTimeout(timer);
+  }, [complete]);
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el) { el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 132)}px`; }
+  }, [query, novusOpen]);
+  useEffect(() => {
+    if (!novusOpen) return;
+    const viewport = window.visualViewport;
+    const fit = () => {
+      if (!panelRef.current || !viewport || viewport.scale !== 1) return;
+      panelRef.current.style.setProperty("--intelligence-height", `${viewport.height}px`);
+      panelRef.current.style.setProperty("--intelligence-top", `${viewport.offsetTop}px`);
+    };
+    fit(); viewport?.addEventListener("resize", fit); viewport?.addEventListener("scroll", fit);
+    return () => { viewport?.removeEventListener("resize", fit); viewport?.removeEventListener("scroll", fit); };
   }, [novusOpen]);
-
   useEffect(() => {
-    if (novusDraft !== null) { setQuery(novusDraft); clearNovusDraft(); }
-  }, [novusDraft, clearNovusDraft]);
+    if (!followRef.current) return;
+    const scroll = scrollRef.current;
+    scroll?.scrollTo({ top: scroll.scrollHeight, behavior: reduceMotion ? "instant" : "smooth" });
+  }, [messages, pending, thinking, failure, reduceMotion]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, pending, thinking]);
+  const acceptResponse = useCallback((data: ChatResponse) => {
+    setMessages(current => [...current, { role: "assistant", content: data.reply || "No response was returned. Please try again.", results: data.results, degraded: data.degraded }]);
+    if (data.requiresConfirmation && Array.isArray(data.pendingActions)) {
+      setPending({ actions: data.pendingActions, summary: data.confirmationSummary || [] });
+    } else { setPending(null); if (data.executed) router.refresh(); }
+    setComplete(!data.degraded && !data.results?.some(result => !result.ok));
+    if (data.accountDeleted) window.setTimeout(() => { window.location.href = "/auth/login"; }, 1000);
+  }, [router]);
 
   const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || thinking) return;
-    const next = [...messages, { role: "user" as const, content: trimmed }];
-    setMessages(next);
-    setQuery("");
-    setThinking(true);
-    setPending(null);
+    if (!trimmed || busyRef.current || pending) return;
+    busyRef.current = true;
+    const next: ChatMsg[] = [...messages, { role: "user", content: trimmed }];
+    setMessages(next); setQuery(""); setThinking(true); setFailure(null); setComplete(false); followRef.current = true;
     try {
-      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next }) });
-      const data = await response.json();
-      setMessages((current) => [...current, { role: "assistant", content: data.reply || "I couldn't respond just now." }]);
-      if (data.requiresConfirmation && Array.isArray(data.pendingActions)) {
-        setPending({ actions: data.pendingActions, summary: data.confirmationSummary || [] });
-      } else if (data.executed) router.refresh();
-    } catch {
-      setMessages((current) => [...current, { role: "assistant", content: "Something went wrong reaching Novus." }]);
-    } finally {
-      setThinking(false);
-    }
-  }, [messages, router, thinking]);
+      const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })) }) });
+      const data: ChatResponse = await response.json();
+      if (!response.ok || data.error) throw new Error(response.status === 401 ? "Your session has expired. Sign in again to continue." : "Novus couldn't complete this request.");
+      acceptResponse(data);
+    } catch (error) {
+      setFailure({ text: `${error instanceof Error ? error.message : "Couldn't reach Novus."} If you requested a change, check its current state before trying again.`, request: trimmed });
+    } finally { setThinking(false); busyRef.current = false; }
+  }, [messages, pending, acceptResponse]);
 
   const confirmPending = useCallback(async () => {
-    if (!pending) return;
-    setExecuting(true);
+    if (!pending || busyRef.current) return;
+    busyRef.current = true; setExecuting(true); setFailure(null); setComplete(false); followRef.current = true;
     try {
       const response = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmActions: pending.actions }) });
-      const data = await response.json();
-      setMessages((current) => [...current, { role: "assistant", content: data.reply || "Done." }]);
-      setPending(null);
-      if (data.accountDeleted) window.setTimeout(() => { window.location.href = "/auth/login"; }, 1000);
-      else router.refresh();
+      const data: ChatResponse = await response.json();
+      if (!response.ok || data.error) throw new Error("The action could not be confirmed.");
+      acceptResponse(data);
     } catch {
-      setMessages((current) => [...current, { role: "assistant", content: "Something went wrong performing that action." }]);
-    } finally {
-      setExecuting(false);
-    }
-  }, [pending, router]);
+      // A lost response can follow a completed mutation. Never blindly replay.
+      setPending(null); setFailure({ text: "The action result couldn't be verified. Check your data before asking Novus to try again." });
+    } finally { setExecuting(false); busyRef.current = false; }
+  }, [pending, acceptResponse]);
 
-  const cancelPending = useCallback(() => {
-    setPending(null);
-    setMessages((current) => [...current, { role: "assistant", content: "Okay — cancelled. Nothing was changed." }]);
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {novusOpen && (
-        <motion.div className="fixed inset-0 z-[90]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.button aria-label="Close Novus" className="absolute inset-0 h-full w-full bg-black/70 backdrop-blur-[4px]" onClick={() => setNovusOpen(false)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-          <motion.aside
-            role="dialog"
-            aria-modal="true"
-            aria-label="Ask Novus"
-            className="novus-canonical-panel absolute inset-y-0 right-0 flex w-full flex-col overflow-hidden sm:w-[min(620px,calc(100vw-58px))]"
-            initial={reduceMotion ? false : { x: 42, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={reduceMotion ? { opacity: 0 } : { x: 30, opacity: 0 }}
-            transition={reduceMotion ? { duration: .01 } : { type: "spring", stiffness: 350, damping: 36 }}
-          >
-            <NovusCore state={thinking ? "thinking" : "invoked"} variant="panel" className="novus-panel-liquid" />
-            <header className="novus-panel-header">
-              <NovusMark size="sm" />
-              <strong>Novus</strong>
-              <span>AI partner</span>
-              <button onClick={() => setNovusOpen(false)} aria-label="Close Novus"><X /></button>
-            </header>
-
-            <div ref={scrollRef} className="novus-panel-body">
-              {!messages.length && !thinking ? (
-                <div className="novus-panel-empty">
-                  <p className="novus-panel-kicker">Intelligence, in context</p>
-                  <h2>How can I help<br />you make progress?</h2>
-                  <p className="novus-panel-intro">Ask about your day, create a habit, set a goal, or log your mood. Novus can act on what you decide.</p>
-                  <div className="novus-panel-orbit" aria-hidden="true"><NovusMark size="md" /></div>
-                  <div className="novus-suggestions">
-                    {suggestions.map((suggestion, index) => (
-                      <button key={suggestion} onClick={() => send(suggestion)}>
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                        <strong>{suggestion}</strong>
-                        <ArrowRight />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="novus-conversation">
-                  {messages.map((message, index) => <div key={`${message.role}-${index}`} className={cn("novus-message", `novus-message--${message.role}`)}><span>{message.content}</span></div>)}
-                  {thinking && <div className="novus-thinking" aria-label="Novus is thinking">{[0, 1, 2].map((index) => <motion.i key={index} animate={{ opacity: [.24, 1, .24], scale: [.85, 1, .85] }} transition={{ duration: 1.1, repeat: Infinity, delay: index * .14 }} />)}</div>}
-                  {pending && (
-                    <motion.div className="novus-confirm" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                      <h3><AlertTriangle /> Confirm before I continue</h3>
-                      <ul>{pending.summary.map((summary, index) => <li key={index}>{summary}</li>)}</ul>
-                      <p>This permanently changes your data and can&apos;t be undone.</p>
-                      <div><button onClick={confirmPending} disabled={executing}>{executing ? "Working…" : "Yes, do it"}</button><button onClick={cancelPending} disabled={executing}>Cancel</button></div>
-                    </motion.div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <footer className="novus-panel-input">
-              <form onSubmit={(event) => { event.preventDefault(); if (!pending && !executing) send(query); }}>
-                <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ask Novus anything…" />
-                <button type="submit" disabled={!query.trim() || thinking || !!pending} aria-label="Send"><ArrowUp /></button>
-              </form>
-              <p>Novus can take real actions</p>
-            </footer>
-          </motion.aside>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  return <Dialog.Root open={novusOpen} onOpenChange={setNovusOpen}><AnimatePresence>{novusOpen &&
+    <Dialog.Portal forceMount><div className="intelligence-layer">
+      <Dialog.Overlay asChild forceMount><motion.div className="intelligence-underlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : .28 }} /></Dialog.Overlay>
+      <Dialog.Content forceMount asChild onOpenAutoFocus={event => {
+        event.preventDefault(); openerRef.current = document.activeElement as HTMLElement;
+        if (matchMedia("(pointer: fine) and (min-width: 768px)").matches) inputRef.current?.focus(); else panelRef.current?.focus();
+      }} onCloseAutoFocus={event => { event.preventDefault(); openerRef.current?.focus(); }} aria-describedby="intelligence-description">
+        <motion.aside ref={panelRef} className="novus-canonical-panel intelligence-surface" data-state={state} data-conversation={messages.length > 0} initial={reduceMotion ? false : { x: 32, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: reduceMotion ? 0 : 24, opacity: 0 }} transition={{ duration: reduceMotion ? 0 : .32, ease: [.22, .8, .2, 1] }}>
+          <IntelligenceLiquid state={state} />
+          <header className="intelligence-header"><NovusMark size="sm" /><Dialog.Title>Novus</Dialog.Title><span className="intelligence-context">From {contextName}</span><Dialog.Close asChild><button ref={closeRef} aria-label="Close Novus"><X /></button></Dialog.Close></header>
+          <Dialog.Description id="intelligence-description" className="sr-only">Ask about your life or request an action. Destructive changes require confirmation.</Dialog.Description>
+          <div ref={scrollRef} className="intelligence-body" onScroll={event => { const el = event.currentTarget; followRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
+            {!messages.length ? <div className="intelligence-welcome">
+              <p className="intelligence-eyebrow">Intelligence, in context</p><h2>Make sense<br />of now.</h2>
+              <p className="intelligence-intro">Ask about your day. Shape a habit, set a goal, or find your next step.</p>
+              <div className="intelligence-prompts" aria-label="Suggested prompts">{suggestions.map((suggestion, index) => <NovusPromptRow key={suggestion} index={index} onSelect={() => send(suggestion)}>{suggestion}</NovusPromptRow>)}</div>
+            </div> : <div className="intelligence-conversation" role="log" aria-label="Novus conversation" aria-live="polite" aria-relevant="additions">
+              {messages.map((message, index) => <article key={index} className={`intelligence-message intelligence-message--${message.role}`}><p className="intelligence-eyebrow">{message.role === "user" ? "Your request" : "Novus"}</p>{message.role === "user" ? <p className="intelligence-request">{message.content}</p> : <><IntelligenceResponse content={message.content} />{message.degraded && <p className="intelligence-degraded">Limited intelligence is available right now. No actions were performed.</p>}{message.results?.length ? <AIActionResults results={message.results} /> : null}</>}</article>)}
+            </div>}
+            {(thinking || executing) && <div className="intelligence-status" role="status"><span aria-hidden="true" />{executing ? "Executing your confirmed action" : "Considering your request"}</div>}
+            {pending && <AIActionConfirmation summary={pending.summary} executing={executing} onConfirm={confirmPending} onCancel={() => { setPending(null); setMessages(current => [...current, { role: "assistant", content: "Cancelled. Nothing was changed." }]); }} />}
+            {failure && <div className="intelligence-error" role="alert"><h3>Let&apos;s pause here.</h3><p>{failure.text}</p>{failure.request && <button onClick={() => { setQuery(failure.request!); setFailure(null); inputRef.current?.focus(); }}>Review request and retry</button>}</div>}
+          </div>
+          <footer className="intelligence-composer novus-panel-input">
+            <form onSubmit={event => { event.preventDefault(); send(query); }}>
+              <textarea ref={inputRef} aria-label="Ask Novus" rows={1} value={query} onChange={event => setQuery(event.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder={pending ? "Review the action above…" : "Ask Novus anything…"} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && matchMedia("(pointer: fine)").matches) { event.preventDefault(); send(query); } }} />
+              <button type="submit" disabled={!query.trim() || thinking || executing || !!pending} aria-label="Send"><ArrowUp /></button>
+            </form><div className="intelligence-composer-note"><span>{pending ? "Awaiting your confirmation" : "Novus can take real actions"}</span><span className="intelligence-keyhint">Shift + Enter for a new line</span></div>
+          </footer>
+        </motion.aside>
+      </Dialog.Content>
+    </div></Dialog.Portal>
+  }</AnimatePresence></Dialog.Root>;
 }

@@ -37,7 +37,7 @@ export function SystemAtmosphere() {
       )}
       data-ambient-mode={modeForPath(pathname)}
     >
-      <AmbientField mode={modeForPath(pathname)} active={novusOpen} />
+      <AmbientField mode={modeForPath(pathname)} paused={novusOpen} />
       <span className="os-light-field os-light-field--primary" />
       <span className="os-light-field os-light-field--depth" />
     </div>

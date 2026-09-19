@@ -310,3 +310,108 @@ Remaining target differences are intentional: canonical liquid, truthful state,
 shorter contextual copy, current navigation order, and real phone-height limits.
 
 final result: passed
+
+## Stage 1M — canonical intelligence surface, 2026-09-19
+
+Scope: desktop/mobile Novus only. Desktop Now and mobile Now remain locked.
+Frontend/image-to-code guidance was used for reference comparison and iteration;
+the user's explicit requirement to reuse the real-time canonical material takes
+precedence over generating static artwork or exploring another visual identity.
+
+### Source and comparison evidence
+
+- Target: second phone in `.golden-reference-desktop-final-comparison.png`.
+  Original board is 3360 x 945; source mockup occupies its left 1680 x 945.
+  App content crop (1410,210)-(1638,740), 228 x 530, normalized to 390px width
+  with aspect ratio preserved. Bezel/status chrome excluded. Target has a taller
+  content ratio and older example copy; pixel equivalence is not claimed.
+- Material/typography: locked Stage 1K/1L Now and existing OpticalSurface.
+- Implementation: `artifacts/visual-qa/stage1m-final-desktop-idle.png` at
+  1440 x 1000; phone captures `stage1m-final-mobile-{360,390,430}.png` at
+  360 x 800, 390 x 844, 430 x 932, CSS pixels/DPR 1.
+- Combined target comparison: `stage1m-final-mobile-390-compare.png`.
+  Phone-scale text, prompt edges and composer are directly legible in this view.
+- Focused state evidence: `stage1m-final-desktop-focus.png`,
+  `stage1m-final-desktop-response.png`, `stage1m-final-desktop-long-bottom.png`,
+  `stage1m-final-desktop-confirm.png`, `stage1m-final-desktop-executing.png`,
+  `stage1m-final-desktop-success.png`, `stage1m-final-desktop-action-failed.png`,
+  `stage1m-final-desktop-error.png`, `stage1m-final-mobile-confirm.png`,
+  `stage1m-final-mobile-long.png`, `stage1m-final-mobile-keyboard-sized.png`.
+- Locked-surface comparisons, same fixture and viewport:
+  `stage1m-final-now-desktop-compare.png`, `stage1m-final-now-390-compare.png`.
+  Composition, type, materials and navigation remain unchanged. Minor liquid
+  frame differences are expected from its live clock. Shader source is unchanged.
+
+### Findings and iteration history
+
+1. Baseline (`stage1m-before-*`): older wave Core, generic message bubbles,
+   one-line input and hidden action results. Replaced with shared canonical
+   renderer, editorial response layout, multiline composer, explicit results.
+2. `stage1m-01/02`: decorative field/transformed extent increased panel scroll
+   width. Confined the field to the panel; state scale now occurs inside its
+   clipped wrapper. Long response/code no longer widens the panel.
+3. `stage1m-03`: existing mobile renderer CSS hid the intelligence field.
+   Added an intelligence-scoped display rule; no change to Now selectors.
+   Prompt block sat too low; moved it closer to the mobile heading.
+4. `stage1m-04`: focus on the modal container showed a browser outline and
+   prompts lacked edge definition. Suppressed only the container outline,
+   retained visible control focus, strengthened optical edge pickup and mobile
+   prompt text/tap height. Final captures above verify these corrections.
+5. QA fixture correction: Tasks API returns an array, not `{tasks: []}`.
+   Fixed the harness response shape, then reran navigation and all suites.
+   No production Tasks change was needed or made.
+
+### Required fidelity surfaces
+
+- Typography: existing Bricolage display and Inter UI, measured mobile heading
+  42px, prompt 13px, prose 14px, textarea 16px to avoid mobile focus zoom.
+  Technical labels are subordinate to readable content; long strings wrap.
+- Spacing: 600px desktop layer, full-width mobile; 44px controls, 64px phone
+  prompts, one content scroller and a separate safe-area-aware composer.
+  Reference hierarchy is retained; heading copy and no redundant bottom nav
+  inside the full-screen dialog are intentional Stage 1M choices.
+- Tokens: obsidian, silver/ice, smoked optical glass. Slightly deeper surface
+  with a controlled 3px dimmed underlay. Quiet failure color, no green confetti.
+- Imagery: supplied canonical maps and unchanged procedural shader, not the
+  older Core/wave implementation. One active Now/intelligence liquid loop;
+  secondary atmosphere pauses while Novus is open. Reduced-motion fallback
+  retains the supplied material. State changes gently alter timing/illumination.
+- Content: route-based suggestions make no fabricated claims. "From Tasks"
+  describes invocation context, not a new backend context contract. Responses,
+  result summaries and confirmations come from the existing API. No fake metrics.
+
+### Engineering and interaction evidence
+
+- `npx tsc --noEmit` and `npx next build` pass. Existing metadataBase and dynamic
+  route diagnostics remain. No schema, auth, AI provider or action API changes.
+- `scripts/intelligence-qa.cjs`: idle/focus/thinking/completed, long Markdown,
+  safe links/no raw HTML or remote images, confirmation/cancellation, execution,
+  explicit action success/failure, HTTP failure recovery, 3 phone widths,
+  safe area, smaller keyboard-sized viewport, reduced motion, focus containment,
+  Escape/shortcut close, renderer resumption and Tasks-context invocation pass.
+- Ten-second shader-clock progression verified with screenshots, not inferred
+  from a single still. Existing API is non-streaming JSON; no fake stream added.
+- `scripts/intelligence-touch-qa.cjs`: actual coarse-pointer Chrome emulation,
+  no keyboard autofocus on open, prompt submission, Enter inserts newline,
+  send submits multiline text and close restores focus. No console/page errors.
+- Desktop Now suite passes with WebGL and no console/page errors.
+- Mobile Now suite passes at six sizes, including all entry points, fixture
+  task/habit mutation contracts and long names/titles. No console/page errors.
+- New Markdown dependencies are locked in package-lock.json. Installation
+  reported repository dependency advisories; broad dependency/security upgrades
+  are outside this visual stage and were not attempted.
+
+### Limits / follow-up
+
+State tests use local intercepted API responses, including destructive action
+fixtures. No production account data was created/deleted to test UI. This
+verifies request contracts and rendering, not live provider answer quality.
+Physical iOS/Safari and a physical soft keyboard were not tested. Keyboard
+resilience uses VisualViewport and an emulated reduced-height viewport.
+The existing non-streaming API has no streaming state to exercise.
+
+No actionable P0/P1/P2 visual findings remain after the documented corrections.
+Reference copy, lower liquid composition and current full-screen mobile
+architecture are intentional; this is not a claim of pixel-identical mock art.
+
+final result: passed

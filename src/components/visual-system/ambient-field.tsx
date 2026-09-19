@@ -33,7 +33,7 @@ function traceFlow(context: CanvasRenderingContext2D, width: number, height: num
   }
 }
 
-export function AmbientField({ mode = "now", active = false, className }: { mode?: AmbientMode; active?: boolean; className?: string }) {
+export function AmbientField({ mode = "now", active = false, paused = false, className }: { mode?: AmbientMode; active?: boolean; paused?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function AmbientField({ mode = "now", active = false, className }: { mode
         const interval = mobile ? 1000 / 18 : 1000 / 30;
         if (now - previous > interval) { previous = now; draw(now); }
       }
-      if (!reduced) frame = requestAnimationFrame(loop);
+      if (!reduced && !paused) frame = requestAnimationFrame(loop);
     };
     const handleVisibility = () => { pageVisible = !document.hidden; };
     const observer = new ResizeObserver(resize);
@@ -120,14 +120,14 @@ export function AmbientField({ mode = "now", active = false, className }: { mode
     document.addEventListener("visibilitychange", handleVisibility);
     resize();
     draw(started + 3100);
-    if (!reduced) frame = requestAnimationFrame(loop);
+    if (!reduced && !paused) frame = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [active, mode]);
+  }, [active, mode, paused]);
 
   return <canvas ref={canvasRef} className={cn("ambient-field__canvas", className)} aria-hidden="true" />;
 }

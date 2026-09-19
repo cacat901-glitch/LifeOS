@@ -39,7 +39,7 @@ let activeBrowser;
       : url.pathname === '/api/ai/insights' ? { insights: [] }
       : url.pathname === '/api/notifications' ? { notifications: [] }
       : url.pathname === '/api/ai/chat' ? { reply: 'Local QA response. No real AI request was sent.' }
-      : url.pathname === '/api/tasks' ? { tasks: fixture.tasks.list }
+      : url.pathname === '/api/tasks' ? fixture.tasks.list
       : {};
     await route.fulfill({ json: payload });
   });
@@ -75,7 +75,7 @@ let activeBrowser;
   if (process.env.QA_SUITE) {
     const checks=[];
     await page.getByRole('button', { name: /Choose today's first priority/ }).click();
-    const input = page.locator('.novus-panel-input input');
+    const input = page.getByRole('textbox', { name: 'Ask Novus' });
     await input.waitFor();
     assert.equal(await input.inputValue(), "Help me choose today's first priority.");
     await input.press('Enter');
