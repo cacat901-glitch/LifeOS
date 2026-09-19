@@ -1157,6 +1157,17 @@ html {
 .now-liquid-field[data-renderer="fallback"] .now-liquid-field__fallback { display:block; }
 @media (max-width:1023px) { .now-liquid-field { display:none; } }
 
+/* Shared propagated-Space environment. One canonical liquid context spans the
+   full composition; page instruments remain transparent enough to reveal it. */
+.secondary-space-field { position:absolute;z-index:0;inset:0 -42px -70px;overflow:hidden;pointer-events:none;opacity:.82;mask-image:linear-gradient(to bottom,#000 0 87%,transparent 100%); }
+.secondary-space-field > .now-liquid-field { display:block;inset:0; }
+.secondary-space-field .now-liquid-field__fallback { background:url('/media/novus-hero-liquid.png') 78% 2% / 88% 34% no-repeat,url('/media/novus-activity-stream.png') 28% 49% / 82% 28% no-repeat,url('/media/novus-bottom-flow.png') center 93% / 120% 24% no-repeat;opacity:.78;mask-image:linear-gradient(to bottom,#000 4%,#000 86%,transparent); }
+.secondary-space-field[data-space="tasks"] { opacity:.9;filter:brightness(1.02) contrast(1.06); }
+.secondary-space-field[data-space="habits"] { opacity:.9;filter:brightness(.98); }
+.secondary-space-field[data-space="goals"] { opacity:.88;filter:brightness(.94) contrast(1.06); }
+@media(max-width:1023px){.secondary-space-field{inset:0 -18px auto;height:1120px;opacity:.5;mask-image:linear-gradient(to bottom,#000 0 69%,transparent 96%)}.secondary-space-field .now-liquid-field__fallback{background-size:auto 30%,125% 25%,160% 18%;background-position:72% 1%,45% 37%,center 78%}.secondary-space-field[data-space="tasks"]{opacity:.56}}
+@media(prefers-reduced-motion:reduce){.secondary-space-field{opacity:.5}}
+
 .now-desktop {
   position: relative;
   overflow: visible;

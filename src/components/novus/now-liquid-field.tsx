@@ -19,6 +19,8 @@ uniform vec2 pointer;
 uniform float time;
 uniform float heroHeight;
 uniform float mobileLayout;
+uniform float secondaryLayout;
+uniform float spaceVariant;
 uniform sampler2D densityMap;
 uniform sampler2D bottomMap;
 uniform sampler2D activityMap;
@@ -122,6 +124,39 @@ vec3 silk(vec2 p, float variant, float strength) {
 }
 void main() {
   vec2 pixel=vec2(gl_FragCoord.x,resolution.y-gl_FragCoord.y);
+  if(secondaryLayout>.5) {
+    vec2 s=pixel/resolution;
+    float variant=spaceVariant;
+    vec3 secondaryLight=vec3(0.);
+    if(mobileLayout>.5) {
+      // Secondary Spaces retain the same refractive material on phones with a
+      // deliberately cheaper two-volume composition and no filament loop.
+      vec2 upper=vec2(s.x*1.08-.02,(s.y+.02)*2.45+.05*sin(s.x*5.+variant));
+      secondaryLight+=liquidVolume(upper,0.,1.48);
+      vec2 lower=vec2(s.x*1.28-.12,(s.y-.43)*2.7+.24*pow(s.x-.48,2.)+variant*.025);
+      secondaryLight+=liquidVolume(lower,1.,1.18);
+      secondaryLight*=mix(.34,1.,smoothstep(.08,.72,s.x));
+    } else {
+      // One authored field crosses header, overview and working surface. The
+      // variant only shifts composition; it never encodes user information.
+      vec2 upper=vec2(s.x*1.08-.02,s.y*2.2+.04*sin(s.x*6.+variant*1.7));
+      secondaryLight+=liquidVolume(upper,0.,1.58);
+      vec2 bridge=vec2(s.x*1.34-.16,(s.y-.25)*2.65+.19*pow(s.x-(.38+variant*.035),2.));
+      secondaryLight+=liquidVolume(bridge,2.,1.42);
+      vec2 lower=vec2(s.x*1.18-.08,(s.y-.63)*2.75+.35*pow(s.x-.52,2.));
+      secondaryLight+=liquidVolume(lower,1.,.72);
+      vec2 thread=vec2(s.x*1.18-.09,s.y*1.75+.08+variant*.035);
+      secondaryLight+=silk(thread,variant<1.5?1.:2.,.15);
+      secondaryLight*=mix(.28,1.,smoothstep(.03,.7,s.x));
+    }
+    secondaryLight*=variant<.5?1.28:1.;
+    secondaryLight=1.-exp(-secondaryLight*1.55);
+    secondaryLight*=smoothstep(0.,.045,s.x)*(1.-smoothstep(.95,1.,s.x));
+    secondaryLight*=smoothstep(0.,.025,s.y)*(1.-smoothstep(.94,1.,s.y));
+    float secondaryAlpha=clamp(max(secondaryLight.r,max(secondaryLight.g,secondaryLight.b)),0.,.9);
+    gl_FragColor=vec4(secondaryLight,secondaryAlpha);
+    return;
+  }
   if(mobileLayout>.5) {
     // Phone composition: the same optical material, fewer layers and no silk
     // particle loop. A broad right-hand crest folds into the primary dial.
@@ -179,7 +214,7 @@ void main() {
 }
 `;
 
-export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intelligence = false, activity = 1 }: { pixelRatioCap?: number; mobile?: boolean; intelligence?: boolean; activity?: number }) {
+export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intelligence = false, secondary = false, spaceVariant = 0, activity = 1 }: { pixelRatioCap?: number; mobile?: boolean; intelligence?: boolean; secondary?: boolean; spaceVariant?: number; activity?: number }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const novusOpen = useAppStore(state => state.novusOpen);
@@ -196,7 +231,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intellige
     const initialize = () => {
       dispose?.(); dispose = undefined;
       element.dataset.renderer = "fallback";
-      if ((!intelligence && (desktop.matches === mobile || novusOpen)) || reduced.matches) return;
+      if ((!intelligence && ((!secondary && desktop.matches === mobile) || novusOpen)) || reduced.matches) return;
       const gl = surface.getContext("webgl", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, powerPreference: "high-performance" });
       if (!gl) return;
       const resources: WebGLShader[] = [];
@@ -231,7 +266,9 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intellige
         gl.linkProgram(program);
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error("Liquid program linking failed");
         gl.useProgram(program);
-        gl.uniform1f(gl.getUniformLocation(program,"mobileLayout"),mobile ? 1 : 0);
+        gl.uniform1f(gl.getUniformLocation(program,"mobileLayout"),secondary ? (desktop.matches ? 0 : 1) : mobile ? 1 : 0);
+        gl.uniform1f(gl.getUniformLocation(program,"secondaryLayout"),secondary ? 1 : 0);
+        gl.uniform1f(gl.getUniformLocation(program,"spaceVariant"),spaceVariant);
         const loadDensity=(unit:number,name:string,url:string)=>{
           const texture=gl.createTexture(); if(!texture) throw new Error("Liquid texture allocation failed");
           textures.push(texture);gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,texture);
@@ -261,7 +298,7 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intellige
         const resize=()=>{
           const bounds=element.getBoundingClientRect();
           // Explicit quality ceiling; a single context covers the complete console.
-          const ratio=Math.min(devicePixelRatio || 1,Math.max(.75,Math.min(mobile ? 1.2 : 2,pixelRatioCap)));
+          const ratio=Math.min(devicePixelRatio || 1,Math.max(.75,Math.min((mobile || (secondary && !desktop.matches)) ? 1.2 : 2,pixelRatioCap)));
           surface.width=Math.round(bounds.width*ratio); surface.height=Math.round(bounds.height*ratio);
           gl.viewport(0,0,surface.width,surface.height);
           gl.uniform2f(uniforms.resolution,surface.width,surface.height);
@@ -296,6 +333,6 @@ export function NowLiquidField({ pixelRatioCap = 1.35, mobile = false, intellige
     initialize();desktop.addEventListener("change",initialize);reduced.addEventListener("change",initialize);
     surface.addEventListener("webglcontextrestored",initialize);
     return ()=>{dispose?.();desktop.removeEventListener("change",initialize);reduced.removeEventListener("change",initialize);surface.removeEventListener("webglcontextrestored",initialize);};
-  }, [pixelRatioCap, mobile, intelligence, novusOpen]);
+  }, [pixelRatioCap, mobile, intelligence, secondary, spaceVariant, novusOpen]);
   return <div ref={root} className={`now-liquid-field${mobile ? " now-liquid-field--mobile" : ""}`} aria-hidden="true" data-renderer="fallback"><canvas ref={canvas}/><div className="now-liquid-field__fallback" /></div>;
 }

@@ -5,6 +5,7 @@ import { ArrowRight, Check, CircleAlert, Plus, Repeat2, RotateCcw, Trash2, X } f
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import { SecondarySpaceField } from "@/components/novus/secondary-space-field";
 import { useAppStore } from "@/hooks/use-store";
 import styles from "./habits.module.css";
 
@@ -108,6 +109,7 @@ export default function HabitsPage() {
 
   if (loading) return <HabitsSkeleton />;
   return <div className={styles.page}>
+    <SecondarySpaceField space="habits" className={styles.environment} />
     <header className={styles.header}>
       <div className={styles.headingCopy}><h2>Habits</h2><p>Build consistency through small actions repeated over time.</p><div className={styles.headerState} aria-label={`${completed.length} of ${total} habits completed today`}><span>Today</span><i aria-hidden="true" /><span>{completed.length} of {total} complete</span></div></div>
       <button className={styles.primaryAction} onClick={handleNewHabit} disabled={saving}><Plus aria-hidden="true" />{atFreeLimit ? "Upgrade for more" : "New habit"}</button>

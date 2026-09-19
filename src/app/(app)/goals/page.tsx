@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { NovusMark } from "@/components/shared/novus-logo";
 import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import { SecondarySpaceField } from "@/components/novus/secondary-space-field";
 import { formatDate } from "@/lib/utils";
 import styles from "./goals.module.css";
 
@@ -100,8 +101,9 @@ export default function GoalsPage() {
 
   if (loading) return <GoalsSkeleton />;
   const openCreate = () => { setFormError(""); setShowCreate(true); };
-  if (error && goals.length === 0) return <div className={styles.page}><GoalsHeader active={0} onCreate={openCreate} /><OpticalSurface className={styles.loadError} light="quiet"><CircleAlert aria-hidden="true" /><h3>Goals could not be loaded</h3><p>Check your connection and try again. No empty-state assumptions have been made.</p><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></OpticalSurface></div>;
+  if (error && goals.length === 0) return <div className={styles.page}><SecondarySpaceField space="goals" className={styles.environment} /><GoalsHeader active={0} onCreate={openCreate} /><OpticalSurface className={styles.loadError} light="quiet"><CircleAlert aria-hidden="true" /><h3>Goals could not be loaded</h3><p>Check your connection and try again. No empty-state assumptions have been made.</p><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></OpticalSurface></div>;
   return <div className={styles.page}>
+    <SecondarySpaceField space="goals" className={styles.environment} />
     <GoalsHeader active={activeGoals.length} onCreate={openCreate} />
     {error && <div className={styles.error} role="alert"><CircleAlert aria-hidden="true" /><span>{error}</span><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></div>}
 

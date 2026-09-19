@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays, Check, CircleAlert, ListChecks, Plus, RotateC
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import { SecondarySpaceField } from "@/components/novus/secondary-space-field";
 import { useAppStore } from "@/hooks/use-store";
 import styles from "./tasks.module.css";
 
@@ -137,6 +138,7 @@ export default function TasksPage() {
       : { title: "Nothing is asking for action", body: "Your active queue is clear. Add a task when there is something worth carrying forward." };
 
   return <div className={styles.page}>
+    <SecondarySpaceField space="tasks" className={styles.environment} />
     <header className={styles.header}>
       <div className={styles.headingCopy}><h2>Tasks</h2><p>Keep priority visible, move the work, and close the loop.</p>
         <div className={styles.headerState} aria-label={`${active.length} active tasks, ${overdue.length} overdue`}><span>{active.length} active</span><i aria-hidden="true" /><span>{overdue.length} overdue</span></div>

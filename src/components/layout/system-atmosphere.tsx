@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { AmbientField, type AmbientMode } from "@/components/visual-system/ambient-field";
 
 const INTELLIGENCE_PATHS = ["/analyst", "/dna", "/review"];
+const CANONICAL_FIELD_PATHS = ["/dashboard", "/tasks", "/habits", "/goals"];
 
 function modeForPath(pathname: string): AmbientMode {
   if (pathname === "/dashboard") return "now";
@@ -22,9 +23,9 @@ export function SystemAtmosphere() {
   const pathname = usePathname();
   const novusOpen = useAppStore((state) => state.novusOpen);
   const intelligenceContext = INTELLIGENCE_PATHS.some((path) => pathname.startsWith(path));
-  // Now owns its material at both breakpoints; never run a second ambient
-  // graphics context underneath it. Other routes retain their atmosphere.
-  if (pathname === "/dashboard") return null;
+  // Canonical surfaces own one composition-specific material field. Do not run
+  // the older Canvas2D atmosphere beneath their WebGL environment.
+  if (CANONICAL_FIELD_PATHS.some((path) => pathname.startsWith(path))) return null;
 
   return (
     <div
