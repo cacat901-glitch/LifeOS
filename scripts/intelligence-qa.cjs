@@ -1,7 +1,7 @@
 // Local interception only. Never submit fixture actions to a real account.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs=require('node:fs');const assert=require('node:assert/strict');
-const base='http://localhost:3000',out='artifacts/visual-qa',prefix=process.env.QA_CAPTURE || 'stage1m';
+const base=process.env.QA_BASE_URL || 'http://localhost:3000',out='artifacts/visual-qa',prefix=process.env.QA_CAPTURE || 'stage1m';
 let browser, page;
 const fixture={user:{name:'David',xp:0,level:1},habits:{list:[],completed:0,total:0,bestStreak:0},tasks:{list:[],done:0,total:0},goals:[],mood:null,recentWorkout:null,recentJournal:null,lifeScore:{total:0,grade:'F',breakdown:{}},streaks:{habits:0,journal:0,workout:0,mood:0}};
 (async()=>{

@@ -240,13 +240,13 @@ One existing caveat is `SignalTrace` in `instruments.tsx`: for constant series i
 | Compare against current canonical screenshots | Restart art direction from the original TARGET |
 | Inspect complete selector chains | Treat an early CSS declaration as the final computed style |
 
-## 12. Extending to secondary Spaces — guidance only
+## 12. Extending to secondary Spaces
 
-These are future directions, not claims of completed adoption. Preserve existing functionality and real data contracts. All routes live under `src/app/(app)`.
+Tasks is the first completed canonical propagation. The remaining rows are future directions, not claims of completed adoption. Preserve existing functionality and real data contracts. All routes live under `src/app/(app)`.
 
 | Space / route | Appropriate interpretation |
 | --- | --- |
-| Tasks `/tasks` | Execution, priority and real completion; compact readable rows, restrained motion, clear filters and deadlines. Do not let reflection obscure checkboxes. |
+| Tasks `/tasks` | **Stage 2A canonical.** Execution, priority and real completion; compact readable rows, restrained motion, clear filters and deadlines. Reflection never obscures checkboxes. |
 | Habits `/habits` | Cadence, actual streaks and completion matrices; distinguish today completion from dated history. Local response can follow a successful check. |
 | Goals `/goals` | Real progress paths and milestones; emphasize direction and target dates without invented forecasts. |
 | Journal `/journal` | Writing-first editorial hierarchy, quiet glass and minimal ambient movement; no large active material behind long-form editing. |
@@ -260,6 +260,12 @@ These are future directions, not claims of completed adoption. Preserve existing
 | Settings `/settings` | Minimal motion, clear forms/toggles, account/security confidence; canonical edges without cinematic display. |
 
 Reuse exactly the color identity, material vocabulary, fonts, liquid character, motion philosophy, navigation architecture, and micro-detail language. Vary composition, density, instrument/chart type, content hierarchy, local light placement, and amount of motion according to purpose. A shared system does not require every Space to duplicate Now’s three columns.
+
+### Stage 2A — canonical Tasks propagation
+
+`src/app/(app)/tasks/page.tsx` and `tasks.module.css` define the Tasks-specific composition. Tasks uses one compact `OpticalSurface` execution rail for truthful current Active, Completed, and Completion values, followed by one dominant queue surface. Priority is conveyed by precise line and label treatment rather than traffic-light cards; due state, category, status, filtering, creation, completion, and deletion remain attached to the existing task contracts. The desktop queue is dense and execution-first. The mobile composition is separately authored for touch targets, safe areas, metadata flow, and the canonical bottom navigation.
+
+Tasks keeps the existing execution-mode `SystemAtmosphere`; it does not add another WebGL context. Its local completion sweep is brief, subordinate, and disabled for reduced motion. `scripts/tasks-qa.cjs` covers populated, long-list, empty, touch, dialog, mutation-contract, responsive, and reduced-motion states with intercepted local fixtures. The task creation overlay remains the route's legacy custom dialog and does not claim the Radix focus-containment guarantees of the canonical Novus intelligence layer.
 
 ## 13. Legacy, performance and future refactoring notes
 
@@ -283,8 +289,9 @@ Relevant harnesses:
 - `scripts/mobile-now-qa.cjs`: six sizes including 360×640, long names/titles, greetings, zero/100 score, safe-area, fixture mutation contracts and reduced motion.
 - `scripts/intelligence-qa.cjs`: desktop/three phone widths, idle/focus/thinking, long Markdown, safe output, confirmation/cancel/execution/results/failure, reduced motion, focus containment, route context, keyboard-sized viewport and ten-second shader progression.
 - `scripts/intelligence-touch-qa.cjs`: coarse-pointer Chrome emulation, no unwanted opening keyboard, newline/send and focus restoration.
+- `scripts/tasks-qa.cjs`: Stage 2A desktop/mobile Tasks composition, real task request contracts, filters, dense and empty states, touch, safe areas, dialog and reduced motion.
 
-Recorded final suites had no unexpected console/page errors. Destructive actions were intercepted fixtures, not live account mutations. This verifies UI and request contracts, not real provider quality or live authenticated action success. A physical iPhone, Safari and physical soft keyboard were not tested. Dependency installation reported advisories; no broad security audit or dependency remediation is implied. Light mode and every secondary Space are not newly certified by the canonical lock.
+Recorded final suites had no unexpected console/page errors. Destructive actions were intercepted fixtures, not live account mutations. This verifies UI and request contracts, not real provider quality or live authenticated action success. A physical iPhone, Safari and physical soft keyboard were not tested. Dependency installation reported advisories; no broad security audit or dependency remediation is implied. Light mode and secondary Spaces other than Tasks are not newly certified by the canonical lock.
 
 The following files exist locally under `artifacts/visual-qa/`. They are ignored/untracked artifacts, **not files guaranteed in a fresh clone**. Share/copy them separately if another workstation needs visual evidence. Paths are useful locally; do not silently substitute an older tracked mockup if unavailable.
 
@@ -312,6 +319,6 @@ Start future model switches with `docs/NOVUS_2_MODEL_HANDOFF.md`. Use this file 
 
 ## Next Phase
 
-Propagate the locked Novus 2.0 visual system across secondary Spaces using actual canonical primitives, without redesigning the system. Recommended order: Tasks → Habits → Goals → Journal → Projects → Finance → Workout → Mood → Statistics → Timeline → Life DNA / Weekly Review / Analyst → Settings.
+Continue propagating the locked Novus 2.0 visual system across secondary Spaces using actual canonical primitives, without redesigning the system. Recommended next order: Habits → Goals → Journal → Projects → Finance → Workout → Mood → Statistics → Timeline → Life DNA / Weekly Review / Analyst → Settings.
 
-Begin with Tasks only when authorized. Inspect its existing data/interaction model, reuse optical material and execution-appropriate instrumentation, preserve functionality, verify desktop/mobile and truthful empty/populated states, then guard all four canonical surfaces against regression. Do not combine propagation with backend redesign, Stripe, onboarding, integrations, new modules, or performance rewrites. Stage 1N ends with documentation and handoff.
+Begin the next Space only when authorized. Inspect its existing data/interaction model, reuse canonical material and purpose-appropriate instrumentation, preserve functionality, verify desktop/mobile and truthful empty/populated states, then guard all previously locked surfaces against regression. Do not combine propagation with backend redesign, Stripe, onboarding, integrations, new modules, or performance rewrites.
