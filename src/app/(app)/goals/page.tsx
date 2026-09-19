@@ -1,409 +1,121 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, CalendarDays, Check, CircleAlert, Flag, Milestone as MilestoneIcon, Plus, RotateCcw, Sparkles, Target, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatDate } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import { NovusMark } from "@/components/shared/novus-logo";
-import { motion } from "framer-motion";
-import { SpaceHeading } from "@/components/visual-system/space-heading";
+import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import { formatDate } from "@/lib/utils";
+import styles from "./goals.module.css";
 
-interface Milestone { id: string; title: string; isCompleted: boolean; order: number }
-interface Goal {
-  id: string; title: string; description?: string; type: string; status: string;
-  currentValue: number; targetValue: number; color: string; targetDate?: string;
-  milestones: Milestone[];
-}
-interface GoalCoachPlan {
-  assessment: string;
-  suggestedMilestones: Array<{ title: string; timeframe: string; description: string }>;
-  recommendedHabits: string[];
-  recommendedActions: string[];
-  estimatedTimeline: string;
-  motivationalNote: string;
+type GoalStatus = "ACTIVE" | "COMPLETED" | "PAUSED" | "CANCELLED";
+type GoalType = "LONG_TERM" | "QUARTERLY" | "MONTHLY" | "WEEKLY" | "CUSTOM";
+interface Milestone { id: string; title: string; description?: string; isCompleted: boolean; order: number; targetDate?: string }
+interface Goal { id: string; title: string; description?: string; type: GoalType; status: GoalStatus; currentValue: number; targetValue: number; unit?: string; color: string; targetDate?: string; milestones: Milestone[]; category?: { name: string } }
+interface GoalCoachPlan { assessment: string; suggestedMilestones: Array<{ title: string; timeframe: string; description: string }>; recommendedHabits: string[]; recommendedActions: string[]; estimatedTimeline: string; motivationalNote: string }
+
+const COLORS = ["#6366f1", "#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#ef4444", "#06b6d4"];
+const GOAL_TYPES: GoalType[] = ["LONG_TERM", "QUARTERLY", "MONTHLY", "WEEKLY", "CUSTOM"];
+
+function clampPercent(goal: Pick<Goal, "currentValue" | "targetValue">) { const target = Number.isFinite(goal.targetValue) && goal.targetValue > 0 ? goal.targetValue : 100; return Math.max(0, Math.min(100, Math.round((goal.currentValue / target) * 100))); }
+function readableType(type: string) { return type.toLowerCase().replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
+function readableStatus(status: string) { return status.toLowerCase().replace(/^./, (letter) => letter.toUpperCase()); }
+function valueWithUnit(value: number, unit?: string) { return `${Number.isInteger(value) ? value : value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ""}`; }
+function targetTiming(targetDate?: string) {
+  if (!targetDate) return null; const target = new Date(targetDate); if (Number.isNaN(target.getTime())) return null;
+  const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime(); const days = Math.round((targetDay - today) / 86_400_000);
+  if (days === 0) return "Due today"; if (days < 0) return `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`; return `${days} day${days === 1 ? "" : "s"} remaining`;
 }
 
-const COLORS = ["#6366f1","#3b82f6","#10b981","#f59e0b","#ec4899","#8b5cf6","#ef4444","#06b6d4"];
-const GOAL_TYPES = ["LONG_TERM","QUARTERLY","MONTHLY","WEEKLY","CUSTOM"];
+function DirectionPath({ goal, compact = false }: { goal: Goal; compact?: boolean }) {
+  const progress = clampPercent(goal); const milestones = [...(goal.milestones || [])].sort((a, b) => a.order - b.order);
+  return <div className={styles.directionPath} data-compact={compact || undefined} role="meter" aria-label={`${goal.title} progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+    <div className={styles.pathRail} aria-hidden="true"><span key="fill" className={styles.pathFill} style={{ width: `${progress}%` }} /><i key="current" className={styles.currentMarker} style={{ left: `${progress}%` }} />{milestones.map((milestone, index) => <i key={milestone.id} className={styles.milestoneNode} data-complete={milestone.isCompleted || undefined} style={{ left: `${((index + 1) / (milestones.length + 1)) * 100}%` }} />)}<i key="destination" className={styles.destinationNode} data-reached={progress >= 100 || undefined} /></div>
+    <div className={styles.pathCalibration} aria-hidden="true">{Array.from({ length: 11 }, (_, index) => <i key={index} />)}</div>
+  </div>;
+}
+
+function OverviewPath({ value, active }: { value: number; active: number }) {
+  return <div className={styles.overviewPath} role="meter" aria-label="Average active goal progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}><div className={styles.overviewLine} aria-hidden="true"><span style={{ width: `${value}%` }} /><i className={styles.overviewCurrent} style={{ left: `${value}%` }} /><i className={styles.overviewDestination} />{Array.from({ length: 17 }, (_, index) => <b key={index} />)}</div><div className={styles.overviewPathCopy}><strong>{value}%</strong><span>{active ? "average current progress" : "no active goals"}</span></div></div>;
+}
+
+function GoalsSkeleton() { return <div className={styles.page} aria-label="Loading goals" aria-busy="true"><div className={`${styles.skeleton} ${styles.skeletonHeader}`} /><div className={`${styles.skeleton} ${styles.skeletonOverview}`} /><div className={styles.skeletonGrid}>{Array.from({ length: 4 }, (_, index) => <div key={index} className={`${styles.skeleton} ${styles.skeletonCard}`} />)}</div></div>; }
+
+function GoalSurface({ goal, onOpen, onCoach }: { goal: Goal; onOpen: (goal: Goal) => void; onCoach: (goal: Goal) => void }) {
+  const progress = clampPercent(goal); const completedMilestones = goal.milestones.filter((milestone) => milestone.isCompleted).length; const remaining = Math.max(0, goal.targetValue - goal.currentValue); const timing = goal.status === "COMPLETED" ? "Completed" : targetTiming(goal.targetDate);
+  return <OpticalSurface as="article" className={styles.goalSurface} light={goal.status === "ACTIVE" ? "signal" : "quiet"} data-status={goal.status.toLowerCase()}>
+    <header className={styles.goalTopline}><div><span>{readableStatus(goal.status)}</span><i aria-hidden="true" /><span>{readableType(goal.type)}</span>{goal.category?.name && <><i aria-hidden="true" /><span>{goal.category.name}</span></>}</div>{goal.targetDate && <span className={styles.dateMeta}><CalendarDays aria-hidden="true" />{formatDate(goal.targetDate)}</span>}</header>
+    <div className={styles.goalBody}><div className={styles.goalHeading}><div><h3>{goal.title}</h3>{goal.description && <p>{goal.description}</p>}</div><strong>{progress}<span>%</span></strong></div><DirectionPath goal={goal} /><dl className={styles.goalMetrics}><div><dt>Current</dt><dd>{valueWithUnit(goal.currentValue, goal.unit)}</dd></div><div><dt>Target</dt><dd>{valueWithUnit(goal.targetValue, goal.unit)}</dd></div><div><dt>Remaining</dt><dd>{valueWithUnit(remaining, goal.unit)}</dd></div></dl>
+      {(goal.milestones.length > 0 || timing) && <div className={styles.goalEvidence}>{goal.milestones.length > 0 && <span><MilestoneIcon aria-hidden="true" />{completedMilestones} of {goal.milestones.length} milestones</span>}{timing && <span data-overdue={timing.includes("overdue") || undefined}><Flag aria-hidden="true" />{timing}</span>}</div>}
+    </div>
+    <footer className={styles.goalActions}><button onClick={() => onOpen(goal)}>View and update<ArrowRight aria-hidden="true" /></button><button onClick={() => onCoach(goal)}><NovusMark size="sm" className={styles.coachMark} />Goal Coach</button></footer>
+  </OpticalSurface>;
+}
+
+function GoalsHeader({ active, onCreate }: { active: number; onCreate: () => void }) {
+  return <header className={styles.header}><div className={styles.headingCopy}><h2>Goals</h2><p>See where you are going and the progress you have actually made.</p><div className={styles.headerState}><span>Direction</span><i aria-hidden="true" /><span>{active} active</span></div></div><button className={styles.primaryAction} onClick={onCreate}><Plus aria-hidden="true" />New goal</button><span className={styles.headerHorizon} aria-hidden="true"><i /><i /><i /><i /><b /></span></header>;
+}
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
-  const [selected, setSelected] = useState<Goal | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", type: "LONG_TERM", targetValue: 100, color: "#6366f1", targetDate: "" });
-  const [milestoneInput, setMilestoneInput] = useState("");
-  const [milestones, setMilestones] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [goals, setGoals] = useState<Goal[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [formError, setFormError] = useState(""); const [showCreate, setShowCreate] = useState(false); const [selected, setSelected] = useState<Goal | null>(null); const [progressDraft, setProgressDraft] = useState(0);
+  const [form, setForm] = useState({ title: "", description: "", type: "LONG_TERM" as GoalType, targetValue: 100, color: "#6366f1", targetDate: "" }); const [milestoneInput, setMilestoneInput] = useState(""); const [milestones, setMilestones] = useState<string[]>([]); const [saving, setSaving] = useState(false); const [pendingId, setPendingId] = useState<string | null>(null);
+  const [showCoach, setShowCoach] = useState(false); const [coachGoal, setCoachGoal] = useState<Goal | null>(null); const [coachPlan, setCoachPlan] = useState<GoalCoachPlan | null>(null); const [coachLoading, setCoachLoading] = useState(false); const [coachError, setCoachError] = useState("");
 
-  // Goal Coach state
-  const [showCoach, setShowCoach] = useState(false);
-  const [coachGoal, setCoachGoal] = useState<Goal | null>(null);
-  const [coachPlan, setCoachPlan] = useState<GoalCoachPlan | null>(null);
-  const [coachLoading, setCoachLoading] = useState(false);
-
-  const load = useCallback(async () => {
-    const res = await fetch("/api/goals");
-    if (res.ok) setGoals(await res.json());
-    setLoading(false);
-  }, []);
-
+  const load = useCallback(async (showSkeleton = false) => { if (showSkeleton) setLoading(true); try { const response = await fetch("/api/goals"); if (!response.ok) throw new Error(); setGoals(await response.json()); setError(null); } catch { setError("Goals could not be loaded. Check your connection and try again."); } finally { setLoading(false); } }, []);
   useEffect(() => { load(); }, [load]);
+  const activeGoals = useMemo(() => goals.filter((goal) => goal.status === "ACTIVE"), [goals]); const otherGoals = useMemo(() => goals.filter((goal) => goal.status !== "ACTIVE"), [goals]);
+  const averageProgress = activeGoals.length ? Math.round(activeGoals.reduce((sum, goal) => sum + clampPercent(goal), 0) / activeGoals.length) : 0; const completedGoals = goals.filter((goal) => goal.status === "COMPLETED").length; const completedMilestones = goals.reduce((sum, goal) => sum + goal.milestones.filter((milestone) => milestone.isCompleted).length, 0);
+  const openDetail = (goal: Goal) => { setSelected(goal); setProgressDraft(goal.currentValue); setFormError(""); };
+  const addMilestone = () => { const title = milestoneInput.trim(); if (!title) return; setMilestones((current) => [...current, title]); setMilestoneInput(""); };
 
-  const createGoal = async () => {
-    if (!form.title.trim()) return;
-    setSaving(true);
-    const res = await fetch("/api/goals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        targetDate: form.targetDate || undefined,
-        milestones: milestones.map((t) => ({ title: t })),
-      }),
-    });
-    if (res.ok) {
-      setShowCreate(false);
-      setForm({ title: "", description: "", type: "LONG_TERM", targetValue: 100, color: "#6366f1", targetDate: "" });
-      setMilestones([]);
-      load();
-    }
-    setSaving(false);
+  const createGoal = async (event: React.FormEvent) => {
+    event.preventDefault(); if (!form.title.trim() || saving) return; if (!Number.isFinite(form.targetValue) || form.targetValue < 1) { setFormError("Target value must be at least 1."); return; }
+    setSaving(true); setFormError("");
+    try { const response = await fetch("/api/goals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, title: form.title.trim(), description: form.description.trim(), targetDate: form.targetDate || undefined, milestones: milestones.map((title) => ({ title })) }) }); if (!response.ok) throw new Error(); setShowCreate(false); setForm({ title: "", description: "", type: "LONG_TERM", targetValue: 100, color: "#6366f1", targetDate: "" }); setMilestones([]); setMilestoneInput(""); await load(); }
+    catch { setFormError("The goal could not be created. Please try again."); } finally { setSaving(false); }
   };
 
-  const toggleMilestone = async (goalId: string, milestoneId: string, completed: boolean) => {
-    await fetch("/api/goals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ milestoneId, milestoneCompleted: !completed }),
-    });
-    load();
-    if (selected) {
-      setSelected((prev) => prev ? {
-        ...prev,
-        milestones: prev.milestones.map((m) => m.id === milestoneId ? { ...m, isCompleted: !completed } : m),
-      } : null);
-    }
+  const updateProgress = async () => {
+    if (!selected || pendingId) return; const nextValue = Math.max(0, Math.min(selected.targetValue, Number(progressDraft))); if (!Number.isFinite(nextValue)) { setFormError("Enter a valid progress value."); return; }
+    const previous = selected.currentValue; setPendingId(selected.id); setFormError(""); setSelected({ ...selected, currentValue: nextValue }); setGoals((current) => current.map((goal) => goal.id === selected.id ? { ...goal, currentValue: nextValue } : goal));
+    try { const response = await fetch("/api/goals", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ goalId: selected.id, currentValue: nextValue }) }); if (!response.ok) throw new Error(); }
+    catch { setSelected((current) => current?.id === selected.id ? { ...current, currentValue: previous } : current); setGoals((current) => current.map((goal) => goal.id === selected.id ? { ...goal, currentValue: previous } : goal)); setProgressDraft(previous); setFormError("Progress could not be updated. The previous value was restored."); }
+    finally { setPendingId(null); }
   };
 
-  const updateProgress = async (goalId: string, newValue: number) => {
-    await fetch("/api/goals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goalId, currentValue: newValue }),
-    });
-    setGoals((prev) => prev.map((g) => g.id === goalId ? { ...g, currentValue: newValue } : g));
-    if (selected?.id === goalId) setSelected((prev) => prev ? { ...prev, currentValue: newValue } : null);
+  const toggleMilestone = async (goal: Goal, milestone: Milestone) => {
+    if (pendingId) return; const next = !milestone.isCompleted; const apply = (item: Goal, completed: boolean) => ({ ...item, milestones: item.milestones.map((entry) => entry.id === milestone.id ? { ...entry, isCompleted: completed } : entry) });
+    setPendingId(milestone.id); setFormError(""); setGoals((current) => current.map((item) => item.id === goal.id ? apply(item, next) : item)); setSelected((current) => current?.id === goal.id ? apply(current, next) : current);
+    try { const response = await fetch("/api/goals", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ milestoneId: milestone.id, milestoneCompleted: next }) }); if (!response.ok) throw new Error(); }
+    catch { setGoals((current) => current.map((item) => item.id === goal.id ? apply(item, milestone.isCompleted) : item)); setSelected((current) => current?.id === goal.id ? apply(current, milestone.isCompleted) : current); setFormError("The milestone could not be updated. Its previous state was restored."); }
+    finally { setPendingId(null); }
   };
-
-  const active = goals.filter((g) => g.status === "ACTIVE");
 
   const openCoach = async (goal: Goal) => {
-    setCoachGoal(goal);
-    setCoachPlan(null);
-    setShowCoach(true);
-    setCoachLoading(true);
-    try {
-      const pct = Math.min(Math.round((goal.currentValue / (goal.targetValue || 100)) * 100), 100);
-      const r = await fetch("/api/ai/goal-coach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalTitle: goal.title, goalDescription: goal.description, currentProgress: pct, goalId: goal.id }),
-      });
-      if (r.ok) { const d = await r.json(); setCoachPlan(d.plan); }
-    } catch {}
-    setCoachLoading(false);
+    setCoachGoal(goal); setCoachPlan(null); setCoachError(""); setShowCoach(true); setCoachLoading(true);
+    try { const response = await fetch("/api/ai/goal-coach", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ goalTitle: goal.title, goalDescription: goal.description, currentProgress: clampPercent(goal), goalId: goal.id }) }); if (!response.ok) throw new Error(); const data = await response.json(); setCoachPlan(data.plan); }
+    catch { setCoachError("A coaching plan could not be generated. Please try again."); } finally { setCoachLoading(false); }
   };
-  const avgProgress = active.length > 0
-    ? Math.round(active.reduce((s, g) => s + (g.currentValue / (g.targetValue || 100)) * 100, 0) / active.length)
-    : 0;
 
-  if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-2xl bg-muted/50" />)}</div>;
+  if (loading) return <GoalsSkeleton />;
+  const openCreate = () => { setFormError(""); setShowCreate(true); };
+  if (error && goals.length === 0) return <div className={styles.page}><GoalsHeader active={0} onCreate={openCreate} /><OpticalSurface className={styles.loadError} light="quiet"><CircleAlert aria-hidden="true" /><h3>Goals could not be loaded</h3><p>Check your connection and try again. No empty-state assumptions have been made.</p><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></OpticalSurface></div>;
+  return <div className={styles.page}>
+    <GoalsHeader active={activeGoals.length} onCreate={openCreate} />
+    {error && <div className={styles.error} role="alert"><CircleAlert aria-hidden="true" /><span>{error}</span><button onClick={() => load(true)}><RotateCcw aria-hidden="true" />Retry</button></div>}
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <SpaceHeading eyebrow="Directional field" title="Goals" description="Trajectories, milestones, and target horizons." action={
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          New Goal
-        </Button>
-      } />
+    <OpticalSurface className={styles.directionOverview} light="upper" aria-label="Goal direction overview"><div className={styles.overviewCopy}><span className={styles.metaLabel}>Current direction</span><h3>{activeGoals.length ? "Progress toward your active goals" : "Define your next destination"}</h3><p>{activeGoals.length ? "This is your current recorded position, not a forecast." : "Create a goal to establish a real target and track progress toward it."}</p></div><OverviewPath value={averageProgress} active={activeGoals.length} /><dl className={styles.overviewMetrics}><div><dt>Active</dt><dd>{activeGoals.length}</dd><small>goals</small></div><div><dt>Milestones</dt><dd>{completedMilestones}</dd><small>completed</small></div><div><dt>Completed</dt><dd>{completedGoals}</dd><small>goals</small></div></dl></OpticalSurface>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold text-primary">{active.length}</div><div className="text-xs text-muted-foreground">Active Goals</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{avgProgress}%</div><div className="text-xs text-muted-foreground">Avg Progress</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{active.reduce((s, g) => s + g.milestones.filter((m) => m.isCompleted).length, 0)}</div><div className="text-xs text-muted-foreground">Milestones Done</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="font-display text-2xl font-bold">{goals.filter((g) => g.status === "COMPLETED").length}</div><div className="text-xs text-muted-foreground">Completed</div></CardContent></Card>
-      </div>
+    {goals.length === 0 ? <OpticalSurface className={styles.emptyState} light="quiet"><div className={styles.emptyInstrument} aria-hidden="true"><Target /><span /><i /></div><h3>No goals yet</h3><p>Create a goal to define a destination. Progress and milestones will appear only after you record them.</p><button onClick={() => setShowCreate(true)}><Plus aria-hidden="true" />Create first goal</button></OpticalSurface> : <>
+      <section className={styles.goalSection} aria-labelledby="active-goals-heading"><div className={styles.sectionHeading}><div><span className={styles.metaLabel}>Current focus</span><h3 id="active-goals-heading">Active direction</h3></div><span>{activeGoals.length} goal{activeGoals.length === 1 ? "" : "s"}</span></div>{activeGoals.length ? <div className={styles.goalGrid}>{activeGoals.map((goal) => <GoalSurface key={goal.id} goal={goal} onOpen={openDetail} onCoach={openCoach} />)}</div> : <OpticalSurface className={styles.noActive} light="quiet"><Target aria-hidden="true" /><div><strong>No active goals</strong><span>Completed and paused goals remain available below.</span></div></OpticalSurface>}</section>
+      {otherGoals.length > 0 && <section className={`${styles.goalSection} ${styles.secondarySection}`} aria-labelledby="other-goals-heading"><div className={styles.sectionHeading}><div><span className={styles.metaLabel}>Recorded states</span><h3 id="other-goals-heading">Completed and inactive</h3></div><span>{otherGoals.length} goal{otherGoals.length === 1 ? "" : "s"}</span></div><div className={styles.goalGrid}>{otherGoals.map((goal) => <GoalSurface key={goal.id} goal={goal} onOpen={openDetail} onCoach={openCoach} />)}</div></section>}
+    </>}
 
-      {/* Goals Grid */}
-      {goals.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <span className="text-4xl block mb-3">🎯</span>
-            <h3 className="font-semibold mb-1">No goals yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">Set your first goal to start tracking progress.</p>
-            <Button onClick={() => setShowCreate(true)}>Create First Goal</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {goals.map((goal) => {
-            const pct = Math.min(Math.round((goal.currentValue / (goal.targetValue || 100)) * 100), 100);
-            return (
-              <Card key={goal.id} className="card-hover overflow-hidden cursor-pointer" onClick={() => setSelected(goal)}>
-                <div className="h-1" style={{ backgroundColor: goal.color }} />
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 mr-3">
-                      <h3 className="font-semibold">{goal.title}</h3>
-                      {goal.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{goal.description}</p>}
-                    </div>
-                    <Badge variant="secondary" className="shrink-0 text-xs">{goal.type.replace("_"," ")}</Badge>
-                  </div>
-                  <div className="space-y-2 mt-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-semibold">{pct}%</span>
-                    </div>
-                    <Progress value={pct} />
-                    {goal.targetDate && <p className="text-xs text-muted-foreground">Target: {formatDate(goal.targetDate)}</p>}
-                  </div>
-                  {goal.milestones.length > 0 && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="text-xs text-muted-foreground">{goal.milestones.filter((m) => m.isCompleted).length}/{goal.milestones.length} milestones</div>
-                    </div>
-                  )}
-                  <div className="mt-4 pt-3 border-t border-border/40 flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); openCoach(goal); }}
-                      className="flex items-center gap-1.5 text-xs text-primary hover:underline">
-                      <NovusMark size="sm" className="!h-4 !w-4 !text-[8px] !rounded-md" />
-                      AI Coach
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+    <Dialog open={!!selected} onOpenChange={(open) => { if (!open) setSelected(null); }} layerClassName={styles.dialogLayer}>{selected && <DialogContent className={styles.goalDialog} role="dialog" aria-modal="true" aria-labelledby="goal-detail-title" onKeyDown={(event) => { if (event.key === "Escape") setSelected(null); }}><DialogHeader className={styles.dialogHeader}><div><span className={styles.metaLabel}>Goal progress</span><DialogTitle id="goal-detail-title">{selected.title}</DialogTitle></div><button className={styles.dialogClose} onClick={() => setSelected(null)} aria-label="Close goal details"><X aria-hidden="true" /></button></DialogHeader><div className={styles.detailBody}>{formError && <div className={styles.formError} role="alert">{formError}</div>}{selected.description && <p className={styles.detailDescription}>{selected.description}</p>}<div className={styles.detailProgress}><div className={styles.detailProgressTop}><div><span>{valueWithUnit(selected.currentValue, selected.unit)}</span><small>of {valueWithUnit(selected.targetValue, selected.unit)}</small></div><strong>{clampPercent(selected)}%</strong></div><DirectionPath goal={selected} compact /></div><div className={styles.progressEditor}><label htmlFor="goal-progress">Current progress{selected.unit ? ` (${selected.unit})` : ""}</label><div><Input id="goal-progress" type="number" value={progressDraft} min={0} max={selected.targetValue} step="any" onChange={(event) => setProgressDraft(Number(event.target.value))} /><button onClick={updateProgress} disabled={pendingId === selected.id}>{pendingId === selected.id ? "Updating…" : "Update progress"}</button></div><small>Target: {valueWithUnit(selected.targetValue, selected.unit)}</small></div>{selected.targetDate && <div className={styles.detailDate}><CalendarDays aria-hidden="true" /><div><span>Target date</span><strong>{formatDate(selected.targetDate)}</strong><small>{selected.status === "COMPLETED" ? "Completed" : targetTiming(selected.targetDate)}</small></div></div>}{selected.milestones.length > 0 && <div className={styles.milestoneList}><div className={styles.detailSectionTitle}><span>Milestones</span><small>{selected.milestones.filter((item) => item.isCompleted).length} of {selected.milestones.length} complete</small></div>{[...selected.milestones].sort((a, b) => a.order - b.order).map((milestone, index) => <button key={milestone.id} className={styles.milestoneRow} data-complete={milestone.isCompleted || undefined} onClick={() => toggleMilestone(selected, milestone)} disabled={pendingId === milestone.id} aria-label={`${milestone.isCompleted ? "Reopen" : "Complete"} milestone: ${milestone.title}`}><span className={styles.milestoneIndex}>{milestone.isCompleted ? <Check aria-hidden="true" /> : String(index + 1).padStart(2, "0")}</span><span><strong>{milestone.title}</strong>{milestone.description && <small>{milestone.description}</small>}</span>{milestone.targetDate && <time dateTime={milestone.targetDate}>{formatDate(milestone.targetDate)}</time>}</button>)}</div>}</div></DialogContent>}</Dialog>
 
-      {/* Goal Detail Dialog */}
-      {selected && (
-        <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>{selected.title}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Progress: {selected.currentValue} / {selected.targetValue}</span>
-                  <span className="font-semibold">{Math.min(Math.round((selected.currentValue / (selected.targetValue || 100)) * 100), 100)}%</span>
-                </div>
-                <Progress value={Math.min((selected.currentValue / (selected.targetValue || 100)) * 100, 100)} />
-                <div className="flex gap-2 mt-3">
-                  <Input type="number" value={selected.currentValue} min={0} max={selected.targetValue}
-                    onChange={(e) => setSelected({ ...selected, currentValue: Number(e.target.value) })}
-                    className="flex-1" />
-                  <Button size="sm" onClick={() => updateProgress(selected.id, selected.currentValue)}>Update</Button>
-                </div>
-              </div>
-              {selected.milestones.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Milestones</h4>
-                  <div className="space-y-2">
-                    {selected.milestones.map((m) => (
-                      <div key={m.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50">
-                        <button
-                          onClick={() => toggleMilestone(selected.id, m.id, m.isCompleted)}
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${m.isCompleted ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30 hover:border-primary"}`}
-                        >
-                          {m.isCompleted && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </button>
-                        <span className={`text-sm ${m.isCompleted ? "line-through text-muted-foreground" : ""}`}>{m.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+    <Dialog open={showCoach} onOpenChange={setShowCoach} layerClassName={styles.dialogLayer}><DialogContent className={`${styles.goalDialog} ${styles.coachDialog}`} role="dialog" aria-modal="true" aria-labelledby="goal-coach-title"><DialogHeader className={styles.dialogHeader}><div className={styles.coachTitle}><NovusMark size="sm" /><div><span className={styles.metaLabel}>Novus guidance</span><DialogTitle id="goal-coach-title">Goal Coach</DialogTitle>{coachGoal && <p>{coachGoal.title}</p>}</div></div><button className={styles.dialogClose} onClick={() => setShowCoach(false)} aria-label="Close Goal Coach"><X aria-hidden="true" /></button></DialogHeader><div className={styles.coachBody}>{coachLoading ? <div className={styles.coachLoading}><Sparkles aria-hidden="true" /><span>Analyzing your goal</span><i /><i /><i /></div> : coachError ? <div className={styles.coachError} role="alert">{coachError}</div> : coachPlan ? <><OpticalSurface className={styles.assessment} light="upper"><p>{coachPlan.assessment}</p>{coachPlan.motivationalNote && <small>{coachPlan.motivationalNote}</small>}</OpticalSurface>{coachPlan.estimatedTimeline && <div className={styles.coachEstimate}><span>Coach estimate</span><strong>{coachPlan.estimatedTimeline}</strong><small>AI guidance, not a measured forecast.</small></div>}{coachPlan.suggestedMilestones.length > 0 && <div className={styles.coachSection}><h3>Suggested milestones</h3>{coachPlan.suggestedMilestones.map((milestone, index) => <div className={styles.coachRow} key={`${milestone.title}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{milestone.title}</strong><small>{milestone.timeframe}</small>{milestone.description && <p>{milestone.description}</p>}</div></div>)}</div>}{coachPlan.recommendedHabits.length > 0 && <div className={styles.coachSection}><h3>Recommended habits</h3>{coachPlan.recommendedHabits.map((habit, index) => <div className={styles.coachLine} key={`${habit}-${index}`}><Target aria-hidden="true" /><span>{habit}</span></div>)}</div>}{coachPlan.recommendedActions.length > 0 && <div className={styles.coachSection}><h3>Recommended actions</h3>{coachPlan.recommendedActions.map((action, index) => <div className={styles.coachLine} key={`${action}-${index}`}><ArrowRight aria-hidden="true" /><span>{action}</span></div>)}</div>}</> : null}</div></DialogContent></Dialog>
 
-      {/* Goal Coach Dialog */}
-      <Dialog open={showCoach} onOpenChange={setShowCoach}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <NovusMark size="sm" />
-              <div>
-                <DialogTitle>Goal Coach</DialogTitle>
-                {coachGoal && <p className="text-sm text-muted-foreground mt-0.5">{coachGoal.title}</p>}
-              </div>
-            </div>
-          </DialogHeader>
-          {coachLoading ? (
-            <div className="space-y-3 py-4">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <NovusMark size="sm" />
-                <span>Analyzing your goal…</span>
-                <div className="flex gap-1">
-                  {[0,1,2].map((i) => (
-                    <motion.span key={i} className="w-1.5 h-1.5 rounded-full bg-primary"
-                      animate={{ opacity: [0.3,1,0.3] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }} />
-                  ))}
-                </div>
-              </div>
-              {[...Array(4)].map((_, i) => <div key={i} className="h-12 rounded-xl shimmer" />)}
-            </div>
-          ) : coachPlan ? (
-            <div className="space-y-5">
-              {/* Assessment */}
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20">
-                <p className="text-sm leading-relaxed text-foreground/90">{coachPlan.assessment}</p>
-                {coachPlan.motivationalNote && (
-                  <p className="text-xs text-primary/80 mt-2 italic">{coachPlan.motivationalNote}</p>
-                )}
-              </div>
-
-              {/* Timeline */}
-              {coachPlan.estimatedTimeline && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Estimated:</span>
-                  <span className="font-medium">{coachPlan.estimatedTimeline}</span>
-                </div>
-              )}
-
-              {/* Milestones */}
-              {coachPlan.suggestedMilestones.length > 0 && (
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-primary/70 mb-3">Suggested Milestones</p>
-                  <div className="space-y-2">
-                    {coachPlan.suggestedMilestones.map((m, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted/30">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i+1}</div>
-                        <div>
-                          <div className="text-sm font-medium">{m.title}</div>
-                          <div className="text-xs text-primary/70">{m.timeframe}</div>
-                          {m.description && <div className="text-xs text-muted-foreground mt-0.5">{m.description}</div>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recommended habits */}
-              {coachPlan.recommendedHabits.length > 0 && (
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-emerald-400/70 mb-2">Recommended Habits</p>
-                  <div className="space-y-1.5">
-                    {coachPlan.recommendedHabits.map((h, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <span className="text-emerald-400">✦</span>
-                        <span>{h}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions this week */}
-              {coachPlan.recommendedActions.length > 0 && (
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-sky-400/70 mb-2">This Week</p>
-                  <div className="space-y-1.5">
-                    {coachPlan.recommendedActions.map((a, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <span className="text-sky-400">→</span>
-                        <span>{a}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4">Could not generate coaching plan. Try again.</p>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader><DialogTitle>New Goal</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <Input placeholder="Goal title *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Why does this goal matter to you?" className="w-full h-20 px-3 py-2 rounded-xl border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary" />
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium block mb-1.5">Type</label>
-                <div className="flex flex-wrap gap-1">
-                  {GOAL_TYPES.map((t) => (
-                    <Button key={t} variant={form.type === t ? "default" : "outline"} size="sm"
-                      onClick={() => setForm({ ...form, type: t })} className="text-xs px-2 h-7">
-                      {t.replace("_"," ")}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">Target Value</label>
-                <Input type="number" value={form.targetValue} min={1}
-                  onChange={(e) => setForm({ ...form, targetValue: Number(e.target.value) })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium block mb-2">Color</label>
-                <div className="flex flex-wrap gap-2">
-                  {COLORS.map((c) => (
-                    <button key={c} onClick={() => setForm({ ...form, color: c })}
-                      className={`w-7 h-7 rounded-full ${form.color === c ? "ring-2 ring-offset-2 ring-offset-background ring-foreground" : ""}`}
-                      style={{ backgroundColor: c }} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">Target Date</label>
-                <Input type="date" value={form.targetDate} onChange={(e) => setForm({ ...form, targetDate: e.target.value })} />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Milestones (optional)</label>
-              <div className="flex gap-2 mb-2">
-                <Input placeholder="Add a milestone…" value={milestoneInput}
-                  onChange={(e) => setMilestoneInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && milestoneInput.trim()) { setMilestones([...milestones, milestoneInput.trim()]); setMilestoneInput(""); }}} />
-                <Button size="sm" variant="outline" onClick={() => { if (milestoneInput.trim()) { setMilestones([...milestones, milestoneInput.trim()]); setMilestoneInput(""); }}}>Add</Button>
-              </div>
-              {milestones.map((m, i) => (
-                <div key={i} className="flex items-center gap-2 py-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <span className="text-sm flex-1">{m}</span>
-                  <button onClick={() => setMilestones(milestones.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">×</button>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button className="flex-1" onClick={createGoal} disabled={saving || !form.title.trim()}>
-                {saving ? "Creating…" : "Create Goal"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+    <Dialog open={showCreate} onOpenChange={setShowCreate} layerClassName={styles.dialogLayer}><DialogContent className={styles.goalDialog} role="dialog" aria-modal="true" aria-labelledby="new-goal-title" onKeyDown={(event) => { if (event.key === "Escape") setShowCreate(false); }}><DialogHeader className={styles.dialogHeader}><div><span className={styles.metaLabel}>Set a destination</span><DialogTitle id="new-goal-title">New goal</DialogTitle></div><button className={styles.dialogClose} onClick={() => setShowCreate(false)} aria-label="Close new goal form"><X aria-hidden="true" /></button></DialogHeader><form className={styles.goalForm} onSubmit={createGoal}>{formError && <div className={styles.formError} role="alert">{formError}</div>}<div><label htmlFor="goal-title">Goal title</label><Input id="goal-title" autoFocus placeholder="What do you want to achieve?" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></div><div><label htmlFor="goal-description">Description</label><textarea id="goal-description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Why does this goal matter to you?" /></div><fieldset><legend>Time horizon</legend><div className={styles.typeChoices}>{GOAL_TYPES.map((type) => <button type="button" key={type} aria-pressed={form.type === type} onClick={() => setForm({ ...form, type })}>{readableType(type)}</button>)}</div></fieldset><div className={styles.formPair}><div><label htmlFor="goal-target">Target value</label><Input id="goal-target" type="number" min={1} step="any" value={form.targetValue} onChange={(event) => setForm({ ...form, targetValue: Number(event.target.value) })} /></div><div><label htmlFor="goal-date">Target date</label><Input id="goal-date" type="date" value={form.targetDate} onChange={(event) => setForm({ ...form, targetDate: event.target.value })} /></div></div><fieldset><legend>Color</legend><div className={styles.colorChoices}>{COLORS.map((color) => <button type="button" key={color} aria-pressed={form.color === color} aria-label={`Use color ${color}`} style={{ "--goal-color": color } as React.CSSProperties} onClick={() => setForm({ ...form, color })} />)}</div></fieldset><div><label htmlFor="goal-milestone">Milestones <span>optional</span></label><div className={styles.milestoneInput}><Input id="goal-milestone" placeholder="Add a milestone" value={milestoneInput} onChange={(event) => setMilestoneInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addMilestone(); } }} /><button type="button" onClick={addMilestone}>Add</button></div>{milestones.length > 0 && <div className={styles.pendingMilestones}>{milestones.map((milestone, index) => <div key={`${milestone}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><strong>{milestone}</strong><button type="button" onClick={() => setMilestones((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`Remove milestone: ${milestone}`}><X aria-hidden="true" /></button></div>)}</div>}</div><div className={styles.formActions}><button type="button" onClick={() => setShowCreate(false)}>Cancel</button><button type="submit" disabled={saving || !form.title.trim()}>{saving ? "Creating…" : "Create goal"}</button></div></form></DialogContent></Dialog>
+  </div>;
 }

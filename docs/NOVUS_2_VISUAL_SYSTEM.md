@@ -242,13 +242,13 @@ One existing caveat is `SignalTrace` in `instruments.tsx`: for constant series i
 
 ## 12. Extending to secondary Spaces
 
-Tasks and Habits are completed canonical propagations. The remaining rows are future directions, not claims of completed adoption. Preserve existing functionality and real data contracts. All routes live under `src/app/(app)`.
+Tasks, Habits, and Goals are completed canonical propagations. The remaining rows are future directions, not claims of completed adoption. Preserve existing functionality and real data contracts. All routes live under `src/app/(app)`.
 
 | Space / route | Appropriate interpretation |
 | --- | --- |
 | Tasks `/tasks` | **Stage 2A canonical.** Execution, priority and real completion; compact readable rows, restrained motion, clear filters and deadlines. Reflection never obscures checkboxes. |
 | Habits `/habits` | **Stage 2B canonical.** Cadence, actual streaks and today completion; the current route exposes no dated history, so it deliberately has no historical matrix. |
-| Goals `/goals` | Real progress paths and milestones; emphasize direction and target dates without invented forecasts. |
+| Goals `/goals` | **Stage 2C canonical.** Direction, real current/target distance, ordered milestones, and actual target dates without invented forecasts. |
 | Journal `/journal` | Writing-first editorial hierarchy, quiet glass and minimal ambient movement; no large active material behind long-form editing. |
 | Projects `/projects` | Board/list clarity, project state and recorded progress; preserve drag/drop hit targets and column legibility. |
 | Finance `/finance` | Precise values, units, dates, income/expense/account/budget charts supported by available data. Minimal decoration; never remove axes merely for aesthetics. |
@@ -272,6 +272,12 @@ Tasks keeps the existing execution-mode `SystemAtmosphere`; it does not add anot
 `src/app/(app)/habits/page.tsx` and `habits.module.css` define the rhythm-specific composition. One integrated cadence surface places actual today completion in a segmented arc beside supported active, longest-streak, and all-time completion values. The dominant Today surface uses circular ritual controls, exact frequency labels, real target-day marks when present, restrained streak metadata, and a short local completion signal. It keeps the existing rhythm-mode `SystemAtmosphere` and adds no rendering context or historical inference.
 
 Creation still supports the existing name, icon, color, and daily/weekly/monthly frequency contract; completion, archival deletion, optimistic state, rollback messaging, plan limit, checkout entry, and route-context Novus entry remain intact. The route receives only today’s logs, so no weekly/monthly matrix or consistency history is claimed. `scripts/habits-qa.cjs` covers populated, long-list, empty, touch, create/delete/toggle contracts, responsive, dialog, and reduced-motion states with local intercepted fixtures. The creation overlay uses the legacy custom Dialog; its Habits-only layer override keeps mobile navigation non-interactive beneath it, but it does not claim Radix focus containment.
+
+### Stage 2C — canonical Goals propagation
+
+`src/app/(app)/goals/page.tsx` and `goals.module.css` define the direction-specific composition. An integrated direction surface displays the honestly derived average of current active-goal progress beside active, completed-milestone, and completed-goal counts. Goal surfaces make current value, target, remaining distance, actual target dates, status, and ordered real milestones primary. Their calibrated paths represent only current progress and milestone state; they do not claim history, velocity, or prediction.
+
+Creation retains the existing title, description, horizon, target value, color, target date, and milestone contract. Numeric progress and milestone toggles use the existing PATCH shapes with optimistic UI and rollback messaging. Existing Goal Coach output remains available, and its generated timeline is explicitly labelled AI guidance rather than measured forecasting. The current UI still exposes no delete, metadata edit, filter, sort, or status-change control, so Stage 2C does not invent them. `scripts/goals-qa.cjs` covers populated, dense, empty, touch, create/progress/milestone/coach contracts, rollback, responsive composition, dialog layering, and reduced motion with local intercepted fixtures.
 
 ## 13. Legacy, performance and future refactoring notes
 
@@ -297,8 +303,9 @@ Relevant harnesses:
 - `scripts/intelligence-touch-qa.cjs`: coarse-pointer Chrome emulation, no unwanted opening keyboard, newline/send and focus restoration.
 - `scripts/tasks-qa.cjs`: Stage 2A desktop/mobile Tasks composition, real task request contracts, filters, dense and empty states, touch, safe areas, dialog and reduced motion.
 - `scripts/habits-qa.cjs`: Stage 2B desktop/mobile Habits rhythm, truthful summary values, recurrence display, create/toggle/delete contracts, dense and empty states, touch, dialog and reduced motion.
+- `scripts/goals-qa.cjs`: Stage 2C desktop/mobile Goals direction, truthful progress/date/milestone values, create/update/toggle/coach contracts, rollback, dense and empty states, touch, dialog and reduced motion.
 
-Recorded final suites had no unexpected console/page errors. Destructive actions were intercepted fixtures, not live account mutations. This verifies UI and request contracts, not real provider quality or live authenticated action success. A physical iPhone, Safari and physical soft keyboard were not tested. Dependency installation reported advisories; no broad security audit or dependency remediation is implied. Light mode and secondary Spaces other than Tasks and Habits are not newly certified by the canonical lock.
+Recorded final suites had no unexpected console/page errors. Destructive actions were intercepted fixtures, not live account mutations. This verifies UI and request contracts, not real provider quality or live authenticated action success. A physical iPhone, Safari and physical soft keyboard were not tested. Dependency installation reported advisories; no broad security audit or dependency remediation is implied. Light mode and secondary Spaces other than Tasks, Habits, and Goals are not newly certified by the canonical lock.
 
 The following files exist locally under `artifacts/visual-qa/`. They are ignored/untracked artifacts, **not files guaranteed in a fresh clone**. Share/copy them separately if another workstation needs visual evidence. Paths are useful locally; do not silently substitute an older tracked mockup if unavailable.
 
@@ -326,6 +333,6 @@ Start future model switches with `docs/NOVUS_2_MODEL_HANDOFF.md`. Use this file 
 
 ## Next Phase
 
-Continue propagating the locked Novus 2.0 visual system across secondary Spaces using actual canonical primitives, without redesigning the system. Recommended next order: Goals → Journal → Projects → Finance → Workout → Mood → Statistics → Timeline → Life DNA / Weekly Review / Analyst → Settings.
+Continue propagating the locked Novus 2.0 visual system across secondary Spaces using actual canonical primitives, without redesigning the system. Recommended next order: Journal → Projects → Finance → Workout → Mood → Statistics → Timeline → Life DNA / Weekly Review / Analyst → Settings.
 
 Begin the next Space only when authorized. Inspect its existing data/interaction model, reuse canonical material and purpose-appropriate instrumentation, preserve functionality, verify desktop/mobile and truthful empty/populated states, then guard all previously locked surfaces against regression. Do not combine propagation with backend redesign, Stripe, onboarding, integrations, new modules, or performance rewrites.
