@@ -1,300 +1,137 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowRight, BookOpenText, CalendarDays, CircleAlert, Feather, RotateCcw, Search, Sparkles, Trash2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { MOOD_EMOJIS } from "@/lib/constants";
-import { formatDate } from "@/lib/utils";
 import { NovusMark } from "@/components/shared/novus-logo";
-import { motion } from "framer-motion";
-import { SpaceHeading } from "@/components/visual-system/space-heading";
+import { OpticalSurface } from "@/components/visual-system/optical-surface";
+import styles from "./journal.module.css";
 
-interface JournalEntry {
-  id: string; title?: string; content: string; mood?: number; moodEmoji?: string;
-  tags: string[]; wordCount: number; type: string; date: string;
-}
+interface JournalEntry { id: string; title?: string; content: string; mood?: number; moodEmoji?: string; tags: string[]; wordCount: number; type: string; date: string; }
+interface JournalPattern { title: string; description: string; actionable: string; type: "positive" | "warning" | "neutral"; }
+const ENTRY_TYPES = ["DAILY", "GRATITUDE", "REFLECTION", "FREE_WRITE"] as const;
 
-interface JournalAnalysis {
-  themes: string[];
-  emotionalTrends: string;
-  commonConcerns: string[];
-  growthIndicators: string[];
-  reflection: string;
+function entryDate(value: string) { return new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric", year: "numeric" }).format(new Date(value)); }
+function entryTime(value: string) { return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(value)); }
+function monthLabel(value: string) { return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(value)); }
+function typeLabel(value: string) { return value.toLowerCase().replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()); }
+
+function JournalSkeleton() {
+  return <div className={styles.page} aria-label="Loading journal" aria-busy="true">
+    <div className={`${styles.skeleton} ${styles.skeletonHeader}`} />
+    <div className={`${styles.skeleton} ${styles.skeletonCompose}`} />
+    <div className={styles.skeletonArchive}>{Array.from({ length: 4 }, (_, index) => <div key={index} className={`${styles.skeleton} ${styles.skeletonRow}`} />)}</div>
+  </div>;
 }
 
 export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [reading, setReading] = useState<JournalEntry | null>(null);
-  const [form, setForm] = useState({ title: "", content: "", mood: 0, moodEmoji: "", tags: "", type: "DAILY" });
+  const [form, setForm] = useState({ title: "", content: "", mood: 0, moodEmoji: "", type: "DAILY" });
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
-  const [analysis, setAnalysis] = useState<JournalAnalysis | null>(null);
+  const [patterns, setPatterns] = useState<JournalPattern[]>([]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
-  const load = useCallback(async (q = "") => {
-    const params = new URLSearchParams({ limit: "20" });
-    if (q) params.set("search", q);
-    const res = await fetch(`/api/journal?${params}`);
-    if (res.ok) { const d = await res.json(); setEntries(d.entries); setTotal(d.total); }
-    setLoading(false);
+  const load = useCallback(async (query = "", showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: "20" });
+      if (query.trim()) params.set("search", query.trim());
+      const response = await fetch(`/api/journal?${params}`);
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      setEntries(data.entries); setTotal(data.total); setLoadError(null);
+    } catch { setLoadError("Your journal could not be loaded. Check your connection and try again."); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { const timer = window.setTimeout(() => load(search), search ? 350 : 0); return () => window.clearTimeout(timer); }, [load, search]);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("new") === "1") setShowCreate(true); }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => load(search), 400);
-    return () => clearTimeout(t);
-  }, [search, load]);
+  const groupedEntries = useMemo(() => {
+    const groups: Array<{ label: string; entries: JournalEntry[] }> = [];
+    for (const entry of entries) { const label = monthLabel(entry.date); const current = groups.at(-1); if (current?.label === label) current.entries.push(entry); else groups.push({ label, entries: [entry] }); }
+    return groups;
+  }, [entries]);
+  const wordsInView = entries.reduce((sum, entry) => sum + (entry.wordCount || 0), 0);
+  const moodEntries = entries.filter((entry) => entry.mood);
+  const averageMood = moodEntries.length ? (moodEntries.reduce((sum, entry) => sum + (entry.mood || 0), 0) / moodEntries.length).toFixed(1) : "—";
+  const gratitudeInView = entries.filter((entry) => entry.type === "GRATITUDE").length;
 
-  const createEntry = async () => {
-    if (!form.content.trim()) return;
-    setSaving(true);
-    const tags = tagInput.split(",").map((t) => t.trim()).filter(Boolean);
-    const res = await fetch("/api/journal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, tags, mood: form.mood || undefined, moodEmoji: form.moodEmoji || undefined }),
-    });
-    if (res.ok) {
-      setShowCreate(false);
-      setForm({ title: "", content: "", mood: 0, moodEmoji: "", tags: "", type: "DAILY" });
-      setTagInput("");
-      load(search);
-    }
-    setSaving(false);
+  const resetForm = () => { setForm({ title: "", content: "", mood: 0, moodEmoji: "", type: "DAILY" }); setTagInput(""); setActionError(null); };
+  const createEntry = async (event: React.FormEvent) => {
+    event.preventDefault(); if (!form.content.trim() || saving) return; setSaving(true); setActionError(null);
+    const tags = tagInput.split(",").map((tag) => tag.trim()).filter(Boolean);
+    try {
+      const response = await fetch("/api/journal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, title: form.title.trim() || undefined, content: form.content.trim(), tags, mood: form.mood || undefined, moodEmoji: form.moodEmoji || undefined }) });
+      if (!response.ok) throw new Error(); setShowCreate(false); resetForm(); await load(search);
+    } catch { setActionError("This entry could not be saved. Your writing is still here so you can try again."); }
+    finally { setSaving(false); }
   };
-
-  const deleteEntry = async (id: string) => {
-    if (!confirm("Delete this entry?")) return;
-    await fetch(`/api/journal/${id}`, { method: "DELETE" });
-    load(search);
+  const deleteEntry = async (entry: JournalEntry) => {
+    if (deletingId || !window.confirm("Delete this entry?")) return; setDeletingId(entry.id); setActionError(null);
+    try { const response = await fetch(`/api/journal/${entry.id}`, { method: "DELETE" }); if (!response.ok) throw new Error(); setReading(null); await load(search); }
+    catch { setActionError("That entry could not be deleted. Nothing was removed."); }
+    finally { setDeletingId(null); }
   };
-
-  const totalWords = entries.reduce((s, e) => s + (e.wordCount || 0), 0);
-  const avgMood = entries.filter((e) => e.mood).length > 0
-    ? (entries.filter((e) => e.mood).reduce((s, e) => s + (e.mood || 0), 0) / entries.filter((e) => e.mood).length).toFixed(1)
-    : "—";
-
   const analyzeJournal = async () => {
-    setAnalysisLoading(true);
-    setShowAnalysis(true);
-    try {
-      const r = await fetch("/api/ai/analyze");
-      if (r.ok) {
-        const d = await r.json();
-        // We re-use the life analysis route but only show journal section
-        // Separately call a journal-specific endpoint
-      }
-    } catch {}
-    // Use the patterns endpoint which includes journal analysis
-    try {
-      const r = await fetch("/api/ai/patterns");
-      if (r.ok) {
-        const d = await r.json();
-        // Build a journal analysis from what we have
-        setAnalysis({
-          themes: d.patterns?.patterns?.slice(0,3).map((p: any) => p.title) || [],
-          emotionalTrends: "Analyzing your recent entries…",
-          commonConcerns: [],
-          growthIndicators: [],
-          reflection: "Analysis based on your recent writing patterns.",
-        });
-      }
-    } catch {}
-    setAnalysisLoading(false);
+    setAnalysisLoading(true); setShowAnalysis(true); setActionError(null);
+    try { const response = await fetch("/api/ai/patterns"); if (!response.ok) throw new Error(); const data = await response.json(); setPatterns(Array.isArray(data.patterns?.patterns) ? data.patterns.patterns : []); }
+    catch { setPatterns([]); setActionError("Novus could not review your current patterns. Try again when you are ready."); }
+    finally { setAnalysisLoading(false); }
   };
 
-  if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted/50" />)}</div>;
+  if (loading) return <JournalSkeleton />;
+  return <div className={styles.page}>
+    <header className={styles.header}>
+      <div className={styles.headingCopy}><span>Private reflection</span><h2>Journal</h2><p>A quiet place to record what happened, what mattered, and what you want to remember.</p><div className={styles.headerState} aria-label={`${total} journal entries`}><span>{total} {total === 1 ? "entry" : "entries"}</span><i aria-hidden="true" /><span>{entries.length ? `Latest ${entryDate(entries[0].date)}` : "Archive waiting"}</span></div></div>
+      <button className={styles.primaryAction} onClick={() => { resetForm(); setShowCreate(true); }}><Feather aria-hidden="true" />Write</button><span className={styles.headerReflection} aria-hidden="true"><i /><i /><i /></span>
+    </header>
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <SpaceHeading eyebrow="Reflection field" title="Journal" description="A quieter surface for writing and perspective." intensity="calm" action={<div className="flex gap-2">
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          New Entry
-        </Button>
-        <Button size="sm" variant="outline" onClick={analyzeJournal}>
-          AI Insights
-        </Button>
-      </div>} />
+    {actionError && <div className={styles.actionError} role="alert"><CircleAlert aria-hidden="true" /><span>{actionError}</span><button onClick={() => setActionError(null)} aria-label="Dismiss error"><X aria-hidden="true" /></button></div>}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{total}</div><div className="text-xs text-muted-foreground">Total Entries</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{totalWords > 999 ? `${(totalWords/1000).toFixed(1)}k` : totalWords}</div><div className="text-xs text-muted-foreground">Words Written</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{avgMood}</div><div className="text-xs text-muted-foreground">Avg Mood</div></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{entries.filter((e) => e.type === "GRATITUDE").length}</div><div className="text-xs text-muted-foreground">Gratitude</div></CardContent></Card>
-      </div>
+    <OpticalSurface className={styles.writingThreshold} light="quiet">
+      <div className={styles.thresholdCopy}><span className={styles.metaLabel}>New reflection</span><h3>Begin with what is true right now.</h3><p>Your entry stays private to your account. Add a title, mood, type, or tags only when they help.</p></div>
+      <button className={styles.thresholdAction} onClick={() => { resetForm(); setShowCreate(true); }}><span><Feather aria-hidden="true" /></span><strong>Start writing</strong><small>Open a blank entry</small><ArrowRight aria-hidden="true" /></button>
+      <dl className={styles.folio} aria-label="Journal summary"><div><dt>Entries</dt><dd>{total}</dd><small>All recorded</small></div><div><dt>Words</dt><dd>{wordsInView > 999 ? `${(wordsInView / 1000).toFixed(1)}k` : wordsInView}</dd><small>Current view</small></div><div><dt>Average mood</dt><dd>{averageMood}</dd><small>{moodEntries.length ? `${moodEntries.length} rated` : "Not recorded"}</small></div><div><dt>Gratitude</dt><dd>{gratitudeInView}</dd><small>Current view</small></div></dl>
+    </OpticalSurface>
 
-      <Input placeholder="Search entries…" value={search} onChange={(e) => setSearch(e.target.value)}
-        icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>} />
+    {showAnalysis && <OpticalSurface className={styles.analysis} light="upper" aria-label="Novus whole-life patterns">
+      <div className={styles.analysisHeader}><NovusMark size="sm" /><div><span className={styles.metaLabel}>Novus review</span><h3>Whole-life patterns</h3></div><button onClick={() => setShowAnalysis(false)} aria-label="Close Novus review"><X aria-hidden="true" /></button></div>
+      <p className={styles.analysisScope}>This existing analysis considers your recorded activity across Novus, including journal frequency. It is not a journal-only interpretation.</p>
+      {analysisLoading ? <div className={styles.analysisLoading} role="status"><span /><span /><span /><p>Reviewing current records…</p></div> : patterns.length ? <div className={styles.patternList}>{patterns.slice(0, 4).map((pattern, index) => <article key={`${pattern.title}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><div><h4>{pattern.title}</h4>{pattern.description && <p>{pattern.description}</p>}{pattern.actionable && <small>{pattern.actionable}</small>}</div></article>)}</div> : <p className={styles.noPatterns}>No patterns were returned from the current records.</p>}
+    </OpticalSurface>}
 
-      {/* AI Analysis Panel */}
-      {showAnalysis && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-[20px] border border-primary/20 bg-card/50 overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-border/40">
-            <NovusMark size="sm" />
-            <span className="text-sm font-medium">Journal AI Insights</span>
-            <button onClick={() => setShowAnalysis(false)} className="ml-auto text-muted-foreground hover:text-foreground">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <div className="p-5">
-            {analysisLoading ? (
-              <div className="space-y-2">
-                <div className="h-4 w-3/4 rounded shimmer"/><div className="h-4 w-full rounded shimmer"/><div className="h-4 w-1/2 rounded shimmer"/>
-              </div>
-            ) : analysis ? (
-              <div className="space-y-4">
-                {analysis.reflection && <p className="text-sm leading-relaxed text-foreground/90">{analysis.reflection}</p>}
-                {analysis.themes.length > 0 && (
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-primary/70 mb-2">Recurring Themes</p>
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.themes.map((t) => <span key={t} className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs">{t}</span>)}
-                    </div>
-                  </div>
-                )}
-                {analysis.emotionalTrends && (
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-pink-400/70 mb-1.5">Emotional Trends</p>
-                    <p className="text-sm text-muted-foreground">{analysis.emotionalTrends}</p>
-                  </div>
-                )}
-                {analysis.growthIndicators.length > 0 && (
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-emerald-400/70 mb-2">Growth Indicators</p>
-                    <ul className="space-y-1">{analysis.growthIndicators.map((g) => <li key={g} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-emerald-400 mt-0.5">✦</span>{g}</li>)}</ul>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Could not generate analysis. Try again.</p>
-            )}
-          </div>
-        </motion.div>
-      )}
+    <section className={styles.archive} aria-labelledby="journal-archive-title">
+      <div className={styles.archiveHeader}><div><span className={styles.metaLabel}>Chronology</span><h3 id="journal-archive-title">Your archive</h3></div><div className={styles.archiveActions}><label className={styles.searchBox}><Search aria-hidden="true" /><span className="sr-only">Search journal entries</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search entries" /></label><button onClick={analyzeJournal} disabled={analysisLoading}><Sparkles aria-hidden="true" />AI insights</button></div></div>
+      {loadError ? <OpticalSurface className={styles.loadError} light="quiet"><CircleAlert aria-hidden="true" /><h3>Journal unavailable</h3><p>{loadError}</p><button onClick={() => load(search, true)}><RotateCcw aria-hidden="true" />Retry</button></OpticalSurface> : entries.length === 0 ? <OpticalSurface className={styles.emptyState} light="quiet"><div className={styles.emptyMark} aria-hidden="true"><BookOpenText /><span /></div><h3>{search ? "No entries match this search" : "Your first page is waiting"}</h3><p>{search ? "Try another word or clear the search to return to your archive." : "Start with one honest paragraph. You can add structure later if it becomes useful."}</p>{search ? <button onClick={() => setSearch("")}>Clear search</button> : <button onClick={() => { resetForm(); setShowCreate(true); }}><Feather aria-hidden="true" />Write first entry</button>}</OpticalSurface> : <div className={styles.chronology}>
+        {groupedEntries.map((group) => <div className={styles.monthGroup} key={group.label}><div className={styles.monthLabel}><span>{group.label}</span><i aria-hidden="true" /></div><ol>{group.entries.map((entry, index) => <li key={entry.id} className={styles.entryRow}>
+          <button className={styles.entryOpen} onClick={() => setReading(entry)} aria-label={`Read ${entry.title || "untitled entry"}`}><time dateTime={entry.date}><strong>{new Date(entry.date).getDate()}</strong><span>{entryTime(entry.date)}</span></time><span className={styles.railNode} aria-hidden="true" data-first={index === 0} /><span className={styles.entryCopy}><span className={styles.entryTopline}>{entry.moodEmoji && <i>{entry.moodEmoji}</i>}<b>{typeLabel(entry.type)}</b><em>{entry.wordCount} {entry.wordCount === 1 ? "word" : "words"}</em></span><strong>{entry.title || "Untitled entry"}</strong><p>{entry.content}</p>{entry.tags.length > 0 && <span className={styles.tags}>{entry.tags.map((tag) => <small key={tag}>{tag}</small>)}</span>}</span><ArrowRight className={styles.entryArrow} aria-hidden="true" /></button>
+          <button className={styles.deleteButton} onClick={() => deleteEntry(entry)} disabled={deletingId === entry.id} aria-label={`Delete ${entry.title || "untitled entry"}`}><Trash2 aria-hidden="true" /></button>
+        </li>)}</ol></div>)}<footer className={styles.archiveFooter}><span>{entries.length} of {total} {total === 1 ? "entry" : "entries"} shown</span></footer>
+      </div>}
+    </section>
 
-      {entries.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="p-12 text-center">
-            <span className="text-4xl block mb-3">✍️</span>
-            <h3 className="font-semibold mb-1">{search ? "No entries found" : "No journal entries yet"}</h3>
-            {!search && <><p className="text-sm text-muted-foreground mb-4">Start writing to track your thoughts and growth.</p><Button onClick={() => setShowCreate(true)}>Write First Entry</Button></>}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {entries.map((entry) => (
-            <Card key={entry.id} className="card-hover group cursor-pointer" onClick={() => setReading(entry)}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {entry.moodEmoji && <span className="text-xl">{entry.moodEmoji}</span>}
-                    <div>
-                      <h3 className="font-semibold">{entry.title || "Untitled Entry"}</h3>
-                      <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{entry.wordCount} words</span>
-                    <button onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:text-destructive text-muted-foreground">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">{entry.content}</p>
-                {entry.tags.length > 0 && (
-                  <div className="flex gap-1.5 mt-3 flex-wrap">
-                    {entry.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+    <Dialog open={!!reading} onOpenChange={(open) => { if (!open) setReading(null); }} layerClassName={styles.dialogLayer}>
+      {reading && <DialogContent className={styles.readerDialog} role="dialog" aria-modal="true" aria-labelledby="journal-reader-title"><div className={styles.readerHeader}><div><span className={styles.metaLabel}>{typeLabel(reading.type)}</span><DialogTitle id="journal-reader-title">{reading.title || "Journal entry"}</DialogTitle></div><button onClick={() => setReading(null)} aria-label="Close journal entry"><X aria-hidden="true" /></button></div><div className={styles.readerMeta}><span><CalendarDays aria-hidden="true" />{entryDate(reading.date)} at {entryTime(reading.date)}</span><span>{reading.wordCount} {reading.wordCount === 1 ? "word" : "words"}</span>{reading.moodEmoji && <span>{reading.moodEmoji}{reading.mood ? ` ${reading.mood}/10` : ""}</span>}</div><article className={styles.readerBody}><p>{reading.content}</p></article><footer className={styles.readerFooter}><div>{reading.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><button onClick={() => deleteEntry(reading)} disabled={deletingId === reading.id}><Trash2 aria-hidden="true" />{deletingId === reading.id ? "Deleting…" : "Delete entry"}</button></footer></DialogContent>}
+    </Dialog>
 
-      {/* Read Entry Dialog */}
-      {reading && (
-        <Dialog open={!!reading} onOpenChange={() => setReading(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{reading.title || "Journal Entry"}</DialogTitle>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {reading.moodEmoji && <span>{reading.moodEmoji}</span>}
-                <span>{formatDate(reading.date)}</span>
-                <span>·</span>
-                <span>{reading.wordCount} words</span>
-              </div>
-            </DialogHeader>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{reading.content}</p>
-            </div>
-            {reading.tags.length > 0 && (
-              <div className="flex gap-1.5 mt-4 flex-wrap">
-                {reading.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Create Dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>New Journal Entry</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <Input placeholder="Title (optional)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="What's on your mind today?…" rows={8}
-              className="w-full px-3 py-2 rounded-xl border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary" />
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium block mb-2">Mood</label>
-                <div className="flex gap-1 flex-wrap">
-                  {MOOD_EMOJIS.filter((_, i) => i % 2 === 0).map((m) => (
-                    <button key={m.score} onClick={() => setForm({ ...form, mood: m.score, moodEmoji: m.emoji })}
-                      className={`text-xl p-1 rounded-lg transition-all ${form.mood === m.score ? "bg-primary/10 ring-2 ring-primary" : "hover:bg-muted"}`}>
-                      {m.emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1.5">Type</label>
-                <div className="flex flex-wrap gap-1">
-                  {["DAILY","GRATITUDE","REFLECTION","FREE_WRITE"].map((t) => (
-                    <Button key={t} variant={form.type === t ? "default" : "outline"} size="sm"
-                      onClick={() => setForm({ ...form, type: t })} className="text-xs px-2 h-7">
-                      {t.replace("_"," ")}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-1.5">Tags (comma-separated)</label>
-              <Input placeholder="work, health, gratitude…" value={tagInput} onChange={(e) => setTagInput(e.target.value)} />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button className="flex-1" onClick={createEntry} disabled={saving || !form.content.trim()}>
-                {saving ? "Saving…" : "Save Entry"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+    <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open && !saving) setActionError(null); }} layerClassName={styles.dialogLayer}>
+      <DialogContent className={styles.editorDialog} role="dialog" aria-modal="true" aria-labelledby="journal-editor-title"><form onSubmit={createEntry} className={styles.editorForm}><DialogHeader className={styles.editorHeader}><div><span className={styles.metaLabel}>Private entry</span><DialogTitle id="journal-editor-title">Write what is here.</DialogTitle><p>{entryDate(new Date().toISOString())}</p></div><button type="button" onClick={() => setShowCreate(false)} aria-label="Close journal editor"><X aria-hidden="true" /></button></DialogHeader>{actionError && <div className={styles.formError} role="alert">{actionError}</div>}<div className={styles.editorCanvas}><label className="sr-only" htmlFor="journal-title">Title optional</label><input id="journal-title" className={styles.titleInput} autoFocus placeholder="Untitled reflection" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /><label className="sr-only" htmlFor="journal-content">Journal entry</label><textarea id="journal-content" className={styles.bodyInput} value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="Begin with what is true right now…" /></div>
+        <div className={styles.editorMetadata}><fieldset><legend>Mood <span>optional</span></legend><div className={styles.moodChoices}>{MOOD_EMOJIS.filter((_, index) => index % 2 === 0).map((mood) => <button type="button" key={mood.score} aria-pressed={form.mood === mood.score} aria-label={`${mood.label}, ${mood.score} out of 10`} onClick={() => setForm({ ...form, mood: mood.score, moodEmoji: mood.emoji })}><span>{mood.emoji}</span><small>{mood.score}</small></button>)}</div></fieldset><fieldset><legend>Type</legend><div className={styles.typeChoices}>{ENTRY_TYPES.map((type) => <button type="button" key={type} aria-pressed={form.type === type} onClick={() => setForm({ ...form, type })}>{typeLabel(type)}</button>)}</div></fieldset><div><label htmlFor="journal-tags">Tags <span>comma-separated</span></label><Input id="journal-tags" placeholder="work, health, gratitude" value={tagInput} onChange={(event) => setTagInput(event.target.value)} /></div></div>
+        <footer className={styles.editorFooter}><span>{form.content.trim() ? `${form.content.trim().split(/\s+/).length} words` : "Blank entry"}</span><div><button type="button" onClick={() => setShowCreate(false)}>Cancel</button><button type="submit" disabled={saving || !form.content.trim()}>{saving ? "Saving…" : "Save entry"}</button></div></footer>
+      </form></DialogContent>
+    </Dialog>
+  </div>;
 }

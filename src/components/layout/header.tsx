@@ -113,7 +113,7 @@ export function AppHeader() {
         <div className="flex items-center gap-3">
           <NovusMark size="sm" className="lg:hidden" />
           <h1 className="font-display text-base font-semibold tracking-[-0.02em] md:text-lg">{title}</h1>
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">
+          <span suppressHydrationWarning className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">
             {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })}
           </span>
         </div>
